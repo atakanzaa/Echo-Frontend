@@ -37,7 +37,7 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
         let session  = AVAudioSession.sharedInstance()
         do {
             try session.setCategory(.playAndRecord, mode: .default,
-                                    options: [.defaultToSpeaker, .allowBluetooth, .allowBluetoothA2DP])
+                                    options: [.defaultToSpeaker, .allowBluetoothHFP, .allowBluetoothA2DP])
             try session.setActive(true)
 
             let url = FileManager.default.temporaryDirectory
@@ -59,16 +59,16 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
             statusMessage  = "Recording…"
             startTimer()
         } catch {
-            errorMessage = "Mikrofona erişilemiyor: \(error.localizedDescription)"
+            errorMessage = "Microphone access error: \(error.localizedDescription)"
         }
     }
 
     func stopRecording() {
-        recorder?.stop()
+        recorder?.stop()   // triggers audioRecorderDidFinishRecording when file is flushed
         timer?.invalidate()
         isRecording   = false
         statusMessage = "Processing…"
-        Task { await uploadRecording() }
+        // upload is initiated in the delegate once the file is fully written to disk
     }
 
     // MARK: — Upload
@@ -76,7 +76,7 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
     private func uploadRecording() async {
         guard let url = audioFileURL,
               let data = try? Data(contentsOf: url) else {
-            errorMessage  = "Ses dosyası okunamadı."
+            errorMessage  = "Could not read audio file."
             statusMessage = "Ready to listen"
             return
         }
@@ -101,7 +101,7 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
             errorMessage  = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
         }
 
-        // Temp dosyayı sil
+        // Clean up temp file
         try? FileManager.default.removeItem(at: url)
         audioFileURL = nil
     }
@@ -114,7 +114,7 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
         pollingTask?.cancel()
         pollingTask = Task {
             var attemptCount = 0
-            let maxAttempts  = 30  // 30 × 2sn = 60sn maksimum bekleme
+            let maxAttempts  = 30  // 30 × 2s = 60s max wait
             while !Task.isCancelled && attemptCount < maxAttempts {
                 attemptCount += 1
                 do {
@@ -131,7 +131,7 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
                         isProcessing  = false
                         return
                     case "failed":
-                        errorMessage  = status.errorMessage ?? "İşlem başarısız."
+                        errorMessage  = status.errorMessage ?? "Processing failed."
                         statusMessage = "Ready to listen"
                         isProcessing  = false
                         return
@@ -145,7 +145,7 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
             }
             // Zaman aşımı
             if !Task.isCancelled {
-                errorMessage  = "Analiz zaman aşımına uğradı. Lütfen daha sonra tekrar deneyin."
+                errorMessage  = "Analysis timed out. Please try again later."
                 statusMessage = "Ready to listen"
                 isProcessing  = false
             }
@@ -182,10 +182,17 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
     }
 
     // MARK: — AVAudioRecorderDelegate
+
+    // Called after recorder.stop() flushes the file to disk — safe to upload here
     nonisolated func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder,
                                                      successfully flag: Bool) {
-        if !flag {
-            Task { @MainActor in self.errorMessage = "Kayıt tamamlanamadı." }
+        Task { @MainActor in
+            if flag {
+                await self.uploadRecording()
+            } else {
+                self.errorMessage  = "Recording failed. Please try again."
+                self.statusMessage = "Ready to listen"
+            }
         }
     }
 }

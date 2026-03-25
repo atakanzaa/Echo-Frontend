@@ -54,7 +54,8 @@ enum APIRouter {
     case deleteCapsule(id: String)
 
     // Coach
-    case getCoachSessions
+    case getCoachSessions(page: Int, size: Int)
+    case endCoachSession(sessionId: String)
     case createCoachSession
     case createCoachSessionWithJournal(journalEntryId: String)
     case getCoachMessages(sessionId: String)
@@ -171,7 +172,10 @@ extension APIRouter {
         case .deleteCapsule(let id): return ("/capsules/\(id)", "DELETE", nil, false)
 
         // Coach
-        case .getCoachSessions:  return ("/coach/sessions", "GET",  nil, false)
+        case .getCoachSessions(let page, let size):
+            return ("/coach/sessions?page=\(page)&size=\(size)", "GET", nil, false)
+        case .endCoachSession(let sid):
+            return ("/coach/sessions/\(sid)/end", "POST", nil, false)
         case .createCoachSession: return ("/coach/sessions", "POST", nil, false)
         case .createCoachSessionWithJournal(let journalId):
             return ("/coach/sessions", "POST", try? encoder.encode(CreateCoachSessionBody(journalEntryId: journalId)), false)

@@ -18,7 +18,7 @@ final class ProfileViewModel: ObservableObject {
     var currentStreak:  Int    { user?.currentStreak ?? 0 }
     var moodAvgText:    String {
         guard let u = user, u.moodScoreAvg > 0 else { return "—" }
-        return String(format: "%.1f", u.moodScoreAvg)
+        return String(format: "%.1f", u.moodScoreAvg * 10)
     }
 
     func loadProfile() {

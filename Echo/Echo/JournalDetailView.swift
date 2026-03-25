@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 
 struct JournalDetailView: View {
     let entry: APIJournalEntry
@@ -84,47 +85,32 @@ struct JournalDetailView: View {
 
                     // MARK: — Reflective Question
                     if let question = entry.analysis?.reflectiveQuestion, !question.isEmpty {
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack(spacing: 8) {
-                                Image(systemName: "questionmark.bubble")
-                                    .font(.system(size: 14))
-                                    .foregroundColor(Color(red: 0.235, green: 0.808, blue: 0.996))
-                                Text("Yansitma Sorusu")
-                                    .font(.system(size: 13, weight: .bold))
-                                    .foregroundColor(Color(red: 0.235, green: 0.808, blue: 0.996))
-                            }
+                        sectionCard(title: "Yansıma Sorusu", icon: "questionmark.bubble") {
                             Text(question)
                                 .font(.system(size: 15, weight: .regular))
                                 .foregroundColor(Color(red: 0.820, green: 0.839, blue: 0.855))
                                 .lineSpacing(3)
                                 .italic()
                         }
-                        .padding(16)
-                        .background(Color(red: 0.235, green: 0.808, blue: 0.996).opacity(0.08))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16)
-                                .stroke(Color(red: 0.235, green: 0.808, blue: 0.996).opacity(0.2), lineWidth: 1)
-                        )
-                        .cornerRadius(16)
-                        .padding(.horizontal, 16)
                     }
 
                     // MARK: — Transcript (genisletilebilir)
                     if let transcript = entry.transcript, !transcript.isEmpty {
                         VStack(alignment: .leading, spacing: 12) {
                             Button(action: { withAnimation { showTranscript.toggle() } }) {
-                                HStack {
+                                HStack(spacing: 8) {
                                     Image(systemName: "doc.text")
                                         .font(.system(size: 14))
+                                        .foregroundColor(Color(red: 0.498, green: 0.075, blue: 0.929))
                                     Text("Transkript")
                                         .font(.system(size: 13, weight: .bold))
+                                        .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
                                     Spacer()
                                     Image(systemName: showTranscript ? "chevron.up" : "chevron.down")
                                         .font(.system(size: 12))
+                                        .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
                                 }
-                                .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
                             }
-
                             if showTranscript {
                                 Text(transcript)
                                     .font(.system(size: 14, weight: .regular))
@@ -139,9 +125,8 @@ struct JournalDetailView: View {
                         .padding(.horizontal, 16)
                     }
 
-                    // MARK: — Coach ile Tartis butonu
+                    // MARK: — Coach ile Konuş butonu
                     Button(action: {
-                        // Coach sayfasina journalEntryId ile yonlendir
                         CoachJournalContext.shared.pendingJournalEntryId = entry.id
                         selectedTab = "coach"
                         dismiss()
@@ -149,7 +134,7 @@ struct JournalDetailView: View {
                         HStack(spacing: 10) {
                             Image(systemName: "bubble.left.and.bubble.right.fill")
                                 .font(.system(size: 16))
-                            Text("Coach ile Tartis")
+                            Text("Coach ile Konuş")
                                 .font(.system(size: 16, weight: .bold))
                         }
                         .foregroundColor(.white)
@@ -329,12 +314,12 @@ struct FlowLayout: Layout {
     }
 }
 
-// MARK: — Coach Journal Context (basit singleton — journal'dan coach'a veri aktarimi)
+// MARK: — Coach Journal Context (singleton — journal'dan coach'a veri aktarimi)
 
-@MainActor
 final class CoachJournalContext: ObservableObject {
     static let shared = CoachJournalContext()
-    var pendingJournalEntryId: String?
+    @Published var pendingJournalEntryId: String?
+    private init() {}
 }
 
 #Preview {

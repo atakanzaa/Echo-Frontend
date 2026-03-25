@@ -4,113 +4,178 @@ import Combine
 @MainActor
 final class CoachViewModel: ObservableObject {
 
-    @Published var sessions:     [APICoachSession] = []
-    @Published var messages:     [APICoachMessage] = []
-    @Published var inputText     = ""
-    @Published var isLoading     = false
-    @Published var isSending     = false
-    @Published var errorMessage: String?
+    // MARK: — Liste State
 
-    private var currentSessionId: String?
+    @Published var sessions:        [APICoachSession] = []
+    @Published var isLoadingSessions = false
+    @Published var isLoadingMore    = false
+    @Published var hasMorePages     = true
+    @Published var listError:       String?
 
-    // MARK: — Session Management
+    private var currentPage = 0
+    private let pageSize    = 20
 
-    func loadOrCreateSession() {
-        isLoading    = true
-        errorMessage = nil
+    // MARK: — Chat State
+
+    @Published var messages:       [APICoachMessage] = []
+    @Published var inputText       = ""
+    @Published var isLoadingChat   = false
+    @Published var isSending       = false
+    @Published var chatError:      String?
+
+    private(set) var activeSessionId: String?
+
+    // MARK: — Session Listesi
+
+    func loadSessions() {
+        guard !isLoadingSessions else { return }
+        currentPage         = 0
+        hasMorePages        = true
+        isLoadingSessions   = true
+        listError           = nil
         Task {
             do {
-                let result: [APICoachSession] = try await APIClient.shared.requestWithAutoRefresh(
-                    .getCoachSessions
+                let paged: APIPagedResponse<APICoachSession> = try await APIClient.shared.requestWithAutoRefresh(
+                    .getCoachSessions(page: 0, size: pageSize)
                 )
-                sessions = result
-                if let active = result.first(where: { $0.isActive }) ?? result.first {
-                    currentSessionId = active.id
-                    await loadMessages(sessionId: active.id)
-                } else {
-                    // Yeni oturum oluştur
-                    let newSession: APICoachSession = try await APIClient.shared.requestWithAutoRefresh(
-                        .createCoachSession
-                    )
-                    currentSessionId = newSession.id
-                    sessions.insert(newSession, at: 0)
-                }
-                isLoading = false
+                sessions        = paged.content
+                hasMorePages    = !paged.last
+                currentPage     = 1
+                isLoadingSessions = false
             } catch {
-                errorMessage = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
-                isLoading    = false
+                listError           = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
+                isLoadingSessions   = false
             }
         }
     }
 
-    func loadMessages(sessionId: String) async {
-        do {
-            let result: [APICoachMessage] = try await APIClient.shared.requestWithAutoRefresh(
-                .getCoachMessages(sessionId: sessionId)
-            )
-            messages = result
-        } catch {
-            // sessizce geç
-        }
-    }
-
-    // MARK: — Journal Kontekstli Oturum
-
-    /// Journal hakkinda konusmak icin yeni coach oturumu baslatir
-    func startSessionWithJournal(journalEntryId: String) {
-        isLoading    = true
-        errorMessage = nil
+    func loadMoreSessions() {
+        guard hasMorePages, !isLoadingMore, !isLoadingSessions else { return }
+        isLoadingMore = true
         Task {
             do {
-                let newSession: APICoachSession = try await APIClient.shared.requestWithAutoRefresh(
-                    .createCoachSessionWithJournal(journalEntryId: journalEntryId)
+                let paged: APIPagedResponse<APICoachSession> = try await APIClient.shared.requestWithAutoRefresh(
+                    .getCoachSessions(page: currentPage, size: pageSize)
                 )
-                currentSessionId = newSession.id
-                sessions.insert(newSession, at: 0)
-                await loadMessages(sessionId: newSession.id)
-                isLoading = false
+                sessions.append(contentsOf: paged.content)
+                hasMorePages  = !paged.last
+                currentPage  += 1
+                isLoadingMore = false
             } catch {
-                errorMessage = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
-                isLoading    = false
+                isLoadingMore = false
             }
         }
     }
 
-    // MARK: — Send Message
+    // MARK: — Yeni Session Oluştur
+
+    /// Normal (journal bağlantısız) yeni konuşma başlatır
+    func createNewSession() async throws -> APICoachSession {
+        let newSession: APICoachSession = try await APIClient.shared.requestWithAutoRefresh(.createCoachSession)
+        sessions.insert(newSession, at: 0)
+        return newSession
+    }
+
+    /// Journal bağlantılı yeni konuşma başlatır
+    func createSessionWithJournal(journalEntryId: String) async throws -> APICoachSession {
+        let newSession: APICoachSession = try await APIClient.shared.requestWithAutoRefresh(
+            .createCoachSessionWithJournal(journalEntryId: journalEntryId)
+        )
+        sessions.insert(newSession, at: 0)
+        return newSession
+    }
+
+    // MARK: — Chat
+
+    /// Bir session seçilince mesajlarını yükler
+    func openSession(id: String) {
+        activeSessionId = id
+        messages        = []
+        isLoadingChat   = true
+        chatError       = nil
+        Task {
+            do {
+                let result: [APICoachMessage] = try await APIClient.shared.requestWithAutoRefresh(
+                    .getCoachMessages(sessionId: id)
+                )
+                messages      = result
+                isLoadingChat = false
+            } catch {
+                chatError     = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
+                isLoadingChat = false
+            }
+        }
+    }
+
+    func closeSession() {
+        // Aktif session'ı soft-close et (arka planda)
+        if let sid = activeSessionId {
+            Task {
+                try? await APIClient.shared.requestWithAutoRefresh(.endCoachSession(sessionId: sid)) as APIVoidResponse
+            }
+        }
+        activeSessionId = nil
+        messages        = []
+        inputText       = ""
+    }
 
     func sendMessage() {
         let text = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty, let sessionId = currentSessionId else { return }
+        guard !text.isEmpty, let sessionId = activeSessionId else { return }
         inputText = ""
         isSending = true
 
         // Optimistic: kullanıcı mesajını hemen ekle
-        let tempUserMsg = APICoachMessage(
-            id:        UUID().uuidString,
+        let tempId = UUID().uuidString
+        let tempMsg = APICoachMessage(
+            id:        tempId,
             role:      "user",
             content:   text,
             createdAt: ISO8601DateFormatter().string(from: Date())
         )
-        messages.append(tempUserMsg)
+        messages.append(tempMsg)
 
         Task {
             do {
-                // Backend: kullanıcı mesajını gönder, AI yanıtını al
-                // Endpoint kullanıcı + AI mesajını [APICoachMessage] olarak döndürür
                 let response: [APICoachMessage] = try await APIClient.shared.requestWithAutoRefresh(
                     .sendCoachMessage(sessionId: sessionId, body: SendCoachMessageBody(content: text, role: "user"))
                 )
-                // Temp user mesajını kaldır, backend yanıtını ekle
-                messages.removeLast()
+                // Temp mesajı kaldır, backend yanıtını ekle
+                messages.removeAll { $0.id == tempId }
                 messages.append(contentsOf: response)
                 isSending = false
+                // Session listesindeki updatedAt'ı güncelle (sıralama için yenile)
+                refreshSessionInList(sessionId: sessionId)
             } catch {
-                // Temp mesajı kaldır
-                if !messages.isEmpty { messages.removeLast() }
-                errorMessage = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
-                isSending    = false
+                messages.removeAll { $0.id == tempId }
+                chatError = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
+                isSending = false
             }
         }
+    }
+
+    // MARK: — Silme
+
+    func deleteSession(id: String) {
+        Task {
+            do {
+                let _: APIVoidResponse = try await APIClient.shared.requestWithAutoRefresh(
+                    .deleteCoachSession(id: id)
+                )
+                sessions.removeAll { $0.id == id }
+            } catch {
+                listError = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
+            }
+        }
+    }
+
+    // MARK: — Yardımcı
+
+    private func refreshSessionInList(sessionId: String) {
+        // Güncellenmiş session'ı listenin başına taşı (son activity göstergesi için)
+        guard let idx = sessions.firstIndex(where: { $0.id == sessionId }) else { return }
+        let session = sessions.remove(at: idx)
+        sessions.insert(session, at: 0)
     }
 }
 

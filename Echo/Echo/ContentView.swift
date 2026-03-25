@@ -21,7 +21,9 @@ struct ContentView: View {
                     } else if selectedTab == "community" {
                         CommunityView(selectedTab: $selectedTab)
                     } else if selectedTab == "coach" {
-                        ReflectionCoachView(selectedTab: $selectedTab)
+                        NavigationStack {
+                            CoachSessionsListView(selectedTab: $selectedTab)
+                        }
                     } else if selectedTab == "profile" {
                         ProfileViewWrapper(selectedTab: $selectedTab)
                     } else if selectedTab == "journal" {

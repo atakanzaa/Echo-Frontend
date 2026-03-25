@@ -5,9 +5,9 @@
 import SwiftUI
 
 struct ReflectionCoachView: View {
-    @Binding var selectedTab: String
-    @StateObject private var viewModel = CoachViewModel()
-    @State private var isMenuOpen = false
+    let sessionId: String
+    @ObservedObject var viewModel: CoachViewModel
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         ZStack {
@@ -39,37 +39,37 @@ struct ReflectionCoachView: View {
             VStack(spacing: 0) {
                 // Header
                 HStack {
-                    Button(action: {}) {
+                    Button(action: {
+                        viewModel.closeSession()
+                        dismiss()
+                    }) {
                         Image(systemName: "chevron.left")
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(.white)
                     }
                     Spacer()
                     VStack(spacing: 2) {
-                        Text("AI Reflection Coach")
+                        Text(sessionTitle)
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(.white)
-                        HStack(spacing: 4) {
-                            Circle().fill(Color(red: 0.2, green: 0.8, blue: 0.4)).frame(width: 6, height: 6)
-                            Text("LIVE SESSION")
-                                .font(.system(size: 10, weight: .semibold))
-                                .foregroundColor(Color(red: 0.2, green: 0.8, blue: 0.4))
+                            .lineLimit(1)
+                        if let session = currentSession, session.isActive {
+                            HStack(spacing: 4) {
+                                Circle().fill(Color(red: 0.2, green: 0.8, blue: 0.4)).frame(width: 6, height: 6)
+                                Text("AKTİF")
+                                    .font(.system(size: 10, weight: .semibold))
+                                    .foregroundColor(Color(red: 0.2, green: 0.8, blue: 0.4))
+                            }
                         }
                     }
                     Spacer()
-                    Button(action: { isMenuOpen.toggle() }) {
-                        Image(systemName: "line.3.horizontal")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(.white)
-                    }
-                    .frame(width: 40, height: 40)
-                    .background(Color(red: 0.149, green: 0.098, blue: 0.196))
-                    .cornerRadius(20)
+                    // Placeholder — simetri için
+                    Color.clear.frame(width: 40, height: 40)
                 }
                 .padding(.horizontal, 16).padding(.vertical, 12)
 
-                // Chat Messages
-                if viewModel.isLoading {
+                // Chat Mesajları
+                if viewModel.isLoadingChat {
                     Spacer()
                     ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .white))
                     Spacer()
@@ -77,7 +77,7 @@ struct ReflectionCoachView: View {
                     ScrollViewReader { proxy in
                         ScrollView {
                             VStack(spacing: 24) {
-                                // Timestamp
+                                // Tarih damgası
                                 Text(sessionTimestamp())
                                     .font(.system(size: 12, weight: .medium))
                                     .foregroundColor(Color(red: 0.282, green: 0.333, blue: 0.408))
@@ -97,7 +97,8 @@ struct ReflectionCoachView: View {
                                     HStack(alignment: .bottom, spacing: 12) {
                                         AIAvatarView()
                                         VStack(alignment: .leading, spacing: 4) {
-                                            Text("AI Coach").font(.system(size: 12)).foregroundColor(Color(red: 0.576, green: 0.639, blue: 0.725))
+                                            Text("AI Coach").font(.system(size: 12))
+                                                .foregroundColor(Color(red: 0.576, green: 0.639, blue: 0.725))
                                             HStack(spacing: 4) {
                                                 ForEach(0..<3, id: \.self) { _ in
                                                     Circle().fill(Color.white.opacity(0.5)).frame(width: 6, height: 6)
@@ -114,20 +115,28 @@ struct ReflectionCoachView: View {
                             }
                             .padding(.vertical, 16)
                         }
-                        .onChange(of: viewModel.messages.count) { _ in
+                        .onChange(of: viewModel.messages.count) {
                             if let last = viewModel.messages.last {
                                 withAnimation { proxy.scrollTo(last.id, anchor: .bottom) }
                             }
                         }
-                        .onChange(of: viewModel.isSending) { sending in
+                        .onChange(of: viewModel.isSending) { _, sending in
                             if sending { withAnimation { proxy.scrollTo("typing", anchor: .bottom) } }
                         }
                     }
                 }
 
-                // Input Area
+                // Hata mesajı
+                if let err = viewModel.chatError {
+                    Text(err)
+                        .font(.system(size: 13))
+                        .foregroundColor(Color(red: 0.937, green: 0.267, blue: 0.267))
+                        .padding(.horizontal, 16).padding(.vertical, 6)
+                }
+
+                // Input Alanı
                 HStack(spacing: 12) {
-                    TextField("Type your thoughts…", text: $viewModel.inputText)
+                    TextField("Düşüncelerini yaz…", text: $viewModel.inputText)
                         .font(.system(size: 16, weight: .regular))
                         .foregroundColor(Color(red: 1, green: 1, blue: 1, opacity: 0.8))
                         .padding(.horizontal, 16).padding(.vertical, 12)
@@ -161,31 +170,25 @@ struct ReflectionCoachView: View {
                 }
                 .padding(.horizontal, 16).padding(.vertical, 12)
             }
+        }
+        .navigationBarHidden(true)
+        .onAppear { viewModel.openSession(id: sessionId) }
+    }
 
-            if isMenuOpen {
-                HStack(spacing: 0) {
-                    HamburgerMenuView(isMenuOpen: $isMenuOpen, selectedTab: $selectedTab)
-                        .frame(maxWidth: 250)
-                    Spacer()
-                }
-                .transition(.move(edge: .leading))
-                .zIndex(1)
-            }
-        }
-        .onAppear {
-            // Journal konteksti varsa o journal hakkinda oturum baslat
-            if let journalId = CoachJournalContext.shared.pendingJournalEntryId {
-                CoachJournalContext.shared.pendingJournalEntryId = nil
-                viewModel.startSessionWithJournal(journalEntryId: journalId)
-            } else {
-                viewModel.loadOrCreateSession()
-            }
-        }
+    // MARK: — Yardımcılar
+
+    private var currentSession: APICoachSession? {
+        viewModel.sessions.first { $0.id == sessionId }
+    }
+
+    private var sessionTitle: String {
+        currentSession?.title ?? "AI Coach"
     }
 
     private func sessionTimestamp() -> String {
         let f = DateFormatter()
-        f.dateFormat = "EEEE, h:mm a"
+        f.dateFormat = "EEEE, HH:mm"
+        f.locale = Locale(identifier: "tr_TR")
         return f.string(from: Date())
     }
 }
@@ -258,8 +261,4 @@ struct UserMessageBubble: View {
         .padding(.horizontal, 16)
         .id(message.id)
     }
-}
-
-#Preview {
-    ReflectionCoachView(selectedTab: .constant("coach"))
 }

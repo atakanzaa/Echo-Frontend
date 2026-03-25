@@ -244,6 +244,11 @@ struct APICoachSession: Decodable, Identifiable {
     let journalEntryId: String?
 }
 
+extension APICoachSession: Hashable {
+    static func == (lhs: Self, rhs: Self) -> Bool { lhs.id == rhs.id }
+    func hash(into hasher: inout Hasher) { hasher.combine(id) }
+}
+
 struct APICoachMessage: Decodable, Identifiable {
     let id:        String
     let role:      String   // "user" | "assistant"

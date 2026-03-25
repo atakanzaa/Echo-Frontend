@@ -86,7 +86,7 @@ final class PostDetailViewModel: ObservableObject {
                 if let parentId = parentId,
                    let parentIdx = comments.firstIndex(where: { $0.id == parentId }) {
                     // Append reply to the parent's replies
-                    var parent = comments[parentIdx]
+                    let parent = comments[parentIdx]
                     var replies = parent.replies ?? []
                     replies.append(newComment)
                     comments[parentIdx] = APIPostComment(
