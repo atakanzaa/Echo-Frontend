@@ -355,7 +355,3 @@ struct SettingsToggleView: View {
         }
     }
 }
-
-#Preview {
-    SettingsView(selectedTab: .constant("settings"))
-}

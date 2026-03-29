@@ -173,7 +173,3 @@ struct BadgeCard: View {
         .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Color(red: 0.141, green: 0.098, blue: 0.188), lineWidth: 1))
     }
 }
-
-#Preview {
-    AchievementsView(selectedTab: .constant("achievements"))
-}

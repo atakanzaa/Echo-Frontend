@@ -326,7 +326,3 @@ class NavigationManager: ObservableObject {
         self.isMenuOpen = isMenuOpen
     }
 }
-
-#Preview {
-    ContentView()
-}

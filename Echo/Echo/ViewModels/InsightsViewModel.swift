@@ -82,7 +82,7 @@ final class InsightsViewModel: ObservableObject {
         case let n where n.contains("motiv") || n.contains("energy") || n.contains("very_positive"):
             return .motivated
         case let n where n.contains("mix"):
-            return .mixed
+            return .neutral
         // Türkçe
         case let n where n.contains("stres") || n.contains("kayg") || n.contains("gergin") || n.contains("üzg"):
             return .stress
@@ -91,7 +91,7 @@ final class InsightsViewModel: ObservableObject {
         case let n where n.contains("motiv") || n.contains("enerj") || n.contains("heyecan") || n.contains("coşku"):
             return .motivated
         case let n where n.contains("karış") || n.contains("karmas"):
-            return .mixed
+            return .neutral
         default:
             return .neutral
         }

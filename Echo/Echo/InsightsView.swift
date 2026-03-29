@@ -351,7 +351,3 @@ struct GoalRowView: View {
         .padding(.vertical, 4)
     }
 }
-
-#Preview {
-    InsightsView(selectedTab: .constant("insights"))
-}

@@ -6,12 +6,13 @@ import AVFoundation
 final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
 
     // MARK: — Published State
-    @Published var isRecording      = false
-    @Published var recordingTime    = "0:00"
-    @Published var statusMessage    = "Ready to listen"
-    @Published var transcript       = ""
-    @Published var isUploading      = false
-    @Published var isProcessing     = false   // transcribing / analyzing
+    @Published var isRecording         = false
+    @Published var recordingTime       = "0:00"
+    @Published var statusMessage       = "Ready to listen"
+    @Published var transcript          = ""
+    @Published var isUploading         = false
+    @Published var isProcessing        = false   // transcribing / analyzing
+    @Published var awaitingConfirmation = false  // recorded, waiting for Send/Discard
     @Published var errorMessage: String?
 
     // Live date header
@@ -64,6 +65,13 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
     }
 
     func stopRecording() {
+        // Capture actual duration before stop() resets currentTime
+        let actual = Int(recorder?.currentTime ?? 0)
+        elapsedSeconds = max(elapsedSeconds, actual)
+        let m = elapsedSeconds / 60
+        let s = elapsedSeconds % 60
+        recordingTime = String(format: "%d:%02d", m, s)
+
         recorder?.stop()   // triggers audioRecorderDidFinishRecording when file is flushed
         timer?.invalidate()
         isRecording   = false
@@ -74,8 +82,14 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
     // MARK: — Upload
 
     private func uploadRecording() async {
+        guard elapsedSeconds >= 3 else {
+            errorMessage  = "Recording too short. Please record at least 3 seconds."
+            statusMessage = "Ready to listen"
+            return
+        }
         guard let url = audioFileURL,
-              let data = try? Data(contentsOf: url) else {
+              let data = try? Data(contentsOf: url),
+              !data.isEmpty else {
             errorMessage  = "Could not read audio file."
             statusMessage = "Ready to listen"
             return
@@ -181,14 +195,33 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
         }
     }
 
+    // MARK: — Confirmation Actions
+
+    func confirmUpload() {
+        awaitingConfirmation = false
+        Task { await uploadRecording() }
+    }
+
+    func discardRecording() {
+        if let url = audioFileURL {
+            try? FileManager.default.removeItem(at: url)
+            audioFileURL = nil
+        }
+        awaitingConfirmation = false
+        elapsedSeconds = 0
+        recordingTime  = "0:00"
+        statusMessage  = "Ready to listen"
+    }
+
     // MARK: — AVAudioRecorderDelegate
 
-    // Called after recorder.stop() flushes the file to disk — safe to upload here
+    // Called after recorder.stop() flushes the file to disk
     nonisolated func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder,
                                                      successfully flag: Bool) {
         Task { @MainActor in
             if flag {
-                await self.uploadRecording()
+                self.awaitingConfirmation = true
+                self.statusMessage = "Kayıt hazır"
             } else {
                 self.errorMessage  = "Recording failed. Please try again."
                 self.statusMessage = "Ready to listen"

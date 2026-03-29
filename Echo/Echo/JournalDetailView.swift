@@ -321,34 +321,3 @@ final class CoachJournalContext: ObservableObject {
     @Published var pendingJournalEntryId: String?
     private init() {}
 }
-
-#Preview {
-    NavigationView {
-        JournalDetailView(
-            entry: APIJournalEntry(
-                id: "test",
-                recordedAt: "2026-03-16T10:00:00+03:00",
-                entryDate: "2026-03-16",
-                audioUrl: nil,
-                audioDurationSeconds: 44,
-                transcript: "Bugun iyi hissediyorum, sabah erken kalktim ve spor yaptim.",
-                status: "complete",
-                errorMessage: nil,
-                analysis: APIAnalysisResult(
-                    summary: "Kullanici olumlu bir ruh halinde, fiziksel aktivite ve erken kalkis ile enerjik bir gun gecirmis.",
-                    moodScore: 0.78,
-                    moodLabel: "positive",
-                    topics: ["Spor", "Sabah Rutini", "Motivasyon"],
-                    reflectiveQuestion: "Bu olumlu enerjiyi gun boyunca nasil koruyabilirsin?",
-                    keyEmotions: ["Mutluluk", "Enerji", "Motivasyon"],
-                    energyLevel: "high",
-                    goals: nil,
-                    insights: nil,
-                    memoryWorthy: nil
-                ),
-                createdAt: "2026-03-16T10:00:00+03:00"
-            ),
-            selectedTab: .constant("journal")
-        )
-    }
-}

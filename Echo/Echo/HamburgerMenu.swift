@@ -214,7 +214,3 @@ struct MenuItemButton: View {
         }
     }
 }
-
-#Preview {
-    HamburgerMenuView(isMenuOpen: .constant(true), selectedTab: .constant("home"))
-}

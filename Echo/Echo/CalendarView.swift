@@ -284,28 +284,28 @@ struct APISelectedDayView: View {
 
 // MARK: - Unchanged supporting structs
 
+// 4 score-range categories + empty (no entry)
+// 0.00-0.25 → stress | 0.25-0.50 → neutral | 0.50-0.75 → calm | 0.75-1.00 → motivated
 enum EmotionalState {
-    case stress, calm, motivated, mixed, neutral, empty
+    case stress, neutral, calm, motivated, empty
 
     var color: Color {
         switch self {
-        case .stress:    return Color(red: 0.937, green: 0.267, blue: 0.267)
-        case .calm:      return Color(red: 0.235, green: 0.808, blue: 0.996)
-        case .motivated: return Color(red: 0.133, green: 0.769, blue: 0.368)
-        case .mixed:     return Color(red: 0.659, green: 0.333, blue: 0.929)
-        case .neutral:   return Color(red: 0.612, green: 0.639, blue: 0.686)
-        case .empty:     return Color(red: 0.424, green: 0.333, blue: 0.384)
+        case .stress:    return Color(red: 0.937, green: 0.267, blue: 0.267) // #EF4444
+        case .neutral:   return Color(red: 0.612, green: 0.639, blue: 0.686) // #9CA3AF
+        case .calm:      return Color(red: 0.235, green: 0.808, blue: 0.996) // #3CCEFF
+        case .motivated: return Color(red: 0.133, green: 0.769, blue: 0.368) // #22C45E
+        case .empty:     return Color.clear
         }
     }
 
     var label: String {
         switch self {
         case .stress:    return "Stress"
+        case .neutral:   return "Neutral"
         case .calm:      return "Calm"
         case .motivated: return "Motivated"
-        case .mixed:     return "Mixed"
-        case .neutral:   return "Neutral"
-        case .empty:     return "Empty"
+        case .empty:     return ""
         }
     }
 }
@@ -316,51 +316,49 @@ struct DayButtonView: View {
     let isSelected: Bool
     let action: () -> Void
 
+    private var hasEntry: Bool { emotion != .empty }
+
     var body: some View {
         Button(action: action) {
-            Text("\(day)")
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(
-                    emotion == .empty ?
-                    Color(red: 0.350, green: 0.280, blue: 0.330) :
-                    .white
-                )
-                .frame(maxWidth: .infinity)
-                .frame(height: 44)
-                .background(
-                    emotion == .empty ?
-                    Color(red: 0.15, green: 0.10, blue: 0.18).opacity(0.3) :
-                    emotion == .neutral ?
-                    Color(red: 0.612, green: 0.639, blue: 0.686).opacity(0.25) :
-                    emotion.color.opacity(0.7)
-                )
-                .clipShape(RoundedRectangle(cornerRadius: 16))
-                .overlay(
-                    isSelected ?
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.white, lineWidth: 2)
-                        .shadow(color: emotion.color, radius: 8, x: 0, y: 0)
-                    : nil
-                )
+            VStack(spacing: 4) {
+                Text("\(day)")
+                    .font(.system(size: 15, weight: hasEntry ? .semibold : .regular))
+                    .foregroundColor(hasEntry ? .white : Color(red: 0.420, green: 0.360, blue: 0.460))
+
+                // Mood dot — only visible when entry exists
+                Circle()
+                    .fill(emotion.color)
+                    .frame(width: 6, height: 6)
+                    .opacity(hasEntry ? 1 : 0)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 48)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(isSelected ? Color.white.opacity(0.12) : Color.clear)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(isSelected ? Color.white.opacity(0.6) : Color.clear, lineWidth: 1.5)
+            )
         }
     }
 }
 
 struct LegendView: View {
-    let legends: [(emotion: EmotionalState, label: String)] = [
-        (.stress, "Stress"), (.calm, "Calm"), (.motivated, "Motivated")
+    private let legends: [(EmotionalState, String)] = [
+        (.stress, "Stress"), (.neutral, "Neutral"), (.calm, "Calm"), (.motivated, "Motivated")
     ]
 
     var body: some View {
-        HStack(spacing: 24) {
-            ForEach(legends, id: \.label) { legend in
-                HStack(spacing: 8) {
+        HStack(spacing: 16) {
+            ForEach(legends, id: \.1) { state, label in
+                HStack(spacing: 6) {
                     Circle()
-                        .fill(legend.emotion.color)
-                        .frame(width: 10, height: 10)
-                        .shadow(color: legend.emotion.color.opacity(0.6), radius: 8)
-                    Text(legend.label)
-                        .font(.system(size: 12, weight: .medium))
+                        .fill(state.color)
+                        .frame(width: 8, height: 8)
+                    Text(label)
+                        .font(.system(size: 11, weight: .medium))
                         .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
                 }
             }
@@ -404,8 +402,4 @@ struct BottomNavigationView: View {
         }
         .background(Color(red: 0.102, green: 0.067, blue: 0.133).opacity(0.95))
     }
-}
-
-#Preview {
-    EmotionalHeatmapCalendarView(selectedTab: .constant("calendar"))
 }

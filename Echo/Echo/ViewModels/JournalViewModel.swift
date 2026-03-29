@@ -73,15 +73,23 @@ extension APIJournalEntry {
         return m > 0 ? "\(m)m \(s)s" : "\(s)s"
     }
 
-    /// moodLabel → EmotionalState (backend: very_positive/positive/neutral/negative/very_negative)
+    /// moodCategory (primary) or moodScore-range (fallback) → EmotionalState
     var emotionalState: EmotionalState {
-        switch analysis?.moodLabel?.lowercased() {
-        case "very_positive", "motivated": return .motivated
-        case "positive", "calm":           return .calm
-        case "negative", "very_negative", "stressed", "stress": return .stress
-        case "mixed":     return .mixed
-        case "neutral":   return .neutral
-        default:          return .neutral
+        if let category = analysis?.moodCategory {
+            switch category {
+            case "STRESS":    return .stress
+            case "NEUTRAL":   return .neutral
+            case "CALM":      return .calm
+            case "MOTIVATED": return .motivated
+            default: break
+            }
+        }
+        guard let score = analysis?.moodScore else { return .neutral }
+        switch score {
+        case 0..<0.25:    return .stress
+        case 0.25..<0.50: return .neutral
+        case 0.50..<0.75: return .calm
+        default:          return .motivated
         }
     }
 }

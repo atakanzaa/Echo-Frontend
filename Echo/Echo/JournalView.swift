@@ -171,7 +171,3 @@ struct APIJournalEntryCard: View {
         .cornerRadius(16)
     }
 }
-
-#Preview {
-    JournalView(selectedTab: .constant("journal"))
-}

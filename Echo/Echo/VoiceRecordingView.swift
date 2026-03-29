@@ -54,55 +54,115 @@ struct VoiceRecordingView: View {
                                 .foregroundColor(.white)
                                 .multilineTextAlignment(.center)
 
-                            Text(viewModel.isRecording ? "Recording… tap to stop." : "Tap to start recording your thoughts.")
-                                .font(.system(size: 16, weight: .regular))
-                                .foregroundColor(Color(red: 0.678, green: 0.573, blue: 0.792))
-                                .multilineTextAlignment(.center)
+                            Text(
+                                viewModel.awaitingConfirmation
+                                    ? "Kaydınız hazır — göndermek istiyor musunuz?"
+                                    : viewModel.isRecording
+                                        ? "Recording… tap to stop."
+                                        : "Tap to start recording your thoughts."
+                            )
+                            .font(.system(size: 16, weight: .regular))
+                            .foregroundColor(Color(red: 0.678, green: 0.573, blue: 0.792))
+                            .multilineTextAlignment(.center)
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
 
                         // Recording Button Area
                         VStack {
-                            ZStack {
-                                Circle()
-                                    .fill(Color(red: 127/255, green: 19/255, blue: 236/255, opacity: viewModel.isRecording ? 0.35 : 0.2))
-                                    .blur(radius: 30)
-                                    .frame(width: 256, height: 256)
-                                    .animation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true), value: viewModel.isRecording)
-
-                                Circle()
-                                    .fill(Color(red: 127/255, green: 19/255, blue: 236/255, opacity: 0.3))
-                                    .blur(radius: 20)
-                                    .frame(width: 192, height: 192)
-                                    .offset(x: -50, y: 25)
-
-                                Button(action: { viewModel.toggleRecording() }) {
-                                    Image(systemName: viewModel.isRecording ? "stop.fill" : "mic.fill")
-                                        .font(.system(size: 16))
+                            if viewModel.awaitingConfirmation {
+                                // Confirmation buttons
+                                VStack(spacing: 16) {
+                                    Text(viewModel.recordingTime)
+                                        .font(.system(size: 48, weight: .thin, design: .monospaced))
                                         .foregroundColor(.white)
+
+                                    HStack(spacing: 20) {
+                                        // Discard
+                                        Button(action: { viewModel.discardRecording() }) {
+                                            HStack(spacing: 8) {
+                                                Image(systemName: "trash.fill")
+                                                Text("Sil")
+                                                    .fontWeight(.semibold)
+                                            }
+                                            .foregroundColor(Color(red: 0.937, green: 0.267, blue: 0.267))
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 18)
+                                        }
+                                        .background(Color(red: 0.937, green: 0.267, blue: 0.267).opacity(0.15))
+                                        .cornerRadius(20)
+
+                                        // Send
+                                        Button(action: { viewModel.confirmUpload() }) {
+                                            HStack(spacing: 8) {
+                                                Image(systemName: "paperplane.fill")
+                                                Text("Gönder")
+                                                    .fontWeight(.semibold)
+                                            }
+                                            .foregroundColor(.white)
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 18)
+                                        }
+                                        .background(
+                                            LinearGradient(
+                                                gradient: Gradient(colors: [
+                                                    Color(red: 127/255, green: 19/255, blue: 236/255),
+                                                    Color(red: 94/255, green: 14/255, blue: 179/255)
+                                                ]),
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            )
+                                        )
+                                        .cornerRadius(20)
+                                    }
+                                    .padding(.horizontal, 8)
                                 }
-                                .frame(width: 96, height: 96)
-                                .background(
-                                    LinearGradient(
-                                        gradient: Gradient(colors: [
-                                            viewModel.isRecording
-                                                ? Color(red: 0.937, green: 0.267, blue: 0.267)
-                                                : Color(red: 127/255, green: 19/255, blue: 236/255),
-                                            viewModel.isRecording
-                                                ? Color(red: 0.8, green: 0.1, blue: 0.1)
-                                                : Color(red: 94/255, green: 14/255, blue: 179/255)
-                                        ]),
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
+                                .frame(height: 300)
+                                .frame(maxWidth: .infinity)
+                                .transition(.opacity)
+                            } else {
+                                ZStack {
+                                    Circle()
+                                        .fill(Color(red: 127/255, green: 19/255, blue: 236/255, opacity: viewModel.isRecording ? 0.35 : 0.2))
+                                        .blur(radius: 30)
+                                        .frame(width: 256, height: 256)
+                                        .animation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true), value: viewModel.isRecording)
+
+                                    Circle()
+                                        .fill(Color(red: 127/255, green: 19/255, blue: 236/255, opacity: 0.3))
+                                        .blur(radius: 20)
+                                        .frame(width: 192, height: 192)
+                                        .offset(x: -50, y: 25)
+
+                                    Button(action: { viewModel.toggleRecording() }) {
+                                        Image(systemName: viewModel.isRecording ? "stop.fill" : "mic.fill")
+                                            .font(.system(size: 16))
+                                            .foregroundColor(.white)
+                                    }
+                                    .frame(width: 96, height: 96)
+                                    .background(
+                                        LinearGradient(
+                                            gradient: Gradient(colors: [
+                                                viewModel.isRecording
+                                                    ? Color(red: 0.937, green: 0.267, blue: 0.267)
+                                                    : Color(red: 127/255, green: 19/255, blue: 236/255),
+                                                viewModel.isRecording
+                                                    ? Color(red: 0.8, green: 0.1, blue: 0.1)
+                                                    : Color(red: 94/255, green: 14/255, blue: 179/255)
+                                            ]),
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
                                     )
-                                )
-                                .cornerRadius(48)
-                                .shadow(color: Color(red: 127/255, green: 19/255, blue: 236/255, opacity: 0.4), radius: 20)
-                                .disabled(viewModel.isUploading || viewModel.isProcessing)
+                                    .cornerRadius(48)
+                                    .shadow(color: Color(red: 127/255, green: 19/255, blue: 236/255, opacity: 0.4), radius: 20)
+                                    .disabled(viewModel.isUploading || viewModel.isProcessing)
+                                }
+                                .frame(height: 300)
+                                .transition(.opacity)
                             }
-                            .frame(height: 300)
                         }
+                        .animation(.easeInOut(duration: 0.25), value: viewModel.awaitingConfirmation)
 
                         // Status and Transcription Area
                         VStack(spacing: 24) {
@@ -187,8 +247,4 @@ struct VoiceRecordingView: View {
             }
         }
     }
-}
-
-#Preview {
-    VoiceRecordingView(selectedTab: .constant("home"))
 }

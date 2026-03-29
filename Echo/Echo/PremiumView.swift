@@ -352,7 +352,3 @@ struct FeatureItemView: View {
         )
     }
 }
-
-#Preview {
-    PremiumView(selectedTab: .constant("premium"))
-}

@@ -300,9 +300,3 @@ struct SessionRowView: View {
         return "Az önce"
     }
 }
-
-#Preview {
-    NavigationStack {
-        CoachSessionsListView(selectedTab: .constant("coach"))
-    }
-}

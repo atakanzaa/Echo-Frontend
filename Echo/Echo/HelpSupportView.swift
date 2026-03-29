@@ -207,7 +207,3 @@ private struct ContactRow: View {
         }
     }
 }
-
-#Preview {
-    HelpSupportView(selectedTab: .constant("help"))
-}

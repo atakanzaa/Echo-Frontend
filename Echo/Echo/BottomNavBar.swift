@@ -73,11 +73,3 @@ struct BottomNavBar: View {
         }
     }
 }
-
-#Preview {
-    VStack {
-        Spacer()
-        BottomNavBar(selectedTab: .constant("home"))
-    }
-    .background(Color(red: 0.098, green: 0.063, blue: 0.133))
-}

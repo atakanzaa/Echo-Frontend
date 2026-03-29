@@ -241,7 +241,3 @@ extension View {
         }
     }
 }
-
-#Preview {
-    CommunityView(selectedTab: .constant("community"))
-}

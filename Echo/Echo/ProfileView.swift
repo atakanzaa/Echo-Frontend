@@ -163,7 +163,3 @@ struct SettingItemView: View {
         .padding(.horizontal, 24)
     }
 }
-
-#Preview {
-    ProfileView().environmentObject(AppState.shared)
-}

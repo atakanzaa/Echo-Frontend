@@ -39,11 +39,12 @@ struct APIAnalysisResult: Decodable {
     let summary:            String?
     let moodScore:          Double?
     let moodLabel:          String?
+    let moodCategory:       String?   // "STRESS" | "NEUTRAL" | "CALM" | "MOTIVATED"
     let topics:             [String]?
     let reflectiveQuestion: String?
     let keyEmotions:        [String]?
     let energyLevel:        String?
-    // Genişletilmiş analiz alanları — optional (geriye uyumlu)
+    // Extended analysis fields — optional (backwards compatible)
     let goals:              [APIGoalPreview]?
     let insights:           [String]?
     let memoryWorthy:       Bool?
@@ -103,10 +104,11 @@ struct APICalendarMonth: Decodable {
 }
 
 struct APICalendarDay: Decodable {
-    let day:       Int
-    let moodLabel: String?   // nil = giriş yok
-    let entryId:   String?
-    let moodScore: Double?   // 0.0-1.0 skalası
+    let day:          Int
+    let moodLabel:    String?   // nil = no entry
+    let entryId:      String?
+    let moodScore:    Double?   // 0.0-1.0 scale
+    let moodCategory: String?   // "STRESS" | "NEUTRAL" | "CALM" | "MOTIVATED"
 }
 
 // MARK: — AI Insights

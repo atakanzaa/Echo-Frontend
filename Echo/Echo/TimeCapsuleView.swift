@@ -271,7 +271,3 @@ struct CreateCapsuleSheet: View {
         }
     }
 }
-
-#Preview {
-    TimeCapsuleView(selectedTab: .constant("timecapsule"))
-}

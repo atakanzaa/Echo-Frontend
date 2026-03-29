@@ -115,20 +115,6 @@ struct AIInsightsView: View {
                                         ? Color(red: 0.157, green: 0.631, blue: 0.569)
                                         : Color(red: 0.937, green: 0.267, blue: 0.267))
                                 }
-                                // Chart bars (placeholder for real chart data)
-                                VStack(spacing: 12) {
-                                    HStack(alignment: .bottom, spacing: 8) {
-                                        ForEach([0.4, 0.3, 0.5, 0.6, 0.45, 0.65, 0.8], id: \.self) { h in
-                                            ChartBarView(height: h)
-                                        }
-                                    }
-                                    .frame(height: 150)
-                                    HStack(spacing: 12) {
-                                        ForEach(["Mon","Tue","Wed","Thu","Fri","Sat","Sun"], id: \.self) { day in
-                                            Text(day).font(.system(size: 11)).foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686)).frame(maxWidth: .infinity)
-                                        }
-                                    }
-                                }
                             }
                             .padding(24)
                             .background(Color(red: 0.149, green: 0.098, blue: 0.200))
@@ -188,24 +174,6 @@ struct AIInsightsView: View {
     }
 }
 
-struct ChartBarView: View {
-    let height: CGFloat
-    var body: some View {
-        VStack {
-            Spacer()
-            RoundedRectangle(cornerRadius: 4)
-                .fill(LinearGradient(
-                    gradient: Gradient(colors: [
-                        Color(red: 0.498, green: 0.075, blue: 0.929),
-                        Color(red: 0.596, green: 0.283, blue: 0.941)
-                    ]),
-                    startPoint: .topLeading, endPoint: .bottomTrailing
-                ))
-        }
-        .frame(maxWidth: .infinity)
-        .frame(height: height * 150)
-    }
-}
 
 struct ThemeTag: View {
     let text: String
@@ -239,8 +207,4 @@ struct SuggestionCardView: View {
             Spacer()
         }
     }
-}
-
-#Preview {
-    AIInsightsView(selectedTab: .constant("aiinsights"))
 }

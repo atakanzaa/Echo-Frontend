@@ -146,7 +146,3 @@ private struct NotifToggleRow: View {
         .padding(.vertical, 4)
     }
 }
-
-#Preview {
-    NotificationsView(selectedTab: .constant("notifications"))
-}
