@@ -1,0 +1,75 @@
+# ============================================================
+# .claudeignore — Echo iOS Project
+# Claude'un okumaya ihtiyaç duymadığı dosyalar
+# ============================================================
+
+# ── Xcode proje & workspace yapılandırması ──────────────────
+# Kaynak kod değil, IDE meta verisi — nadiren okunması gerekir
+Echo/Echo.xcodeproj/**
+Echo/*.xcworkspace/**
+**/*.xcscheme
+**/*.xcuserstate
+**/*.xcuserdatad/**
+xcuserdata/**
+
+# ── Derleme çıktıları ───────────────────────────────────────
+build/**
+DerivedData/**
+*.xcarchive/**
+*.ipa
+*.app/**
+*.dSYM/**
+*.o
+*.d
+*.hmap
+*.LinkFileList
+
+# ── Asset katalogları ───────────────────────────────────────
+# İkon/renk JSON'ları — görsel varlıklar, kod mantığı yok
+Echo/Echo/Assets.xcassets/**
+
+# ── Paket yöneticisi kilitleri & önbellekler ────────────────
+# (SPM, CocoaPods, Carthage kullanılırsa)
+.build/**
+Pods/**
+Podfile.lock
+Carthage/**
+*.resolved
+Package.resolved
+
+# ── macOS sistem dosyaları ──────────────────────────────────
+**/.DS_Store
+.DS_Store
+**/*.DS_Store
+
+# ── Log, geçici & çıktı dosyaları ──────────────────────────
+*.log
+*.tmp
+*.temp
+*.orig
+*.bak
+*.swp
+*.swo
+**/__pycache__/**
+*.pyc
+
+# ── Gizli & çevre değişkeni dosyaları ──────────────────────
+# Bunlar zaten okunmamalı
+.env
+.env.*
+*.pem
+*.key
+secrets/**
+credentials/**
+
+# ── Test çıktıları & coverage raporları ─────────────────────
+TestResults/**
+*.xcresult/**
+coverage/**
+*.profdata
+
+# ── Git iç yapısı ───────────────────────────────────────────
+.git/**
+
+# ── Genel dokümantasyon (içerik için okunabilir, rutin değil)
+# LICENSE  ← yorum satırı: ihtiyaç duyulursa açılabilir
