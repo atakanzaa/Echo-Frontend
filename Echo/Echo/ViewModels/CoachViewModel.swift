@@ -13,7 +13,7 @@ final class CoachViewModel: ObservableObject {
     @Published var listError:       String?
 
     private var currentPage = 0
-    private let pageSize    = 20
+    private let pageSize    = AppConstants.Pagination.defaultPageSize
 
     // MARK: — Chat State
 
@@ -129,16 +129,16 @@ final class CoachViewModel: ObservableObject {
         let tempId = UUID().uuidString
         let tempMsg = APICoachMessage(
             id:        tempId,
-            role:      "user",
+            role:      CoachMessageRole.user.rawValue,
             content:   text,
-            createdAt: ISO8601DateFormatter().string(from: Date())
+            createdAt: DateFormatting.iso8601String(from: Date())
         )
         messages.append(tempMsg)
 
         Task {
             do {
                 let response: [APICoachMessage] = try await APIClient.shared.requestWithAutoRefresh(
-                    .sendCoachMessage(sessionId: sessionId, body: SendCoachMessageBody(content: text, role: "user"))
+                    .sendCoachMessage(sessionId: sessionId, body: SendCoachMessageBody(content: text, role: .user))
                 )
                 // Temp mesajı kaldır, backend yanıtını ekle
                 messages.removeAll { $0.id == tempId }
@@ -180,12 +180,10 @@ final class CoachViewModel: ObservableObject {
 }
 
 extension APICoachMessage {
-    var isUser: Bool { role == "user" }
+    var isUser: Bool { messageRole == .user }
 
     var formattedTime: String {
-        guard let date = ISO8601DateFormatter().date(from: createdAt) else { return "" }
-        let f = DateFormatter()
-        f.timeStyle = .short
-        return f.string(from: date)
+        guard let date = DateFormatting.parseISO8601(createdAt) else { return "" }
+        return DateFormatting.shortTime(from: date)
     }
 }

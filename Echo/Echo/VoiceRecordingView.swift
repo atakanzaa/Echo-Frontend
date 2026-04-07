@@ -6,7 +6,7 @@ import SwiftUI
 import AVFoundation
 
 struct VoiceRecordingView: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     @StateObject private var viewModel = HomeViewModel()
     @State private var isMenuOpen = false
 

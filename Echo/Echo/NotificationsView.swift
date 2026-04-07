@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct NotificationsView: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
 
     @AppStorage("notif_push")    private var pushEnabled    = true
     @AppStorage("notif_daily")   private var dailyReminder  = true
@@ -16,7 +16,7 @@ struct NotificationsView: View {
             VStack(spacing: 0) {
                 // Header
                 HStack {
-                    Button(action: { selectedTab = "profile" }) {
+                    Button(action: { selectedTab = .profile }) {
                         Image(systemName: "chevron.left")
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(.white)

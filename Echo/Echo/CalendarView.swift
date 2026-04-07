@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct EmotionalHeatmapCalendarView: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     @StateObject private var viewModel = CalendarViewModel()
     @State private var isMenuOpen = false
 
@@ -89,7 +89,7 @@ struct EmotionalHeatmapCalendarView: View {
                 }
 
                 Spacer()
-                BottomNavigationView(currentPage: "Calendar", selectedTab: $selectedTab)
+                BottomNavigationView(currentTab: .calendar, selectedTab: $selectedTab)
             }
 
             // Hamburger Menu Overlay
@@ -155,14 +155,11 @@ struct APICalendarGridView: View {
 
 struct APISelectedDayView: View {
     let entry: APIJournalEntry
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
 
     var formattedDate: String {
-        guard let date = ISO8601DateFormatter().date(from: entry.recordedAt) else { return entry.entryDate }
-        let f = DateFormatter()
-        f.dateFormat = "EEEE, d MMM"
-        f.locale = Locale(identifier: "tr_TR")
-        return f.string(from: date)
+        guard let date = DateFormatting.parseISO8601(entry.recordedAt) else { return entry.entryDate }
+        return DateFormatting.calendarDetailDate(from: date)
     }
 
     var body: some View {
@@ -369,14 +366,14 @@ struct LegendView: View {
 }
 
 struct BottomNavigationView: View {
-    let currentPage: String
-    @Binding var selectedTab: String
+    let currentTab: AppTab
+    @Binding var selectedTab: AppTab
 
-    private static let items: [(icon: String, label: String, tab: String)] = [
-        ("book.fill",      "Journal",  "journal"),
-        ("calendar",       "Calendar", "calendar"),
-        ("chart.bar.fill", "Insights", "insights"),
-        ("gear",           "Settings", "settings")
+    private static let items: [(icon: String, label: String, tab: AppTab)] = [
+        ("book.fill",      "Journal",  .journal),
+        ("calendar",       "Calendar", .calendar),
+        ("chart.bar.fill", "Insights", .insights),
+        ("gear",           "Settings", .settings)
     ]
 
     var body: some View {
@@ -388,10 +385,10 @@ struct BottomNavigationView: View {
                         VStack(spacing: 4) {
                             Image(systemName: item.icon)
                                 .font(.system(size: 16))
-                                .foregroundColor(item.label == currentPage ? .white : Color(red: 0.612, green: 0.639, blue: 0.686))
+                                .foregroundColor(item.tab == currentTab ? .white : Color(red: 0.612, green: 0.639, blue: 0.686))
                             Text(item.label)
                                 .font(.system(size: 10, weight: .medium))
-                                .foregroundColor(item.label == currentPage ? .white : Color(red: 0.612, green: 0.639, blue: 0.686))
+                                .foregroundColor(item.tab == currentTab ? .white : Color(red: 0.612, green: 0.639, blue: 0.686))
                         }
                         .frame(maxWidth: .infinity)
                         .frame(height: 60)

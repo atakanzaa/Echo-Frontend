@@ -5,7 +5,7 @@
 import SwiftUI
 
 struct CommunityView: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     @StateObject private var viewModel = CommunityViewModel()
     @State private var isMenuOpen = false
 
@@ -34,9 +34,9 @@ struct CommunityView: View {
 
                 // Tabs
                 HStack(spacing: 16) {
-                    ForEach([("Global","global"), ("Following","following")], id: \.0) { label, tab in
+                    ForEach(CommunityTab.allCases, id: \.rawValue) { tab in
                         Button(action: { viewModel.loadFeed(tab: tab) }) {
-                            Text(label)
+                            Text(tab.title)
                                 .font(.system(size: 14, weight: .medium))
                                 .foregroundColor(viewModel.selectedTab == tab ? .white : Color(red: 0.576, green: 0.639, blue: 0.725))
                                 .padding(.horizontal, 16).padding(.vertical, 8)
@@ -55,12 +55,23 @@ struct CommunityView: View {
                 } else {
                     ScrollView {
                         LazyVStack(spacing: 16) {
+                            if let errorMessage = viewModel.errorMessage {
+                                Text(errorMessage)
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundColor(Color(red: 0.937, green: 0.267, blue: 0.267))
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            }
                             ForEach(viewModel.posts) { post in
                                 CommunityPostCard(
                                     post: post,
                                     onLike: { viewModel.toggleLike(post: post) },
                                     onTap: { viewModel.selectedPost = post }
                                 )
+                            }
+                            if viewModel.isLoadingMore {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                    .padding(.vertical, 8)
                             }
                             if !viewModel.posts.isEmpty {
                                 Color.clear.frame(height: 1)
@@ -86,6 +97,7 @@ struct CommunityView: View {
                             .clipShape(Circle())
                             .shadow(color: Color(red: 0.498, green: 0.075, blue: 0.929).opacity(0.4), radius: 8, y: 4)
                     }
+                    .accessibilityLabel("Create community post")
                     .padding(.trailing, 20)
                     .padding(.bottom, 20)
                 }
@@ -117,8 +129,6 @@ struct CommunityPostCard: View {
     let post: APICommunityPost
     let onLike: () -> Void
     let onTap: () -> Void
-
-    private static let serverBase = "http://localhost:8080"
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -171,8 +181,7 @@ struct CommunityPostCard: View {
             }
 
             // Image
-            if let imageUrl = post.imageUrl,
-               let url = URL(string: Self.serverBase + imageUrl) {
+            if let url = AppConstants.API.mediaURL(for: post.imageUrl) {
                 AsyncImage(url: url) { phase in
                     switch phase {
                     case .success(let image):

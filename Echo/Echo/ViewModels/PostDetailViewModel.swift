@@ -15,7 +15,7 @@ final class PostDetailViewModel: ObservableObject {
 
     private var currentPage = 0
     private var hasMore     = true
-    private let pageSize    = 20
+    private let pageSize    = AppConstants.Pagination.defaultPageSize
 
     init(post: APICommunityPost) {
         self.post = post
@@ -40,7 +40,7 @@ final class PostDetailViewModel: ObservableObject {
                 if reset {
                     comments = paged.content
                 } else {
-                    comments.append(contentsOf: paged.content)
+                    appendComments(paged.content)
                 }
                 hasMore     = !paged.last
                 currentPage = paged.page + 1
@@ -60,11 +60,12 @@ final class PostDetailViewModel: ObservableObject {
                 let paged: APIPagedResponse<APIPostComment> = try await APIClient.shared.requestWithAutoRefresh(
                     .getPostComments(postId: post.id, page: currentPage, size: pageSize)
                 )
-                comments.append(contentsOf: paged.content)
+                appendComments(paged.content)
                 hasMore       = !paged.last
                 currentPage   = paged.page + 1
                 isLoadingMore = false
             } catch {
+                errorMessage = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
                 isLoadingMore = false
             }
         }
@@ -89,13 +90,7 @@ final class PostDetailViewModel: ObservableObject {
                     let parent = comments[parentIdx]
                     var replies = parent.replies ?? []
                     replies.append(newComment)
-                    comments[parentIdx] = APIPostComment(
-                        id: parent.id, userId: parent.userId,
-                        displayName: parent.displayName, content: parent.content,
-                        parentId: parent.parentId, likesCount: parent.likesCount,
-                        isLikedByMe: parent.isLikedByMe, replies: replies,
-                        createdAt: parent.createdAt
-                    )
+                    comments[parentIdx] = parent.copy(replies: replies)
                 } else {
                     comments.append(newComment)
                 }
@@ -124,14 +119,7 @@ final class PostDetailViewModel: ObservableObject {
                         if var replies = comments[i].replies,
                            replies.contains(where: { $0.id == comment.id }) {
                             replies.removeAll { $0.id == comment.id }
-                            let parent = comments[i]
-                            comments[i] = APIPostComment(
-                                id: parent.id, userId: parent.userId,
-                                displayName: parent.displayName, content: parent.content,
-                                parentId: parent.parentId, likesCount: parent.likesCount,
-                                isLikedByMe: parent.isLikedByMe, replies: replies,
-                                createdAt: parent.createdAt
-                            )
+                            comments[i] = comments[i].copy(replies: replies)
                             break
                         }
                     }
@@ -151,15 +139,7 @@ final class PostDetailViewModel: ObservableObject {
         let liked    = post.isLikedByMe
         let newCount = liked ? post.likesCount - 1 : post.likesCount + 1
         let original = post
-        post = APICommunityPost(
-            id: post.id, userId: post.userId, displayName: post.displayName,
-            content: post.content, contentType: post.contentType,
-            audioUrl: post.audioUrl, audioDuration: post.audioDuration,
-            imageUrl: post.imageUrl, emoji: post.emoji,
-            isAnonymous: post.isAnonymous, likesCount: newCount,
-            commentsCount: post.commentsCount, isLikedByMe: !liked,
-            createdAt: post.createdAt
-        )
+        post = post.copy(likesCount: newCount, isLikedByMe: !liked)
         Task {
             do {
                 if liked {
@@ -184,12 +164,7 @@ final class PostDetailViewModel: ObservableObject {
         let newCount = liked ? comment.likesCount - 1 : comment.likesCount + 1
 
         updateComment(comment.id) { c in
-            APIPostComment(
-                id: c.id, userId: c.userId, displayName: c.displayName,
-                content: c.content, parentId: c.parentId,
-                likesCount: newCount, isLikedByMe: !liked,
-                replies: c.replies, createdAt: c.createdAt
-            )
+            c.copy(likesCount: newCount, isLikedByMe: !liked)
         }
 
         Task {
@@ -233,55 +208,36 @@ final class PostDetailViewModel: ObservableObject {
                let rIdx = replies.firstIndex(where: { $0.id == id }) {
                 var updatedReplies = replies
                 updatedReplies[rIdx] = transform(replies[rIdx])
-                let parent = comments[i]
-                comments[i] = APIPostComment(
-                    id: parent.id, userId: parent.userId,
-                    displayName: parent.displayName, content: parent.content,
-                    parentId: parent.parentId, likesCount: parent.likesCount,
-                    isLikedByMe: parent.isLikedByMe, replies: updatedReplies,
-                    createdAt: parent.createdAt
-                )
+                comments[i] = comments[i].copy(replies: updatedReplies)
                 return
             }
         }
     }
 
     private func incrementCommentsCount() {
-        post = APICommunityPost(
-            id: post.id, userId: post.userId, displayName: post.displayName,
-            content: post.content, contentType: post.contentType,
-            audioUrl: post.audioUrl, audioDuration: post.audioDuration,
-            imageUrl: post.imageUrl, emoji: post.emoji,
-            isAnonymous: post.isAnonymous, likesCount: post.likesCount,
-            commentsCount: post.commentsCount + 1, isLikedByMe: post.isLikedByMe,
-            createdAt: post.createdAt
-        )
+        post = post.copy(commentsCount: post.commentsCount + 1)
     }
 
     private func decrementCommentsCount() {
-        post = APICommunityPost(
-            id: post.id, userId: post.userId, displayName: post.displayName,
-            content: post.content, contentType: post.contentType,
-            audioUrl: post.audioUrl, audioDuration: post.audioDuration,
-            imageUrl: post.imageUrl, emoji: post.emoji,
-            isAnonymous: post.isAnonymous, likesCount: post.likesCount,
-            commentsCount: max(0, post.commentsCount - 1), isLikedByMe: post.isLikedByMe,
-            createdAt: post.createdAt
-        )
+        post = post.copy(commentsCount: max(0, post.commentsCount - 1))
+    }
+
+    private func appendComments(_ newComments: [APIPostComment]) {
+        let existingIDs = Set(comments.map(\.id))
+        comments.append(contentsOf: newComments.filter { !existingIDs.contains($0.id) })
     }
 }
 
 extension APIPostComment {
     var relativeTime: String {
-        guard let date = ISO8601DateFormatter().date(from: createdAt) else { return "" }
+        guard let date = DateFormatting.parseISO8601(createdAt) else { return "" }
         let diff = Int(Date().timeIntervalSince(date))
         switch diff {
         case 0..<60:       return "\(diff)s ago"
         case 60..<3600:    return "\(diff/60)m ago"
         case 3600..<86400: return "\(diff/3600)h ago"
         default:
-            let f = DateFormatter(); f.dateStyle = .short
-            return f.string(from: date)
+            return DateFormatting.shortDate(from: date)
         }
     }
 }

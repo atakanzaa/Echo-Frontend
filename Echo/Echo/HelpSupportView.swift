@@ -1,8 +1,10 @@
 import SwiftUI
 
 struct HelpSupportView: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
+    @Environment(\.openURL) private var openURL
     @State private var expandedQuestion: String? = nil
+    @State private var infoMessage: String?
 
     private let faqs: [(id: String, q: String, a: String)] = [
         (
@@ -44,7 +46,7 @@ struct HelpSupportView: View {
             VStack(spacing: 0) {
                 // Header
                 HStack {
-                    Button(action: { selectedTab = "profile" }) {
+                    Button(action: { selectedTab = .profile }) {
                         Image(systemName: "chevron.left")
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(.white)
@@ -115,10 +117,10 @@ struct HelpSupportView: View {
                                     icon: "envelope.fill",
                                     iconColor: Color(red: 0.498, green: 0.075, blue: 0.929),
                                     title: "Email Support",
-                                    subtitle: "support@echo-app.com",
+                                    subtitle: AppConstants.Links.supportEmail,
                                     action: {
-                                        if let url = URL(string: "mailto:support@echo-app.com") {
-                                            UIApplication.shared.open(url)
+                                        if let url = URL(string: "mailto:\(AppConstants.Links.supportEmail)") {
+                                            openURL(url)
                                         }
                                     }
                                 )
@@ -128,7 +130,9 @@ struct HelpSupportView: View {
                                     iconColor: Color(red: 0.937, green: 0.722, blue: 0.267),
                                     title: "Rate Echo",
                                     subtitle: "Share your feedback on the App Store",
-                                    action: {}
+                                    action: {
+                                        infoMessage = "App Store rating will be available once Echo is live."
+                                    }
                                 )
                             }
                             .padding(16)
@@ -142,6 +146,14 @@ struct HelpSupportView: View {
                     .padding(.vertical, 8)
                 }
             }
+        }
+        .alert("Coming Soon", isPresented: .init(
+            get: { infoMessage != nil },
+            set: { if !$0 { infoMessage = nil } }
+        )) {
+            Button("OK") { infoMessage = nil }
+        } message: {
+            Text(infoMessage ?? "")
         }
     }
 }

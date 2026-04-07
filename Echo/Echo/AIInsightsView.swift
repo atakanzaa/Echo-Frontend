@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct AIInsightsView: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     @StateObject private var viewModel = AIInsightsViewModel()
     @State private var isMenuOpen = false
 
@@ -13,7 +13,7 @@ struct AIInsightsView: View {
             VStack(spacing: 0) {
                 // Header
                 HStack {
-                    Button(action: {}) {
+                    Button(action: { selectedTab = .insights }) {
                         Image(systemName: "chevron.left")
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(.white)

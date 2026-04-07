@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct AchievementsView: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     @StateObject private var viewModel = AchievementsViewModel()
     @State private var isMenuOpen = false
 
@@ -12,7 +12,7 @@ struct AchievementsView: View {
             VStack(spacing: 0) {
                 // Header
                 HStack {
-                    Button(action: {}) {
+                    Button(action: { selectedTab = .profile }) {
                         Image(systemName: "chevron.left")
                             .font(.system(size: 16, weight: .semibold)).foregroundColor(.white)
                     }

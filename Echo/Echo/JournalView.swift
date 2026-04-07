@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct JournalView: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     @StateObject private var viewModel = JournalViewModel()
     @State private var isMenuOpen = false
 
@@ -73,7 +73,7 @@ struct JournalView: View {
                     }
 
                     Spacer()
-                    BottomNavigationView(currentPage: "Journal", selectedTab: $selectedTab)
+                    BottomNavigationView(currentTab: .journal, selectedTab: $selectedTab)
                 }
 
                 // Hamburger Menu Overlay
@@ -115,7 +115,7 @@ struct APIJournalEntryCard: View {
                 Spacer()
 
                 VStack(alignment: .trailing, spacing: 4) {
-                    if entry.status == "complete", let analysis = entry.analysis {
+                    if entry.entryStatus == .complete, let analysis = entry.analysis {
                         HStack(spacing: 6) {
                             Circle()
                                 .fill(entry.emotionalState.color)
@@ -130,7 +130,7 @@ struct APIJournalEntryCard: View {
                         .background(entry.emotionalState.color.opacity(0.2))
                         .cornerRadius(6)
                     } else {
-                        Text(entry.status.capitalized)
+                        Text(entry.entryStatus.displayTitle)
                             .font(.system(size: 11, weight: .medium))
                             .foregroundColor(Color(red: 0.498, green: 0.075, blue: 0.929))
                             .padding(.vertical, 4)

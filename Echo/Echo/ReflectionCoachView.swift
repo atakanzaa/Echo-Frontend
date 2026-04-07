@@ -186,10 +186,8 @@ struct ReflectionCoachView: View {
     }
 
     private func sessionTimestamp() -> String {
-        let f = DateFormatter()
-        f.dateFormat = "EEEE, HH:mm"
-        f.locale = Locale(identifier: "tr_TR")
-        return f.string(from: Date())
+        let date = Date()
+        return "\(DateFormatting.weekdayMonthDayUppercased(from: date)), \(DateFormatting.shortTime(from: date))"
     }
 }
 

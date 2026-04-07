@@ -5,7 +5,7 @@ import Combine
 final class CommunityViewModel: ObservableObject {
 
     @Published var posts:          [APICommunityPost] = []
-    @Published var selectedTab     = "global"
+    @Published var selectedTab: CommunityTab = .global
     @Published var isLoading       = false
     @Published var isLoadingMore   = false
     @Published var showCreatePost  = false
@@ -14,11 +14,11 @@ final class CommunityViewModel: ObservableObject {
 
     private var currentPage  = 0
     private var hasMore      = true
-    private let pageSize     = 20
+    private let pageSize     = AppConstants.Pagination.defaultPageSize
 
     // MARK: — Feed
 
-    func loadFeed(tab: String? = nil, reset: Bool = true) {
+    func loadFeed(tab: CommunityTab? = nil, reset: Bool = true) {
         let activeTab = tab ?? selectedTab
         if tab != nil { selectedTab = activeTab }
         if reset {
@@ -38,7 +38,7 @@ final class CommunityViewModel: ObservableObject {
                 if reset {
                     posts = paged.content
                 } else {
-                    posts.append(contentsOf: paged.content)
+                    appendPosts(paged.content)
                 }
                 hasMore     = !paged.last
                 currentPage = paged.page + 1
@@ -58,11 +58,12 @@ final class CommunityViewModel: ObservableObject {
                 let paged: APIPagedResponse<APICommunityPost> = try await APIClient.shared.requestWithAutoRefresh(
                     .getCommunityFeed(tab: selectedTab, page: currentPage, size: pageSize)
                 )
-                posts.append(contentsOf: paged.content)
+                appendPosts(paged.content)
                 hasMore       = !paged.last
                 currentPage   = paged.page + 1
                 isLoadingMore = false
             } catch {
+                errorMessage = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
                 isLoadingMore = false
             }
         }
@@ -74,22 +75,7 @@ final class CommunityViewModel: ObservableObject {
         guard let idx = posts.firstIndex(where: { $0.id == post.id }) else { return }
         let liked    = posts[idx].isLikedByMe
         let newCount = liked ? posts[idx].likesCount - 1 : posts[idx].likesCount + 1
-        posts[idx]   = APICommunityPost(
-            id:            post.id,
-            userId:        post.userId,
-            displayName:   post.displayName,
-            content:       post.content,
-            contentType:   post.contentType,
-            audioUrl:      post.audioUrl,
-            audioDuration: post.audioDuration,
-            imageUrl:      post.imageUrl,
-            emoji:         post.emoji,
-            isAnonymous:   post.isAnonymous,
-            likesCount:    newCount,
-            commentsCount: post.commentsCount,
-            isLikedByMe:   !liked,
-            createdAt:     post.createdAt
-        )
+        posts[idx]   = post.copy(likesCount: newCount, isLikedByMe: !liked)
         Task {
             do {
                 if liked {
@@ -122,7 +108,7 @@ final class CommunityViewModel: ObservableObject {
             )
         } else {
             let body = CreatePostBody(
-                content: content ?? "", contentType: "text",
+                content: content ?? "", contentType: .text,
                 emoji: emoji, isAnonymous: isAnonymous
             )
             response = try await APIClient.shared.requestWithAutoRefresh(
@@ -172,19 +158,23 @@ final class CommunityViewModel: ObservableObject {
             }
         }
     }
+
+    private func appendPosts(_ newPosts: [APICommunityPost]) {
+        let existingIDs = Set(posts.map(\.id))
+        posts.append(contentsOf: newPosts.filter { !existingIDs.contains($0.id) })
+    }
 }
 
 extension APICommunityPost {
     var relativeTime: String {
-        guard let date = ISO8601DateFormatter().date(from: createdAt) else { return "" }
+        guard let date = DateFormatting.parseISO8601(createdAt) else { return "" }
         let diff = Int(Date().timeIntervalSince(date))
         switch diff {
         case 0..<60:     return "\(diff)s ago"
         case 60..<3600:  return "\(diff/60)m ago"
         case 3600..<86400: return "\(diff/3600)h ago"
         default:
-            let f = DateFormatter(); f.dateStyle = .short
-            return f.string(from: date)
+            return DateFormatting.shortDate(from: date)
         }
     }
 

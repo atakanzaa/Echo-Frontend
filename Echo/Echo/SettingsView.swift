@@ -1,7 +1,8 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
+    @Environment(\.openURL) private var openURL
     @State private var notificationsEnabled = true
     @State private var dailyReminder = true
     @State private var darkMode = true
@@ -9,6 +10,7 @@ struct SettingsView: View {
     @State private var soundEnabled = true
     @State private var showDeleteAlert = false
     @State private var isMenuOpen = false
+    @State private var infoMessage: String?
     
     var body: some View {
         ZStack {
@@ -129,7 +131,8 @@ struct SettingsView: View {
                                 icon: "hand.raised.circle.fill",
                                 title: "Data & Privacy",
                                 subtitle: "Learn about our practices",
-                                showArrow: true
+                                showArrow: true,
+                                action: { openURL(AppConstants.Links.privacy) }
                             )
                         }
                         
@@ -139,7 +142,8 @@ struct SettingsView: View {
                                 icon: "questionmark.circle.fill",
                                 title: "Help & FAQ",
                                 subtitle: "Get answers and tips",
-                                showArrow: true
+                                showArrow: true,
+                                action: { selectedTab = .help }
                             )
                             
                             Divider()
@@ -149,7 +153,12 @@ struct SettingsView: View {
                                 icon: "envelope.circle.fill",
                                 title: "Contact Support",
                                 subtitle: "Get in touch with us",
-                                showArrow: true
+                                showArrow: true,
+                                action: {
+                                    if let url = URL(string: "mailto:\(AppConstants.Links.supportEmail)") {
+                                        openURL(url)
+                                    }
+                                }
                             )
                             
                             Divider()
@@ -159,7 +168,10 @@ struct SettingsView: View {
                                 icon: "star.circle.fill",
                                 title: "Rate Our App",
                                 subtitle: "Share your feedback",
-                                showArrow: true
+                                showArrow: true,
+                                action: {
+                                    infoMessage = "App Store ratings will be enabled when Echo launches publicly."
+                                }
                             )
                         }
                         
@@ -168,7 +180,7 @@ struct SettingsView: View {
                             SettingsStaticItemView(
                                 icon: "info.circle.fill",
                                 title: "App Version",
-                                subtitle: "1.0.0"
+                                subtitle: AppConstants.AppInfo.shortVersion
                             )
                             
                             Divider()
@@ -178,7 +190,8 @@ struct SettingsView: View {
                                 icon: "doc.circle.fill",
                                 title: "Terms of Service",
                                 subtitle: "Read our terms",
-                                showArrow: true
+                                showArrow: true,
+                                action: { openURL(AppConstants.Links.terms) }
                             )
                         }
                         
@@ -216,13 +229,21 @@ struct SettingsView: View {
                 
                 Spacer()
                 
-                BottomNavigationView(currentPage: "Settings", selectedTab: $selectedTab)
+                BottomNavigationView(currentTab: .settings, selectedTab: $selectedTab)
             }
             .alert("Delete All Data?", isPresented: $showDeleteAlert) {
                 Button("Cancel", role: .cancel) { }
                 Button("Delete", role: .destructive) { }
             } message: {
                 Text("This action cannot be undone. All journal entries and data will be permanently deleted.")
+            }
+            .alert("Coming Soon", isPresented: .init(
+                get: { infoMessage != nil },
+                set: { if !$0 { infoMessage = nil } }
+            )) {
+                Button("OK") { infoMessage = nil }
+            } message: {
+                Text(infoMessage ?? "")
             }
             
             if isMenuOpen {
@@ -267,9 +288,10 @@ struct SettingsItemView: View {
     let title: String
     let subtitle: String
     let showArrow: Bool
+    var action: (() -> Void)? = nil
     
     var body: some View {
-        Button(action: {}) {
+        Button(action: { action?() }) {
             HStack(spacing: 16) {
                 Image(systemName: icon)
                     .font(.system(size: 18))
@@ -288,13 +310,15 @@ struct SettingsItemView: View {
                 
                 Spacer()
                 
-                if showArrow {
+                if showArrow && action != nil {
                     Image(systemName: "chevron.right")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
                 }
             }
         }
+        .buttonStyle(.plain)
+        .allowsHitTesting(action != nil)
     }
 }
 

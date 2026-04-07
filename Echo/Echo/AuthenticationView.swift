@@ -8,13 +8,22 @@ struct AuthenticationView: View {
     @State private var confirmPassword = ""
     @State private var showPassword   = false
     @State private var agreeToTerms   = false
+    @State private var unsupportedAuthMessage: String?
 
     @StateObject private var viewModel = AuthViewModel()
-    @EnvironmentObject  private var appState: AppState
+    @Environment(\.openURL) private var openURL
 
     var body: some View {
         ZStack {
-            Color(red: 0.098, green: 0.063, blue: 0.133)
+            LinearGradient(
+                gradient: Gradient(colors: [
+                    Color(red: 0.051, green: 0.094, blue: 0.176),
+                    Color(red: 0.098, green: 0.063, blue: 0.133),
+                    Color(red: 0.165, green: 0.114, blue: 0.212)
+                ]),
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
@@ -61,8 +70,8 @@ struct AuthenticationView: View {
                         .padding(.bottom, 24)
                         
                         // Error message
-                        if let error = viewModel.errorMessage {
-                            Text(error)
+                        if let message = displayedMessage {
+                            Text(message)
                                 .font(.system(size: 13, weight: .medium))
                                 .foregroundColor(.red)
                                 .multilineTextAlignment(.center)
@@ -85,6 +94,8 @@ struct AuthenticationView: View {
                                         .padding(.vertical, 12)
                                         .background(Color(red: 0.141, green: 0.098, blue: 0.188))
                                         .cornerRadius(12)
+                                        .textInputAutocapitalization(.words)
+                                        .autocorrectionDisabled()
                                 }
 
                                 // Email Input
@@ -101,7 +112,8 @@ struct AuthenticationView: View {
                                         .background(Color(red: 0.141, green: 0.098, blue: 0.188))
                                         .cornerRadius(12)
                                         .keyboardType(.emailAddress)
-                                        .autocapitalization(.none)
+                                        .textInputAutocapitalization(.never)
+                                        .autocorrectionDisabled()
                                 }
                                 
                                 // Password Input
@@ -113,11 +125,11 @@ struct AuthenticationView: View {
                                     HStack {
                                         if showPassword {
                                             TextField("Enter password", text: $password)
-                        .font(.system(size: 16, weight: .regular))
+                                                .font(.system(size: 16, weight: .regular))
                                                 .foregroundColor(.white)
                                         } else {
                                             SecureField("Enter password", text: $password)
-                        .font(.system(size: 16, weight: .regular))
+                                                .font(.system(size: 16, weight: .regular))
                                                 .foregroundColor(.white)
                                         }
                                         
@@ -148,23 +160,29 @@ struct AuthenticationView: View {
                                 }
                                 
                                 // Terms Agreement
-                                HStack(spacing: 8) {
-                                    Button(action: { agreeToTerms.toggle() }) {
-                                        Image(systemName: agreeToTerms ? "checkmark.square.fill" : "square")
-                                            .font(.system(size: 16, weight: .semibold))
+                                VStack(alignment: .leading, spacing: 8) {
+                                    HStack(spacing: 8) {
+                                        Button(action: { agreeToTerms.toggle() }) {
+                                            Image(systemName: agreeToTerms ? "checkmark.square.fill" : "square")
+                                                .font(.system(size: 16, weight: .semibold))
+                                                .foregroundColor(Color(red: 0.498, green: 0.075, blue: 0.929))
+                                        }
+
+                                        Text("I agree to the terms and privacy policy.")
+                                            .font(.system(size: 13, weight: .regular))
+                                            .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
+
+                                        Spacer()
+                                    }
+
+                                    HStack(spacing: 16) {
+                                        Button("Terms of Service") { openURL(AppConstants.Links.terms) }
+                                            .font(.system(size: 13, weight: .medium))
+                                            .foregroundColor(Color(red: 0.498, green: 0.075, blue: 0.929))
+                                        Button("Privacy Policy") { openURL(AppConstants.Links.privacy) }
+                                            .font(.system(size: 13, weight: .medium))
                                             .foregroundColor(Color(red: 0.498, green: 0.075, blue: 0.929))
                                     }
-                                    
-                                    VStack(spacing: 0) {
-                                        Text("I agree to the ")
-                                        + Text("Terms of Service").foregroundColor(Color(red: 0.498, green: 0.075, blue: 0.929))
-                                        + Text(" and ")
-                                        + Text("Privacy Policy").foregroundColor(Color(red: 0.498, green: 0.075, blue: 0.929))
-                                    }
-                                    .font(.system(size: 13, weight: .regular))
-                                    .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
-                                    
-                                    Spacer()
                                 }
                             }
                         }
@@ -173,11 +191,12 @@ struct AuthenticationView: View {
                         VStack(spacing: 12) {
                             if isSigningUp {
                                 Button {
+                                    guard canSubmitSignUp else { return }
                                     Task {
                                         await viewModel.register(
-                                            email: email,
+                                            email: normalizedEmail,
                                             password: password,
-                                            displayName: displayName
+                                            displayName: trimmedDisplayName
                                         )
                                     }
                                 } label: {
@@ -195,11 +214,11 @@ struct AuthenticationView: View {
                                     .foregroundColor(.white)
                                     .cornerRadius(9999)
                                 }
-                                .disabled(viewModel.isLoading || !agreeToTerms)
+                                .disabled(!canSubmitSignUp)
                                 .padding(.vertical, 8)
                             }
                             
-                            Button(action: {}) {
+                            Button(action: { unsupportedAuthMessage = "Sign in with Apple will be available soon." }) {
                                 HStack(spacing: 10) {
                                     Image(systemName: "applelogo")
                                         .font(.system(size: 16, weight: .semibold))
@@ -214,7 +233,7 @@ struct AuthenticationView: View {
                                 .cornerRadius(9999)
                             }
                             
-                            Button(action: {}) {
+                            Button(action: { unsupportedAuthMessage = "Google Sign-In will be available soon." }) {
                                 HStack(spacing: 10) {
                                     Image(systemName: "g.circle.fill")
                                         .font(.system(size: 16, weight: .semibold))
@@ -252,7 +271,8 @@ struct AuthenticationView: View {
                                         .background(Color(red: 0.141, green: 0.098, blue: 0.188))
                                         .cornerRadius(12)
                                         .keyboardType(.emailAddress)
-                                        .autocapitalization(.none)
+                                        .textInputAutocapitalization(.never)
+                                        .autocorrectionDisabled()
 
                                     SecureField("Password", text: $password)
                                         .font(.system(size: 16))
@@ -263,7 +283,8 @@ struct AuthenticationView: View {
                                         .cornerRadius(12)
 
                                     Button {
-                                        Task { await viewModel.login(email: email, password: password) }
+                                        guard canSubmitLogin else { return }
+                                        Task { await viewModel.login(email: normalizedEmail, password: password) }
                                     } label: {
                                         HStack {
                                             if viewModel.isLoading {
@@ -283,7 +304,7 @@ struct AuthenticationView: View {
                                                 .strokeBorder(Color(red: 0.498, green: 0.075, blue: 0.929).opacity(0.3), lineWidth: 1)
                                         )
                                     }
-                                    .disabled(viewModel.isLoading)
+                                    .disabled(!canSubmitLogin)
                                 }
                             }
                         }
@@ -294,7 +315,10 @@ struct AuthenticationView: View {
                                 .font(.system(size: 14, weight: .regular))
                                 .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
                             
-                            Button(action: { isSigningUp.toggle() }) {
+                            Button(action: {
+                                isSigningUp.toggle()
+                                viewModel.errorMessage = nil
+                            }) {
                                 Text(isSigningUp ? "Log in" : "Sign up")
                                     .font(.system(size: 14, weight: .semibold))
                                     .foregroundColor(Color(red: 0.498, green: 0.075, blue: 0.929))
@@ -305,7 +329,7 @@ struct AuthenticationView: View {
                         
                         // Terms & Privacy Links
                         HStack(spacing: 16) {
-                            Button(action: {}) {
+                            Button(action: { openURL(AppConstants.Links.terms) }) {
                                 Text("Terms of Service")
                                     .font(.system(size: 12, weight: .regular))
                                     .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
@@ -314,7 +338,7 @@ struct AuthenticationView: View {
                             Text("•")
                                 .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
                             
-                            Button(action: {}) {
+                            Button(action: { openURL(AppConstants.Links.privacy) }) {
                                 Text("Privacy Policy")
                                     .font(.system(size: 12, weight: .regular))
                                     .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
@@ -328,5 +352,68 @@ struct AuthenticationView: View {
                 }
             }
         }
+        .alert("Coming Soon", isPresented: .init(
+            get: { unsupportedAuthMessage != nil },
+            set: { if !$0 { unsupportedAuthMessage = nil } }
+        )) {
+            Button("OK") { unsupportedAuthMessage = nil }
+        } message: {
+            Text(unsupportedAuthMessage ?? "")
+        }
+    }
+}
+
+private extension AuthenticationView {
+    var normalizedEmail: String {
+        email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    }
+
+    var trimmedDisplayName: String {
+        displayName.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    var isValidEmail: Bool {
+        let email = normalizedEmail
+        guard !email.isEmpty else { return false }
+        let pattern = #"^[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"#
+        return email.range(of: pattern, options: .regularExpression) != nil
+    }
+
+    var signUpValidationMessage: String? {
+        if trimmedDisplayName.count < 2 { return "Please enter your name." }
+        if !isValidEmail { return "Please enter a valid email address." }
+        if password.count < 8 { return "Password must be at least 8 characters." }
+        if confirmPassword != password { return "Passwords do not match." }
+        if !agreeToTerms { return "Please accept the terms to continue." }
+        return nil
+    }
+
+    var loginValidationMessage: String? {
+        if !isValidEmail { return "Please enter a valid email address." }
+        if password.isEmpty { return "Please enter your password." }
+        return nil
+    }
+
+    var displayedMessage: String? {
+        if let errorMessage = viewModel.errorMessage, !errorMessage.isEmpty {
+            return errorMessage
+        }
+        guard shouldShowValidationMessage else { return nil }
+        return isSigningUp ? signUpValidationMessage : loginValidationMessage
+    }
+
+    var canSubmitSignUp: Bool {
+        !viewModel.isLoading && signUpValidationMessage == nil
+    }
+
+    var canSubmitLogin: Bool {
+        !viewModel.isLoading && loginValidationMessage == nil
+    }
+
+    var shouldShowValidationMessage: Bool {
+        if isSigningUp {
+            return !displayName.isEmpty || !email.isEmpty || !password.isEmpty || !confirmPassword.isEmpty || agreeToTerms
+        }
+        return !email.isEmpty || !password.isEmpty
     }
 }

@@ -3,7 +3,7 @@ import SwiftUI
 // MARK: — Chat Geçmişi Listesi
 
 struct CoachSessionsListView: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     @StateObject private var viewModel = CoachViewModel()
 
     @State private var isMenuOpen      = false
@@ -291,7 +291,7 @@ struct SessionRowView: View {
     }
 
     private func relativeDate(_ iso: String) -> String {
-        guard let date = ISO8601DateFormatter().date(from: iso) else { return iso }
+        guard let date = DateFormatting.parseISO8601(iso) else { return iso }
         let diff = Calendar.current.dateComponents([.minute, .hour, .day], from: date, to: Date())
         if let day = diff.day, day >= 2  { return "\(day) gün önce" }
         if let day = diff.day, day == 1  { return "Dün" }

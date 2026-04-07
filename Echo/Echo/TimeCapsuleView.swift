@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct TimeCapsuleView: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     @StateObject private var viewModel = TimeCapsuleViewModel()
     @State private var isMenuOpen = false
 
@@ -24,7 +24,7 @@ struct TimeCapsuleView: View {
             VStack(spacing: 0) {
                 // Header
                 HStack {
-                    Button(action: {}) {
+                    Button(action: { selectedTab = .profile }) {
                         Image(systemName: "chevron.left")
                             .font(.system(size: 16, weight: .semibold)).foregroundColor(.white)
                     }
@@ -48,6 +48,12 @@ struct TimeCapsuleView: View {
                 } else {
                     ScrollView {
                         VStack(spacing: 32) {
+                            if let errorMessage = viewModel.errorMessage {
+                                Text(errorMessage)
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundColor(Color(red: 0.937, green: 0.267, blue: 0.267))
+                                    .padding(.horizontal, 24)
+                            }
                             // Countdown Section
                             VStack(spacing: 32) {
                                 VStack(spacing: 8) {
@@ -150,9 +156,9 @@ struct APISealedMemoryCard: View {
                 .frame(width: 40, height: 40)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(capsule.title ?? capsule.contentType.capitalized + " Capsule")
+                Text(capsule.title ?? capsule.capsuleContentType.displayTitle + " Capsule")
                     .font(.system(size: 15, weight: .semibold)).foregroundColor(.white).lineLimit(1)
-                Text(capsule.contentType.capitalized + " • Unlock \(capsule.unlockDateFormatted)")
+                Text(capsule.capsuleContentType.displayTitle + " • Unlock \(capsule.unlockDateFormatted)")
                     .font(.system(size: 12)).foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
             }
 
@@ -238,6 +244,13 @@ struct CreateCapsuleSheet: View {
                                 : Color.white.opacity(0.05))
                             .cornerRadius(12)
                         }
+                    }
+
+                    if let errorMessage = viewModel.errorMessage {
+                        Text(errorMessage)
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(Color(red: 0.937, green: 0.267, blue: 0.267))
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
 
                     Spacer()

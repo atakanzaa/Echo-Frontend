@@ -29,7 +29,7 @@ enum APIRouter {
     case getAIInsights(period: Int)
 
     // Community
-    case getCommunityFeed(tab: String, page: Int, size: Int)
+    case getCommunityFeed(tab: CommunityTab, page: Int, size: Int)
     case getCommunityPost(id: String)
     case createCommunityPost(CreatePostBody)
     case createCommunityPostWithImage(imageData: Data, filename: String, content: String?, emoji: String?, isAnonymous: Bool)
@@ -79,19 +79,16 @@ enum APIRouter {
 // MARK: — URLRequest Builder
 
 extension APIRouter {
-
-    private static let baseURL = "http://localhost:8080/api/v1"
-
     func asURLRequest() throws -> URLRequest {
         let (path, method, body, isMultipart) = components()
 
-        guard let url = URL(string: Self.baseURL + path) else {
+        guard let url = URL(string: AppConstants.API.baseURL + path) else {
             throw NetworkError.invalidURL
         }
 
         var request = URLRequest(url: url)
         request.httpMethod = method
-        request.timeoutInterval = 30
+        request.timeoutInterval = timeoutInterval
 
         if let body = body, !isMultipart {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -99,6 +96,26 @@ extension APIRouter {
         }
 
         return request
+    }
+
+    private var timeoutInterval: TimeInterval {
+        switch self {
+        case .uploadJournalEntry,
+             .createCommunityPostWithImage,
+             .createCapsule:
+            return AppConstants.Timeout.upload
+
+        case .getAIInsights,
+             .getSummary,
+             .createCoachSession,
+             .createCoachSessionWithJournal,
+             .getCoachMessages,
+             .sendCoachMessage:
+            return AppConstants.Timeout.ai
+
+        default:
+            return AppConstants.Timeout.standard
+        }
     }
 
     // swiftlint:disable function_body_length cyclomatic_complexity
@@ -139,7 +156,7 @@ extension APIRouter {
 
         // Community
         case .getCommunityFeed(let tab, let page, let size):
-            return ("/community/feed?tab=\(tab)&page=\(page)&size=\(size)", "GET", nil, false)
+            return ("/community/feed?tab=\(tab.rawValue)&page=\(page)&size=\(size)", "GET", nil, false)
         case .getCommunityPost(let id):
             return ("/community/posts/\(id)", "GET", nil, false)
         case .createCommunityPost(let b): return ("/community/posts", "POST", try? encoder.encode(b), false)

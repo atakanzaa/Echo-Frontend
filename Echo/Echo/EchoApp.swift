@@ -14,15 +14,35 @@ struct EchoApp: App {
 
     var body: some Scene {
         WindowGroup {
-            Group {
-                if appState.isAuthenticated {
-                    ContentView()
-                } else {
-                    AuthenticationView()
+            ZStack {
+                Group {
+                    if appState.isAuthenticated {
+                        ContentView()
+                    } else {
+                        AuthenticationView()
+                    }
+                }
+
+                if appState.isRestoringSession {
+                    ZStack {
+                        Color.black.opacity(0.35).ignoresSafeArea()
+                        VStack(spacing: 12) {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            Text("Restoring your session…")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.white)
+                        }
+                        .padding(24)
+                        .background(Color.black.opacity(0.45))
+                        .cornerRadius(16)
+                    }
+                    .transition(.opacity)
                 }
             }
             .environmentObject(appState)
             .animation(.easeInOut(duration: 0.3), value: appState.isAuthenticated)
+            .animation(.easeInOut(duration: 0.2), value: appState.isRestoringSession)
         }
     }
 }

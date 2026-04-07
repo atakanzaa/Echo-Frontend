@@ -1,10 +1,11 @@
 import SwiftUI
 
 struct PremiumView: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
+    @Environment(\.openURL) private var openURL
     @State private var selectedPlan: String = "yearly"
-    @State private var showCloseButton = true
     @State private var isMenuOpen = false
+    @State private var purchaseMessage: String?
     
     var body: some View {
         ZStack {
@@ -27,7 +28,7 @@ struct PremiumView: View {
                         
                         Spacer()
                         
-                        Button(action: {}) {
+                        Button(action: { selectedTab = .profile }) {
                             Image(systemName: "xmark")
                                 .font(.system(size: 16, weight: .semibold))
                                 .foregroundColor(.white)
@@ -249,7 +250,7 @@ struct PremiumView: View {
                         .padding(.horizontal, 20)
                         
                         // CTA Button
-                        Button(action: {}) {
+                        Button(action: { purchaseMessage = "Purchases will be available soon." }) {
                             Text("Start Free Trial")
                                 .font(.system(size: 16, weight: .bold))
                                 .frame(maxWidth: .infinity)
@@ -269,7 +270,7 @@ struct PremiumView: View {
                         
                         // Footer Links
                         HStack(spacing: 12) {
-                            Button(action: {}) {
+                            Button(action: { purchaseMessage = "Restore purchases will be available soon." }) {
                                 Text("Restore Purchase")
                                     .font(.system(size: 12, weight: .regular))
                                     .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
@@ -278,7 +279,7 @@ struct PremiumView: View {
                             Text("•")
                                 .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
                             
-                            Button(action: {}) {
+                            Button(action: { openURL(AppConstants.Links.terms) }) {
                                 Text("Terms of Service")
                                     .font(.system(size: 12, weight: .regular))
                                     .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
@@ -287,7 +288,7 @@ struct PremiumView: View {
                             Text("•")
                                 .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
                             
-                            Button(action: {}) {
+                            Button(action: { openURL(AppConstants.Links.privacy) }) {
                                 Text("Privacy Policy")
                                     .font(.system(size: 12, weight: .regular))
                                     .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
@@ -309,6 +310,14 @@ struct PremiumView: View {
                 .transition(.move(edge: .leading))
                 .zIndex(1)
             }
+        }
+        .alert("Coming Soon", isPresented: .init(
+            get: { purchaseMessage != nil },
+            set: { if !$0 { purchaseMessage = nil } }
+        )) {
+            Button("OK") { purchaseMessage = nil }
+        } message: {
+            Text(purchaseMessage ?? "")
         }
     }
 }

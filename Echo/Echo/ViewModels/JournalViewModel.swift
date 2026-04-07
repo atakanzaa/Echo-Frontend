@@ -26,9 +26,7 @@ final class JournalViewModel: ObservableObject {
     }
 
     func loadByDate(_ date: Date) {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        let dateStr = formatter.string(from: date)
+        let dateStr = DateFormatting.apiDateString(from: date)
         isLoading    = true
         errorMessage = nil
         Task {
@@ -52,16 +50,14 @@ extension APIJournalEntry {
 
     /// "Today", "Yesterday", "2 days ago" veya kısa tarih
     var relativeDate: String {
-        guard let date = ISO8601DateFormatter().date(from: recordedAt) else { return entryDate }
+        guard let date = DateFormatting.parseISO8601(recordedAt) else { return entryDate }
         let days = Calendar.current.dateComponents([.day], from: date, to: Date()).day ?? 0
         switch days {
         case 0:  return "Today"
         case 1:  return "Yesterday"
         case 2:  return "2 days ago"
         default:
-            let f = DateFormatter()
-            f.dateStyle = .medium
-            return f.string(from: date)
+            return DateFormatting.mediumDate(from: date)
         }
     }
 
@@ -75,13 +71,13 @@ extension APIJournalEntry {
 
     /// moodCategory (primary) or moodScore-range (fallback) → EmotionalState
     var emotionalState: EmotionalState {
-        if let category = analysis?.moodCategory {
+        if let category = analysis?.resolvedMoodCategory {
             switch category {
-            case "STRESS":    return .stress
-            case "NEUTRAL":   return .neutral
-            case "CALM":      return .calm
-            case "MOTIVATED": return .motivated
-            default: break
+            case .stress:    return .stress
+            case .neutral:   return .neutral
+            case .calm:      return .calm
+            case .motivated: return .motivated
+            case .unknown:   break
             }
         }
         guard let score = analysis?.moodScore else { return .neutral }

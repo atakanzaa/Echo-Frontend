@@ -3,7 +3,7 @@ import Combine
 
 struct JournalDetailView: View {
     let entry: APIJournalEntry
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     @State private var showTranscript = false
     @State private var navigateToCoach = false
     @Environment(\.dismiss) private var dismiss
@@ -128,7 +128,7 @@ struct JournalDetailView: View {
                     // MARK: — Coach ile Konuş butonu
                     Button(action: {
                         CoachJournalContext.shared.pendingJournalEntryId = entry.id
-                        selectedTab = "coach"
+                        selectedTab = .coach
                         dismiss()
                     }) {
                         HStack(spacing: 10) {
@@ -218,11 +218,8 @@ struct JournalDetailView: View {
     // MARK: — Helpers
 
     private var formattedDate: String {
-        guard let date = ISO8601DateFormatter().date(from: entry.recordedAt) else { return entry.entryDate }
-        let f = DateFormatter()
-        f.dateFormat = "d MMMM yyyy, EEEE"
-        f.locale = Locale(identifier: "tr_TR")
-        return f.string(from: date)
+        guard let date = DateFormatting.parseISO8601(entry.recordedAt) else { return entry.entryDate }
+        return DateFormatting.fullJournalDate(from: date)
     }
 
     private func sectionCard<Content: View>(title: String, icon: String, @ViewBuilder content: () -> Content) -> some View {

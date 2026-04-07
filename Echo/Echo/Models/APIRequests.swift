@@ -33,7 +33,7 @@ struct UpdateProfileBody: Encodable {
 
 struct CreatePostBody: Encodable {
     let content:     String
-    let contentType: String   // "text" | "voice" | "mixed"
+    let contentType: PostContentType
     let emoji:       String?
     let isAnonymous: Bool
 }
@@ -47,7 +47,7 @@ struct CreateCommentBody: Encodable {
 
 struct SendCoachMessageBody: Encodable {
     let content: String
-    let role:    String   // "user"
+    let role:    CoachMessageRole
 }
 
 /// Journal hakkinda coach oturumu baslatma
@@ -60,7 +60,7 @@ struct CreateCoachSessionBody: Encodable {
 struct CreateCapsuleBody: Encodable {
     let title:       String?
     let contentText: String?
-    let contentType: String
+    let contentType: CapsuleContentType
     let unlockAt:    String   // ISO 8601
 }
 

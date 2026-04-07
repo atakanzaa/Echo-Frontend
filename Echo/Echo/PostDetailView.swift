@@ -10,7 +10,6 @@ struct PostDetailView: View {
     @StateObject private var viewModel: PostDetailViewModel
     @Environment(\.dismiss) private var dismiss
 
-    private static let serverBase = "http://localhost:8080"
     private var currentUserId: String { AppState.shared.currentUser?.id ?? "" }
 
     init(post: APICommunityPost, communityViewModel: CommunityViewModel) {
@@ -54,6 +53,14 @@ struct PostDetailView: View {
                         Divider().background(Color.white.opacity(0.1))
                             .padding(.vertical, 8)
 
+                        if let errorMessage = viewModel.errorMessage {
+                            Text(errorMessage)
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(Color(red: 0.937, green: 0.267, blue: 0.267))
+                                .padding(.horizontal, 16)
+                                .padding(.bottom, 12)
+                        }
+
                         // Comments
                         if viewModel.isLoading && viewModel.comments.isEmpty {
                             HStack { Spacer(); ProgressView(); Spacer() }
@@ -93,6 +100,11 @@ struct PostDetailView: View {
                                 }
 
                                 if !viewModel.comments.isEmpty {
+                                    if viewModel.isLoadingMore {
+                                        ProgressView()
+                                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                            .padding(.vertical, 12)
+                                    }
                                     Color.clear.frame(height: 1)
                                         .onAppear { viewModel.loadMoreComments() }
                                 }
@@ -156,8 +168,7 @@ struct PostDetailView: View {
 
     private var postImageSection: some View {
         Group {
-            if let imageUrl = viewModel.post.imageUrl,
-               let url = URL(string: Self.serverBase + imageUrl) {
+            if let url = AppConstants.API.mediaURL(for: viewModel.post.imageUrl) {
                 AsyncImage(url: url) { phase in
                     switch phase {
                     case .success(let image):

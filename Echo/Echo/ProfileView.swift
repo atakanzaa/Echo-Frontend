@@ -2,7 +2,6 @@ import SwiftUI
 
 struct ProfileView: View {
     @StateObject private var viewModel = ProfileViewModel()
-    @EnvironmentObject private var appState: AppState
 
     var body: some View {
         ZStack {
@@ -11,17 +10,11 @@ struct ProfileView: View {
             VStack(spacing: 0) {
                 // Header
                 HStack {
-                    Button(action: {}) {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 16, weight: .semibold)).foregroundColor(.white)
-                    }
+                    Color.clear.frame(width: 24, height: 24)
                     Spacer()
                     Text("Profile").font(.system(size: 18, weight: .bold)).foregroundColor(.white)
                     Spacer()
-                    Button(action: {}) {
-                        Image(systemName: "ellipsis")
-                            .font(.system(size: 16, weight: .semibold)).foregroundColor(.white)
-                    }
+                    Color.clear.frame(width: 24, height: 24)
                 }
                 .padding(.horizontal, 16).padding(.vertical, 16)
 
@@ -124,7 +117,7 @@ struct ProfileView: View {
                             .padding(.horizontal, 24).padding(.top, 16)
                             .disabled(viewModel.isLoggingOut)
 
-                            Text("Version 2.4.0")
+                            Text("Version \(AppConstants.AppInfo.shortVersion)")
                                 .font(.system(size: 12)).foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686).opacity(0.6))
                                 .padding(.top, 24).padding(.bottom, 40)
                         }

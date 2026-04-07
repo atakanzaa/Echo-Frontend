@@ -9,57 +9,60 @@ import SwiftUI
 import Combine
 
 struct ContentView: View {
-    @State private var selectedTab: String = "home"
-    
+    @State private var selectedTab: AppTab = .home
+
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
-                // Main Content
-                Group {
-                    if selectedTab == "home" {
-                        VoiceRecordingView(selectedTab: $selectedTab)
-                    } else if selectedTab == "community" {
-                        CommunityView(selectedTab: $selectedTab)
-                    } else if selectedTab == "coach" {
-                        NavigationStack {
-                            CoachSessionsListView(selectedTab: $selectedTab)
-                        }
-                    } else if selectedTab == "profile" {
-                        ProfileViewWrapper(selectedTab: $selectedTab)
-                    } else if selectedTab == "journal" {
-                        JournalViewPage(selectedTab: $selectedTab)
-                    } else if selectedTab == "calendar" {
-                        CalendarViewPage(selectedTab: $selectedTab)
-                    } else if selectedTab == "insights" {
-                        InsightsViewPage(selectedTab: $selectedTab)
-                    } else if selectedTab == "aiinsights" {
-                        AIInsightsViewPage(selectedTab: $selectedTab)
-                    } else if selectedTab == "achievements" {
-                        AchievementsViewPage(selectedTab: $selectedTab)
-                    } else if selectedTab == "timecapsule" {
-                        TimeCapsuleViewPage(selectedTab: $selectedTab)
-                    } else if selectedTab == "premium" {
-                        PremiumViewPage(selectedTab: $selectedTab)
-                    } else if selectedTab == "settings" {
-                        SettingsViewPage(selectedTab: $selectedTab)
-                    } else if selectedTab == "notifications" {
-                        NotificationsViewPage(selectedTab: $selectedTab)
-                    } else if selectedTab == "help" {
-                        HelpSupportViewPage(selectedTab: $selectedTab)
-                    }
-                }
+                currentView
                 
                 // Bottom Navigation Bar (only show for main 4 tabs)
-                if ["home", "community", "coach", "profile"].contains(selectedTab) {
+                if selectedTab.isPrimaryNavigationTab {
                     BottomNavBar(selectedTab: $selectedTab)
                 }
             }
         }
     }
+
+    @ViewBuilder
+    private var currentView: some View {
+        switch selectedTab {
+        case .home:
+            VoiceRecordingView(selectedTab: $selectedTab)
+        case .community:
+            CommunityView(selectedTab: $selectedTab)
+        case .coach:
+            NavigationStack {
+                CoachSessionsListView(selectedTab: $selectedTab)
+            }
+        case .profile:
+            ProfileViewWrapper(selectedTab: $selectedTab)
+        case .journal:
+            JournalViewPage(selectedTab: $selectedTab)
+        case .calendar:
+            CalendarViewPage(selectedTab: $selectedTab)
+        case .insights:
+            InsightsViewPage(selectedTab: $selectedTab)
+        case .aiInsights:
+            AIInsightsViewPage(selectedTab: $selectedTab)
+        case .achievements:
+            AchievementsViewPage(selectedTab: $selectedTab)
+        case .timeCapsule:
+            TimeCapsuleViewPage(selectedTab: $selectedTab)
+        case .premium:
+            PremiumViewPage(selectedTab: $selectedTab)
+        case .settings:
+            SettingsViewPage(selectedTab: $selectedTab)
+        case .notifications:
+            NotificationsViewPage(selectedTab: $selectedTab)
+        case .help:
+            HelpSupportViewPage(selectedTab: $selectedTab)
+        }
+    }
 }
 
 struct ProfileViewWrapper: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     @StateObject private var viewModel = ProfileViewModel()
     @State private var isMenuOpen = false
 
@@ -128,16 +131,16 @@ struct ProfileViewWrapper: View {
 
                             // Menu items
                             VStack(spacing: 12) {
-                                Button(action: { selectedTab = "achievements" }) {
+                                Button(action: { selectedTab = .achievements }) {
                                     ProfileMenuItem(icon: "trophy.fill",           title: "Achievements",  subtitle: "View your progress",  color: Color(red: 0.937, green: 0.722, blue: 0.267))
                                 }
-                                Button(action: { selectedTab = "notifications" }) {
+                                Button(action: { selectedTab = .notifications }) {
                                     ProfileMenuItem(icon: "bell.fill",             title: "Notifications", subtitle: "Manage alerts",       color: Color(red: 0.498, green: 0.075, blue: 0.929))
                                 }
-                                Button(action: { selectedTab = "settings" }) {
+                                Button(action: { selectedTab = .settings }) {
                                     ProfileMenuItem(icon: "gear",                  title: "Settings",      subtitle: "App preferences",     color: Color(red: 0.078, green: 0.357, blue: 0.933))
                                 }
-                                Button(action: { selectedTab = "help" }) {
+                                Button(action: { selectedTab = .help }) {
                                     ProfileMenuItem(icon: "questionmark.circle.fill", title: "Help & Support", subtitle: "Need assistance?", color: Color(red: 0.157, green: 0.631, blue: 0.569))
                                 }
                             }
@@ -159,7 +162,7 @@ struct ProfileViewWrapper: View {
                             .padding(.horizontal, 16).padding(.top, 8)
                             .disabled(viewModel.isLoggingOut)
 
-                            Text("v\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0")")
+                            Text(AppConstants.AppInfo.shortVersionLabel)
                                 .font(.system(size: 12))
                                 .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686).opacity(0.6))
                                 .padding(.bottom, 40)
@@ -246,7 +249,7 @@ struct ProfileMenuItem: View {
 // MARK: - Additional Page Wrappers
 
 struct JournalViewPage: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     
     var body: some View {
         JournalView(selectedTab: $selectedTab)
@@ -254,7 +257,7 @@ struct JournalViewPage: View {
 }
 
 struct CalendarViewPage: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     
     var body: some View {
         CalendarView(selectedTab: $selectedTab)
@@ -262,7 +265,7 @@ struct CalendarViewPage: View {
 }
 
 struct InsightsViewPage: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     
     var body: some View {
         InsightsView(selectedTab: $selectedTab)
@@ -270,7 +273,7 @@ struct InsightsViewPage: View {
 }
 
 struct AIInsightsViewPage: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     
     var body: some View {
         AIInsightsView(selectedTab: $selectedTab)
@@ -278,7 +281,7 @@ struct AIInsightsViewPage: View {
 }
 
 struct AchievementsViewPage: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     
     var body: some View {
         AchievementsView(selectedTab: $selectedTab)
@@ -286,7 +289,7 @@ struct AchievementsViewPage: View {
 }
 
 struct TimeCapsuleViewPage: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     
     var body: some View {
         TimeCapsuleView(selectedTab: $selectedTab)
@@ -294,7 +297,7 @@ struct TimeCapsuleViewPage: View {
 }
 
 struct PremiumViewPage: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     
     var body: some View {
         PremiumView(selectedTab: $selectedTab)
@@ -302,26 +305,26 @@ struct PremiumViewPage: View {
 }
 
 struct SettingsViewPage: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     var body: some View { SettingsView(selectedTab: $selectedTab) }
 }
 
 struct NotificationsViewPage: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     var body: some View { NotificationsView(selectedTab: $selectedTab) }
 }
 
 struct HelpSupportViewPage: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     var body: some View { HelpSupportView(selectedTab: $selectedTab) }
 }
 
 // MARK: - Navigation Manager
 class NavigationManager: ObservableObject {
-    @Published var selectedTab: String
+    @Published var selectedTab: AppTab
     @Published var isMenuOpen: Bool
     
-    init(selectedTab: String, isMenuOpen: Bool) {
+    init(selectedTab: AppTab, isMenuOpen: Bool) {
         self.selectedTab = selectedTab
         self.isMenuOpen = isMenuOpen
     }

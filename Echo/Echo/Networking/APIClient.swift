@@ -55,17 +55,39 @@ final class APIClient {
             return try handleResponse(data: data, response: response,
                                       request: request, endpoint: endpoint)
         } catch let error as NetworkError {
+            Log.network.error("Request failed for \(request.url?.path ?? "unknown", privacy: .public): \(error.localizedDescription, privacy: .public)")
             throw error
+        } catch is CancellationError {
+            throw CancellationError()
         } catch {
-            throw NetworkError.noInternetConnection
+            let mappedError = mapTransportError(error)
+            if let networkError = mappedError as? NetworkError {
+                Log.network.error("Transport failed for \(request.url?.path ?? "unknown", privacy: .public): \(networkError.localizedDescription, privacy: .public)")
+                throw networkError
+            }
+            throw mappedError
         }
     }
 
     private func executeRaw<T: Decodable>(_ request: URLRequest,
                                           endpoint: APIRouter) async throws -> T {
-        let (data, response) = try await session.data(for: request)
-        return try handleResponse(data: data, response: response,
-                                  request: request, endpoint: endpoint)
+        do {
+            let (data, response) = try await session.data(for: request)
+            return try handleResponse(data: data, response: response,
+                                      request: request, endpoint: endpoint)
+        } catch let error as NetworkError {
+            Log.network.error("Upload failed for \(request.url?.path ?? "unknown", privacy: .public): \(error.localizedDescription, privacy: .public)")
+            throw error
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            let mappedError = mapTransportError(error)
+            if let networkError = mappedError as? NetworkError {
+                Log.network.error("Upload transport failed for \(request.url?.path ?? "unknown", privacy: .public): \(networkError.localizedDescription, privacy: .public)")
+                throw networkError
+            }
+            throw mappedError
+        }
     }
 
     private func handleResponse<T: Decodable>(data: Data,
@@ -82,6 +104,7 @@ final class APIClient {
                 let body = data.isEmpty ? Data("{}".utf8) : data
                 return try APIClient.decoder.decode(T.self, from: body)
             } catch {
+                Log.network.error("Decoding failed for \(request.url?.path ?? "unknown", privacy: .public)")
                 throw NetworkError.decodingError(error)
             }
 
@@ -93,13 +116,38 @@ final class APIClient {
             }
             throw NetworkError.unauthorized
 
+        case 403:
+            throw NetworkError.forbidden
+
         case 404:
             throw NetworkError.notFound
 
+        case 422:
+            let message = (try? APIClient.decoder.decode(APIErrorResponse.self, from: data))?.message
+            throw NetworkError.validation(message)
+
         default:
             let message = (try? APIClient.decoder.decode(APIErrorResponse.self, from: data))?.message
+            Log.network.error("Server responded with status \(http.statusCode, privacy: .public) for \(request.url?.path ?? "unknown", privacy: .public)")
             throw NetworkError.serverError(http.statusCode, message)
         }
+    }
+
+    private func mapTransportError(_ error: Error) -> Error {
+        if let urlError = error as? URLError {
+            switch urlError.code {
+            case .cancelled:
+                return CancellationError()
+            case .timedOut:
+                return NetworkError.timeout
+            case .notConnectedToInternet, .networkConnectionLost:
+                return NetworkError.noInternetConnection
+            default:
+                return NetworkError.noInternetConnection
+            }
+        }
+
+        return NetworkError.noInternetConnection
     }
 }
 
@@ -113,6 +161,7 @@ extension APIClient {
         do {
             return try await request(endpoint)
         } catch NetworkError.unauthorized {
+            Log.network.info("Refreshing token after unauthorized response")
             try await refreshTokens()
             return try await request(endpoint)
         }
@@ -122,6 +171,7 @@ extension APIClient {
         do {
             return try await upload(endpoint)
         } catch NetworkError.unauthorized {
+            Log.network.info("Refreshing token before retrying upload")
             try await refreshTokens()
             return try await upload(endpoint)
         }
@@ -138,7 +188,9 @@ extension APIClient {
             let response: APIAuthResponse = try await request(.refreshToken(body))
             try TokenManager.shared.saveAccessToken(response.accessToken)
             try TokenManager.shared.saveRefreshToken(response.refreshToken)
+            Log.auth.info("Access token refreshed successfully")
         } catch {
+            Log.auth.error("Token refresh failed")
             await AppState.shared.signOut()
             throw NetworkError.unauthorized
         }

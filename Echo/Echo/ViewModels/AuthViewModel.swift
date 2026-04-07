@@ -28,8 +28,10 @@ final class AuthViewModel: ObservableObject {
         do {
             let response: APIAuthResponse = try await client.request(.register(body))
             appState.signIn(with: response)
+            Log.auth.info("Registration completed successfully")
         } catch {
             errorMessage = error.localizedDescription
+            Log.auth.error("Registration failed")
         }
 
         isLoading = false
@@ -46,8 +48,10 @@ final class AuthViewModel: ObservableObject {
         do {
             let response: APIAuthResponse = try await client.request(.login(body))
             appState.signIn(with: response)
+            Log.auth.info("Login completed successfully")
         } catch {
             errorMessage = error.localizedDescription
+            Log.auth.error("Login failed")
         }
 
         isLoading = false

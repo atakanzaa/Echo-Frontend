@@ -8,7 +8,7 @@ import SwiftUI
 
 struct HamburgerMenuView: View {
     @Binding var isMenuOpen: Bool
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     var onLogout: (() -> Void)? = nil
     
     var body: some View {
@@ -28,7 +28,7 @@ struct HamburgerMenuView: View {
                         icon: "house.fill",
                         title: "Home",
                         action: {
-                            selectedTab = "home"
+                            selectedTab = .home
                             isMenuOpen = false
                         }
                     )
@@ -37,7 +37,7 @@ struct HamburgerMenuView: View {
                         icon: "book.fill",
                         title: "Community",
                         action: {
-                            selectedTab = "community"
+                            selectedTab = .community
                             isMenuOpen = false
                         }
                     )
@@ -46,7 +46,7 @@ struct HamburgerMenuView: View {
                         icon: "star.fill",
                         title: "Coach",
                         action: {
-                            selectedTab = "coach"
+                            selectedTab = .coach
                             isMenuOpen = false
                         }
                     )
@@ -55,7 +55,7 @@ struct HamburgerMenuView: View {
                         icon: "person.fill",
                         title: "Profile",
                         action: {
-                            selectedTab = "profile"
+                            selectedTab = .profile
                             isMenuOpen = false
                         }
                     )
@@ -76,7 +76,7 @@ struct HamburgerMenuView: View {
                         icon: "book.circle.fill",
                         title: "Journal",
                         action: {
-                            selectedTab = "journal"
+                            selectedTab = .journal
                             isMenuOpen = false
                         }
                     )
@@ -85,7 +85,7 @@ struct HamburgerMenuView: View {
                         icon: "calendar",
                         title: "Calendar",
                         action: {
-                            selectedTab = "calendar"
+                            selectedTab = .calendar
                             isMenuOpen = false
                         }
                     )
@@ -94,7 +94,7 @@ struct HamburgerMenuView: View {
                         icon: "chart.bar.fill",
                         title: "Insights",
                         action: {
-                            selectedTab = "insights"
+                            selectedTab = .insights
                             isMenuOpen = false
                         }
                     )
@@ -103,7 +103,7 @@ struct HamburgerMenuView: View {
                         icon: "sparkles",
                         title: "AI Insights",
                         action: {
-                            selectedTab = "aiinsights"
+                            selectedTab = .aiInsights
                             isMenuOpen = false
                         }
                     )
@@ -112,7 +112,7 @@ struct HamburgerMenuView: View {
                         icon: "trophy.fill",
                         title: "Achievements",
                         action: {
-                            selectedTab = "achievements"
+                            selectedTab = .achievements
                             isMenuOpen = false
                         }
                     )
@@ -121,7 +121,7 @@ struct HamburgerMenuView: View {
                         icon: "time",
                         title: "Time Capsule",
                         action: {
-                            selectedTab = "timecapsule"
+                            selectedTab = .timeCapsule
                             isMenuOpen = false
                         }
                     )
@@ -131,7 +131,7 @@ struct HamburgerMenuView: View {
                         title: "Premium",
                         color: Color(red: 0.937, green: 0.722, blue: 0.267),
                         action: {
-                            selectedTab = "premium"
+                            selectedTab = .premium
                             isMenuOpen = false
                         }
                     )
@@ -152,7 +152,7 @@ struct HamburgerMenuView: View {
                         icon: "gear",
                         title: "Settings",
                         action: {
-                            selectedTab = "settings"
+                            selectedTab = .settings
                             isMenuOpen = false
                         }
                     )
@@ -161,7 +161,7 @@ struct HamburgerMenuView: View {
                         icon: "questionmark.circle",
                         title: "Help & Support",
                         action: {
-                            selectedTab = "help"
+                            selectedTab = .help
                             isMenuOpen = false
                         }
                     )

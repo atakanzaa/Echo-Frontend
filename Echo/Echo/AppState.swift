@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import OSLog
 import SwiftUI
 
 /// Uygulama genelinde auth durumunu tutar.
@@ -11,11 +12,13 @@ final class AppState: ObservableObject {
 
     @Published var isAuthenticated: Bool = false
     @Published var currentUser: APIUser?
+    @Published var isRestoringSession: Bool = false
 
     private init() {
         // Uygulama açılışında token varsa otomatik login
         isAuthenticated = TokenManager.shared.hasTokens
         if isAuthenticated {
+            isRestoringSession = true
             Task { await validateSession() }
         }
     }
@@ -23,12 +26,14 @@ final class AppState: ObservableObject {
     /// Keychain'deki token'ları backend'e doğrulayıp currentUser'ı restore eder.
     /// Token geçersizse (süresi dolmuş, backend yeniden başlamış vb.) oturumu kapatır.
     func validateSession() async {
+        isRestoringSession = true
         do {
             let user: APIUser = try await APIClient.shared.requestWithAutoRefresh(.me)
             currentUser = user
         } catch {
             signOut()
         }
+        isRestoringSession = false
     }
 
     func signIn(with authResponse: APIAuthResponse) {
@@ -37,8 +42,10 @@ final class AppState: ObservableObject {
             try TokenManager.shared.saveRefreshToken(authResponse.refreshToken)
             currentUser       = authResponse.user
             isAuthenticated   = true
+            isRestoringSession = false
+            Log.auth.info("User session restored successfully")
         } catch {
-            print("Token kaydedilemedi: \(error.localizedDescription)")
+            Log.auth.error("Token persistence failed: \(error.localizedDescription)")
         }
     }
 
@@ -46,5 +53,7 @@ final class AppState: ObservableObject {
         TokenManager.shared.clearAll()
         currentUser     = nil
         isAuthenticated = false
+        isRestoringSession = false
+        Log.auth.info("User signed out")
     }
 }

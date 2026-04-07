@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct InsightsView: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     @StateObject private var viewModel     = InsightsViewModel()
     @StateObject private var goalViewModel = GoalViewModel()
     @State private var isMenuOpen = false
@@ -178,7 +178,7 @@ struct InsightsView: View {
                 }
 
                 Spacer()
-                BottomNavigationView(currentPage: "Insights", selectedTab: $selectedTab)
+                BottomNavigationView(currentTab: .insights, selectedTab: $selectedTab)
             }
 
             if isMenuOpen {

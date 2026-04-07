@@ -33,6 +33,8 @@ struct APIJournalEntry: Decodable {
     let errorMessage:         String?
     let analysis:             APIAnalysisResult?
     let createdAt:            String?
+
+    var entryStatus: EntryStatus { EntryStatus(rawBackend: status) }
 }
 
 struct APIAnalysisResult: Decodable {
@@ -48,6 +50,10 @@ struct APIAnalysisResult: Decodable {
     let goals:              [APIGoalPreview]?
     let insights:           [String]?
     let memoryWorthy:       Bool?
+
+    var resolvedMoodCategory: MoodCategory? {
+        moodCategory.map(MoodCategory.init(rawBackend:))
+    }
 }
 
 /// Analizden çıkarılan hedef önizlemesi (goals endpoint'indeki tam APIGoal'dan farklı)
@@ -65,6 +71,8 @@ struct APIEntryStatus: Decodable {
     let id:           String
     let status:       String
     let errorMessage: String?
+
+    var entryStatus: EntryStatus { EntryStatus(rawBackend: status) }
 }
 
 // MARK: — Summary
@@ -109,6 +117,10 @@ struct APICalendarDay: Decodable {
     let entryId:      String?
     let moodScore:    Double?   // 0.0-1.0 scale
     let moodCategory: String?   // "STRESS" | "NEUTRAL" | "CALM" | "MOTIVATED"
+
+    var resolvedMoodCategory: MoodCategory? {
+        moodCategory.map(MoodCategory.init(rawBackend:))
+    }
 }
 
 // MARK: — AI Insights
@@ -151,6 +163,31 @@ struct APICommunityPost: Decodable, Identifiable {
     let commentsCount: Int
     let isLikedByMe:   Bool
     let createdAt:     String
+
+    var resolvedContentType: PostContentType { PostContentType(rawBackend: contentType) }
+
+    func copy(
+        likesCount: Int? = nil,
+        commentsCount: Int? = nil,
+        isLikedByMe: Bool? = nil
+    ) -> APICommunityPost {
+        APICommunityPost(
+            id: id,
+            userId: userId,
+            displayName: displayName,
+            content: content,
+            contentType: contentType,
+            audioUrl: audioUrl,
+            audioDuration: audioDuration,
+            imageUrl: imageUrl,
+            emoji: emoji,
+            isAnonymous: isAnonymous,
+            likesCount: likesCount ?? self.likesCount,
+            commentsCount: commentsCount ?? self.commentsCount,
+            isLikedByMe: isLikedByMe ?? self.isLikedByMe,
+            createdAt: createdAt
+        )
+    }
 }
 
 extension APICommunityPost: Hashable {
@@ -168,6 +205,24 @@ struct APIPostComment: Decodable, Identifiable {
     let isLikedByMe: Bool
     let replies:     [APIPostComment]?
     let createdAt:   String
+
+    func copy(
+        likesCount: Int? = nil,
+        isLikedByMe: Bool? = nil,
+        replies: [APIPostComment]? = nil
+    ) -> APIPostComment {
+        APIPostComment(
+            id: id,
+            userId: userId,
+            displayName: displayName,
+            content: content,
+            parentId: parentId,
+            likesCount: likesCount ?? self.likesCount,
+            isLikedByMe: isLikedByMe ?? self.isLikedByMe,
+            replies: replies ?? self.replies,
+            createdAt: createdAt
+        )
+    }
 }
 
 struct APIPagedResponse<T: Decodable>: Decodable {
@@ -214,6 +269,9 @@ struct APITimeCapsule: Decodable, Identifiable {
     let sealedAt:      String
     let unlockAt:      String
     let openedAt:      String?
+
+    var capsuleStatus: CapsuleStatus { CapsuleStatus(rawBackend: status) }
+    var capsuleContentType: CapsuleContentType { CapsuleContentType(rawBackend: contentType) }
 }
 
 // MARK: — Goals
@@ -256,6 +314,8 @@ struct APICoachMessage: Decodable, Identifiable {
     let role:      String   // "user" | "assistant"
     let content:   String
     let createdAt: String
+
+    var messageRole: CoachMessageRole { CoachMessageRole(rawBackend: role) }
 }
 
 // MARK: — Error
