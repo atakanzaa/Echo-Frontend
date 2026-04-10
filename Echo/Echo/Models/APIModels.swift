@@ -89,6 +89,7 @@ struct APISummaryResponse: Decodable {
     let moodTrend:           String
     let dominantTopics:      [String]
     let topEmotions:         [String]
+    let moodCategoryDistribution: [String: Double]?
     let energyDistribution:  [String: Int]
     let bestDay:             String?
     let worstDay:            String?
@@ -106,21 +107,31 @@ struct APIDailyMoodScore: Decodable {
 // MARK: — Calendar
 
 struct APICalendarMonth: Decodable {
-    let year:  Int
-    let month: Int
-    let days:  [APICalendarDay]
+    let year:         Int
+    let month:        Int
+    let days:         [APICalendarDay]
+    let monthSummary: APIMonthSummary?
 }
 
 struct APICalendarDay: Decodable {
-    let day:          Int
-    let moodLabel:    String?   // nil = no entry
-    let entryId:      String?
-    let moodScore:    Double?   // 0.0-1.0 scale
-    let moodCategory: String?   // "STRESS" | "NEUTRAL" | "CALM" | "MOTIVATED"
+    let day:              Int
+    let moodLabel:        String?   // nil = no entry
+    let entryId:          String?
+    let moodScore:        Double?   // 0.0-1.0 scale
+    let moodCategory:     String?   // "STRESS" | "NEUTRAL" | "CALM" | "MOTIVATED"
+    let entryCount:       Int?
+    let dominantEmotion:  String?
+    let hasCoachSession:  Bool?
 
     var resolvedMoodCategory: MoodCategory? {
         moodCategory.map(MoodCategory.init(rawBackend:))
     }
+}
+
+struct APIMonthSummary: Decodable {
+    let averageMood:  Double?
+    let totalEntries: Int
+    let streakDays:   Int
 }
 
 // MARK: — AI Insights
@@ -132,6 +143,19 @@ struct APIAIInsightsResponse: Decodable {
     let themes:         [APITheme]
     let suggestions:    [APISuggestion]
     let emotionalTrend: Double
+    let hasSufficientData: Bool?
+    let hasPreviousPeriodData: Bool?
+}
+
+struct APIInsightsPeriodEligibility: Decodable {
+    let periods: [APIInsightsPeriod]
+}
+
+struct APIInsightsPeriod: Decodable {
+    let days: Int
+    let unlocked: Bool
+    let requiredEntries: Int
+    let currentEntries: Int
 }
 
 struct APITheme: Decodable {
@@ -225,6 +249,11 @@ struct APIPostComment: Decodable, Identifiable {
     }
 }
 
+extension APIPostComment: Hashable {
+    static func == (lhs: Self, rhs: Self) -> Bool { lhs.id == rhs.id }
+    func hash(into hasher: inout Hasher) { hasher.combine(id) }
+}
+
 struct APIPagedResponse<T: Decodable>: Decodable {
     let content:       [T]
     let page:          Int
@@ -256,6 +285,19 @@ struct APIBadge: Decodable, Identifiable {
     let earnedAt:    String?
 }
 
+extension APIBadge: Hashable {
+    static func == (lhs: Self, rhs: Self) -> Bool { lhs.id == rhs.id }
+    func hash(into hasher: inout Hasher) { hasher.combine(id) }
+}
+
+struct APIAchievementDetail: Decodable {
+    let key: String
+    let title: String
+    let description: String?
+    let progress: Double
+    let earnedAt: String?
+}
+
 // MARK: — Time Capsule
 
 struct APITimeCapsule: Decodable, Identifiable {
@@ -282,7 +324,7 @@ struct APIGoal: Decodable, Identifiable {
     let title:                String
     let timeframe:            String?
     let goalType:             String
-    let status:               String   // PENDING | COMPLETED | DISMISSED
+    let status:               String
     let sourceJournalEntryId: String?
     let detectedAt:           String
     let completedAt:          String?
@@ -291,6 +333,24 @@ struct APIGoal: Decodable, Identifiable {
         case goalType             = "goal_type"
         case sourceJournalEntryId = "source_journal_entry_id"
     }
+}
+
+struct APIGoalSuggestion: Decodable, Identifiable {
+    let id: String
+    let goalId: String?
+    let suggestionType: String
+    let sourceType: String
+    let title: String?
+    let timeframe: String?
+    let goalType: String?
+    let detectedText: String?
+    let reason: String?
+    let confidence: Double?
+    let message: String
+    let primaryActionLabel: String
+    let secondaryActionLabel: String
+    let createdAt: String?
+    let expiresAt: String?
 }
 
 // MARK: — Coach
@@ -333,6 +393,46 @@ struct APIUserStats: Decodable {
     let currentStreak: Int
     let longestStreak: Int
     let moodScoreAvg:  Double
+}
+
+// MARK: — Profile Summary (AI-generated user profile)
+
+struct APIProfileSummary: Decodable {
+    let userProfile:       String?
+    let emotionalPatterns: String?
+    let valuesStrengths:   String?
+    let growthTrajectory:  String?
+    let weeklyDigest:      String?
+    let lastUpdated:       String?
+}
+
+// MARK: — Detailed Stats
+
+struct APIDetailedStats: Decodable {
+    let weeklyConsistency:    [Int]
+    let averageEntriesPerWeek: Double
+    let mostActiveDay:        String?
+    let mostActiveHour:       Int
+    let topTopicsThisMonth:   [String]
+    let topEmotionsThisMonth: [String]
+    let moodTrendVsLastMonth: Double
+    let totalWords:           Int
+    let averageEntryLength:   Int
+}
+
+// MARK: — On This Day
+
+struct APIOnThisDayResponse: Decodable {
+    let entries: [APIOnThisDayEntry]
+}
+
+struct APIOnThisDayEntry: Decodable, Identifiable {
+    let id:        String
+    let date:      String
+    let summary:   String?
+    let moodLabel: String?
+    let moodScore: Double
+    let yearsAgo:  Int
 }
 
 // MARK: — Void / Empty Response

@@ -1,91 +1,102 @@
 import SwiftUI
 
 struct HelpSupportView: View {
-    @Binding var selectedTab: AppTab
-    @Environment(\.openURL) private var openURL
+    @Binding var selectedTab: String
     @State private var expandedQuestion: String? = nil
-    @State private var infoMessage: String?
+    @Environment(\.colorScheme) var colorScheme
+    @EnvironmentObject var locManager: LocalizationManager
+    @EnvironmentObject private var tabNavigation: TabNavigationManager
 
-    private let faqs: [(id: String, q: String, a: String)] = [
-        (
-            id: "1",
-            q: "How does voice journaling work?",
-            a: "Tap the record button on the home screen and speak freely. Echo transcribes your voice, analyzes your mood, and generates insights — all automatically after you finish recording."
-        ),
-        (
-            id: "2",
-            q: "Is my data private?",
-            a: "Yes. Your journal entries are encrypted in transit and at rest. Audio is deleted from our servers immediately after transcription. Only you can access your data."
-        ),
-        (
-            id: "3",
-            q: "How is my mood score calculated?",
-            a: "Echo uses AI to analyze the emotional content of your journal entry and assigns a score from 1–10. The score reflects sentiment, energy level, and key emotions mentioned."
-        ),
-        (
-            id: "4",
-            q: "What is a Time Capsule?",
-            a: "A Time Capsule lets you record a voice message to your future self, sealed until a date you choose. Once the unlock date arrives, you can listen back."
-        ),
-        (
-            id: "5",
-            q: "How do I earn badges?",
-            a: "Badges are awarded for milestones like maintaining streaks, recording your first entry, reaching 10/30/100 entries, and more. Check the Achievements page to see your progress."
-        ),
-        (
-            id: "6",
-            q: "Why does analysis take a moment?",
-            a: "After you record, Echo transcribes your audio and runs AI analysis. This usually takes 10–30 seconds depending on the length of your recording."
-        ),
-    ]
+    @State private var searchText = ""
+    private var faqs: [(id: String, q: String, a: String)] {
+        [
+            (id: "1", q: locManager.t("help.faq1_q"), a: locManager.t("help.faq1_a")),
+            (id: "2", q: locManager.t("help.faq2_q"), a: locManager.t("help.faq2_a")),
+            (id: "3", q: locManager.t("help.faq3_q"), a: locManager.t("help.faq3_a")),
+            (id: "4", q: locManager.t("help.faq4_q"), a: locManager.t("help.faq4_a")),
+            (id: "5", q: locManager.t("help.faq5_q"), a: locManager.t("help.faq5_a")),
+            (id: "6", q: locManager.t("help.faq6_q"), a: locManager.t("help.faq6_a")),
+        ]
+    }
+
+    var filteredFaqs: [(id: String, q: String, a: String)] {
+        searchText.isEmpty ? faqs :
+            faqs.filter { $0.q.localizedCaseInsensitiveContains(searchText) || $0.a.localizedCaseInsensitiveContains(searchText) }
+    }
 
     var body: some View {
         ZStack {
-            Color(red: 0.098, green: 0.063, blue: 0.133).ignoresSafeArea()
+            AppTheme.Colors.background(colorScheme).ignoresSafeArea()
 
             VStack(spacing: 0) {
                 // Header
                 HStack {
-                    Button(action: { selectedTab = .profile }) {
+                    Button(action: {
+                        selectedTab = tabNavigation.goBack(from: selectedTab, fallback: "profile")
+                    }) {
                         Image(systemName: "chevron.left")
                             .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(.white)
+                            .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
                     }
                     Spacer()
-                    Text("Help & Support")
-                        .font(.system(size: 18, weight: .bold)).foregroundColor(.white)
+                    Text(locManager.t("nav.help_support"))
+                        .font(AppTheme.Typography.heading3)
+                        .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
                     Spacer()
                     Color.clear.frame(width: 24, height: 24)
                 }
-                .padding(.horizontal, 16).padding(.vertical, 16)
+                .padding(.horizontal, AppTheme.Spacing.md)
+                .padding(.vertical, AppTheme.Spacing.md)
 
                 ScrollView {
-                    VStack(spacing: 24) {
+                    VStack(spacing: AppTheme.Spacing.lg) {
                         // Hero
-                        VStack(spacing: 12) {
-                            Image(systemName: "questionmark.circle.fill")
-                                .font(.system(size: 48))
-                                .foregroundColor(Color(red: 0.498, green: 0.075, blue: 0.929))
-                            Text("How can we help?")
-                                .font(.system(size: 22, weight: .bold)).foregroundColor(.white)
-                            Text("Find answers below or reach out to our team.")
-                                .font(.system(size: 14))
-                                .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
+                        VStack(spacing: AppTheme.Spacing.sm) {
+                            ZStack {
+                                Circle()
+                                    .fill(AppTheme.Colors.accent.opacity(0.15))
+                                    .frame(width: 80, height: 80)
+                                Image(systemName: "questionmark.circle.fill")
+                                    .font(.system(size: 40))
+                                    .foregroundColor(AppTheme.Colors.accent)
+                            }
+                            Text(locManager.t("help.how_can_we_help"))
+                                .font(AppTheme.Typography.heading2)
+                                .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
+                            Text(locManager.t("help.find_answers"))
+                                .font(AppTheme.Typography.caption)
+                                .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
                                 .multilineTextAlignment(.center)
                         }
-                        .padding(.vertical, 8)
+                        .padding(.vertical, AppTheme.Spacing.sm)
+
+                        // Search bar
+                        HStack(spacing: AppTheme.Spacing.sm) {
+                            Image(systemName: "magnifyingglass")
+                                .font(.system(size: 14))
+                                .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
+                            TextField(locManager.t("help.search_placeholder"), text: $searchText)
+                                .font(AppTheme.Typography.body)
+                                .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
+                        }
+                        .padding(.horizontal, AppTheme.Spacing.md)
+                        .padding(.vertical, AppTheme.Spacing.sm)
+                        .background(AppTheme.Colors.surface(colorScheme))
+                        .cornerRadius(AppTheme.Spacing.radiusMd)
+                        .padding(.horizontal, AppTheme.Spacing.md)
 
                         // FAQ
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("FREQUENTLY ASKED")
-                                .font(.system(size: 12, weight: .bold)).tracking(0.6)
-                                .foregroundColor(Color(red: 0.420, green: 0.447, blue: 0.502))
-                                .padding(.horizontal, 16)
+                            Text(locManager.t("help.frequently_asked"))
+                                .font(AppTheme.Typography.label).fontWeight(.bold)
+                                .tracking(0.6)
+                                .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
+                                .padding(.horizontal, AppTheme.Spacing.md)
 
                             VStack(spacing: 0) {
-                                ForEach(Array(faqs.enumerated()), id: \.element.id) { index, faq in
+                                ForEach(Array(filteredFaqs.enumerated()), id: \.element.id) { index, faq in
                                     if index > 0 {
-                                        Divider().background(Color.white.opacity(0.06))
+                                        Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
                                     }
                                     FAQRow(
                                         question: faq.q,
@@ -99,61 +110,55 @@ struct HelpSupportView: View {
                                     )
                                 }
                             }
-                            .padding(16)
-                            .background(Color(red: 0.141, green: 0.098, blue: 0.188))
-                            .cornerRadius(16)
-                            .padding(.horizontal, 16)
+                            .padding(AppTheme.Spacing.md)
+                            .background(AppTheme.Colors.surfaceElevated(colorScheme))
+                            .cornerRadius(AppTheme.Spacing.radiusLg)
+                            .padding(.horizontal, AppTheme.Spacing.md)
                         }
 
                         // Contact options
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("CONTACT US")
-                                .font(.system(size: 12, weight: .bold)).tracking(0.6)
-                                .foregroundColor(Color(red: 0.420, green: 0.447, blue: 0.502))
-                                .padding(.horizontal, 16)
+                            Text(locManager.t("help.contact_us"))
+                                .font(AppTheme.Typography.label).fontWeight(.bold)
+                                .tracking(0.6)
+                                .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
+                                .padding(.horizontal, AppTheme.Spacing.md)
 
                             VStack(spacing: 0) {
                                 ContactRow(
                                     icon: "envelope.fill",
-                                    iconColor: Color(red: 0.498, green: 0.075, blue: 0.929),
-                                    title: "Email Support",
-                                    subtitle: AppConstants.Links.supportEmail,
+                                    iconColor: AppTheme.Colors.accent,
+                                    title: locManager.t("help.email_support"),
+                                    subtitle: "support@echo-app.com",
                                     action: {
-                                        if let url = URL(string: "mailto:\(AppConstants.Links.supportEmail)") {
-                                            openURL(url)
+                                        if let url = URL(string: "mailto:support@echo-app.com") {
+                                            UIApplication.shared.open(url)
                                         }
                                     }
                                 )
-                                Divider().background(Color.white.opacity(0.06))
+                                Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
                                 ContactRow(
                                     icon: "star.fill",
-                                    iconColor: Color(red: 0.937, green: 0.722, blue: 0.267),
-                                    title: "Rate Echo",
-                                    subtitle: "Share your feedback on the App Store",
-                                    action: {
-                                        infoMessage = "App Store rating will be available once Echo is live."
-                                    }
+                                    iconColor: AppTheme.Colors.gold,
+                                    title: locManager.t("help.rate_echo"),
+                                    subtitle: locManager.t("help.rate_echo_sub"),
+                                    action: {}
                                 )
                             }
-                            .padding(16)
-                            .background(Color(red: 0.141, green: 0.098, blue: 0.188))
-                            .cornerRadius(16)
-                            .padding(.horizontal, 16)
+                            .padding(AppTheme.Spacing.md)
+                            .background(AppTheme.Colors.surfaceElevated(colorScheme))
+                            .cornerRadius(AppTheme.Spacing.radiusLg)
+                            .padding(.horizontal, AppTheme.Spacing.md)
                         }
 
-                        Color.clear.frame(height: 32)
+                        Text("Echo v2.4.0")
+                            .font(AppTheme.Typography.micro)
+                            .foregroundColor(AppTheme.Colors.textDisabled(colorScheme))
+                            .padding(.bottom, AppTheme.Spacing.xxl)
                     }
-                    .padding(.vertical, 8)
+                    .padding(.vertical, AppTheme.Spacing.sm)
                 }
             }
-        }
-        .alert("Coming Soon", isPresented: .init(
-            get: { infoMessage != nil },
-            set: { if !$0 { infoMessage = nil } }
-        )) {
-            Button("OK") { infoMessage = nil }
-        } message: {
-            Text(infoMessage ?? "")
         }
     }
 }
@@ -163,24 +168,25 @@ private struct FAQRow: View {
     let answer: String
     let isExpanded: Bool
     let onTap: () -> Void
+    @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
         Button(action: onTap) {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
+                HStack(spacing: AppTheme.Spacing.sm) {
                     Text(question)
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.white)
+                        .font(AppTheme.Typography.caption).fontWeight(.semibold)
+                        .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
                         .multilineTextAlignment(.leading)
                     Spacer()
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                         .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
+                        .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
                 }
                 if isExpanded {
                     Text(answer)
-                        .font(.system(size: 13))
-                        .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
+                        .font(AppTheme.Typography.caption)
+                        .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
                         .multilineTextAlignment(.leading)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -196,24 +202,29 @@ private struct ContactRow: View {
     let title: String
     let subtitle: String
     let action: () -> Void
+    @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 12) {
+            HStack(spacing: AppTheme.Spacing.sm) {
                 Image(systemName: icon)
                     .font(.system(size: 16))
                     .foregroundColor(iconColor)
                     .frame(width: 32, height: 32)
                     .background(iconColor.opacity(0.15))
-                    .cornerRadius(8)
+                    .cornerRadius(AppTheme.Spacing.radiusSm)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(title).font(.system(size: 15, weight: .semibold)).foregroundColor(.white)
-                    Text(subtitle).font(.system(size: 13)).foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
+                    Text(title)
+                        .font(AppTheme.Typography.body).fontWeight(.semibold)
+                        .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
+                    Text(subtitle)
+                        .font(AppTheme.Typography.caption)
+                        .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
                 }
                 Spacer()
                 Image(systemName: "chevron.right")
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
+                    .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
             }
             .padding(.vertical, 4)
         }

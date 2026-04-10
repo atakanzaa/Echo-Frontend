@@ -4,10 +4,14 @@ import Combine
 @MainActor
 final class ProfileViewModel: ObservableObject {
 
-    @Published var user:         APIUser?
-    @Published var isLoading     = false
-    @Published var isLoggingOut  = false
-    @Published var errorMessage: String?
+    @Published var user:              APIUser?
+    @Published var profileSummary:    APIProfileSummary?
+    @Published var isLoading          = false
+    @Published var isLoggingOut       = false
+    @Published var isUpdatingLanguage = false
+    @Published var errorMessage:      String?
+
+    var preferredLanguage: String { LocalizationManager.shared.currentLanguage }
 
     private var loadTask:   Task<Void, Never>?
     private var logoutTask: Task<Void, Never>?
@@ -16,10 +20,6 @@ final class ProfileViewModel: ObservableObject {
     var email:          String { user?.email       ?? "" }
     var totalEntries:   Int    { user?.totalEntries ?? 0 }
     var currentStreak:  Int    { user?.currentStreak ?? 0 }
-    var moodAvgText:    String {
-        guard let u = user, u.moodScoreAvg > 0 else { return "—" }
-        return String(format: "%.1f", u.moodScoreAvg * 10)
-    }
 
     func loadProfile() {
         loadTask?.cancel()
@@ -27,15 +27,28 @@ final class ProfileViewModel: ObservableObject {
         errorMessage = nil
         loadTask = Task {
             do {
-                let u: APIUser = try await APIClient.shared.requestWithAutoRefresh(.me)
+                async let userReq: APIUser = APIClient.shared.requestWithAutoRefresh(.me)
+                async let summaryReq: APIProfileSummary? = loadProfileSummary()
+
+                let (u, s) = try await (userReq, summaryReq)
                 guard !Task.isCancelled else { return }
-                user      = u
-                isLoading = false
+                user            = u
+                profileSummary  = s
+                isLoading       = false
             } catch {
                 guard !Task.isCancelled else { return }
                 errorMessage = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
                 isLoading    = false
             }
+        }
+    }
+
+    func updateLanguage(_ language: String) {
+        guard !isUpdatingLanguage else { return }
+        isUpdatingLanguage = true
+        Task {
+            LocalizationManager.shared.currentLanguage = language
+            isUpdatingLanguage = false
         }
     }
 
@@ -46,10 +59,20 @@ final class ProfileViewModel: ObservableObject {
         logoutTask = Task {
             let refreshToken = TokenManager.shared.refreshToken() ?? ""
             let body = LogoutBody(refreshToken: refreshToken)
-            _ = try? await APIClient.shared.request(.logout(body)) as APIVoidResponse
+            _ = try? await APIClient.shared.request(.logout(body)) as APIErrorResponse
             TokenManager.shared.clearAll()
             await AppState.shared.signOut()
             isLoggingOut = false
+        }
+    }
+
+    // MARK: - Private helpers
+
+    private func loadProfileSummary() async -> APIProfileSummary? {
+        do {
+            return try await APIClient.shared.requestWithAutoRefresh(.profileSummary)
+        } catch {
+            return nil
         }
     }
 }

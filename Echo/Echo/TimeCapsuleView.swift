@@ -1,256 +1,281 @@
 import SwiftUI
 
 struct TimeCapsuleView: View {
-    @Binding var selectedTab: AppTab
+    @Binding var selectedTab: String
     @StateObject private var viewModel = TimeCapsuleViewModel()
     @State private var isMenuOpen = false
+    @Environment(\.colorScheme) var colorScheme
+    @EnvironmentObject var locManager: LocalizationManager
+    @EnvironmentObject private var tabNavigation: TabNavigationManager
 
     var body: some View {
         ZStack {
+            // Special gradient background for the mystical capsule feel
             LinearGradient(
                 gradient: Gradient(stops: [
                     .init(color: Color(red: 0.298, green: 0.114, blue: 0.584), location: 0.0),
                     .init(color: Color(red: 0.200, green: 0.090, blue: 0.361), location: 0.3),
                     .init(color: Color(red: 0.149, green: 0.075, blue: 0.247), location: 0.45),
-                    .init(color: Color(red: 0.098, green: 0.063, blue: 0.133), location: 0.6)
+                    .init(color: AppTheme.Colors.background(colorScheme), location: 0.6)
                 ]),
                 startPoint: .topLeading, endPoint: .bottomTrailing
             )
             .ignoresSafeArea()
 
             Image(systemName: "sparkles").font(.system(size: 100))
-                .foregroundColor(.white).opacity(0.05).offset(x: -100, y: -100)
+                .foregroundColor(AppTheme.Colors.textPrimary(colorScheme)).opacity(0.05).offset(x: -100, y: -100)
 
             VStack(spacing: 0) {
                 // Header
                 HStack {
-                    Button(action: { selectedTab = .profile }) {
+                    Button(action: {
+                        selectedTab = tabNavigation.goBack(from: selectedTab, fallback: "home")
+                    }) {
                         Image(systemName: "chevron.left")
-                            .font(.system(size: 16, weight: .semibold)).foregroundColor(.white)
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
                     }
                     Spacer()
-                    Text("Time Capsule")
-                        .font(.system(size: 18, weight: .bold)).foregroundColor(.white)
+                    Text(locManager.t("nav.time_capsule"))
+                        .font(AppTheme.Typography.heading3)
+                        .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
                     Spacer()
                     Button(action: { isMenuOpen.toggle() }) {
                         Image(systemName: "line.3.horizontal")
-                            .font(.system(size: 18, weight: .semibold)).foregroundColor(.white)
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
                     }
                     .frame(width: 40, height: 40)
-                    .background(Color(red: 0.149, green: 0.098, blue: 0.196)).cornerRadius(20)
+                    .background(AppTheme.Colors.surface(colorScheme))
+                    .cornerRadius(AppTheme.Spacing.radiusFull)
                 }
-                .padding(.horizontal, 24).padding(.vertical, 24)
+                .padding(.horizontal, AppTheme.Spacing.lg)
+                .padding(.vertical, AppTheme.Spacing.lg)
 
                 if viewModel.isLoading {
                     Spacer()
-                    ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .white))
+                    ProgressView().progressViewStyle(CircularProgressViewStyle(tint: AppTheme.Colors.accent))
                     Spacer()
+                } else if let error = viewModel.errorMessage, viewModel.capsules.isEmpty {
+                    ErrorStateView(message: error) {
+                        viewModel.loadCapsules()
+                    }
                 } else {
                     ScrollView {
-                        VStack(spacing: 32) {
-                            if let errorMessage = viewModel.errorMessage {
-                                Text(errorMessage)
-                                    .font(.system(size: 13, weight: .medium))
-                                    .foregroundColor(Color(red: 0.937, green: 0.267, blue: 0.267))
-                                    .padding(.horizontal, 24)
-                            }
+                        VStack(spacing: AppTheme.Spacing.xl) {
                             // Countdown Section
-                            VStack(spacing: 32) {
-                                VStack(spacing: 8) {
-                                    Text("NEXT CAPSULE OPENING")
-                                        .font(.system(size: 14, weight: .medium)).tracking(1.4)
-                                        .foregroundColor(Color(red: 0.596, green: 0.283, blue: 0.941))
+                            VStack(spacing: AppTheme.Spacing.xl) {
+                                VStack(spacing: AppTheme.Spacing.sm) {
+                                    Text(locManager.t("capsule.next_opening"))
+                                        .font(AppTheme.Typography.caption).fontWeight(.medium)
+                                        .tracking(1.4)
+                                        .foregroundColor(AppTheme.Colors.accentSecondary)
 
                                     Text(viewModel.nextUnlockCountdown)
-                                        .font(.system(size: 36, weight: .bold)).foregroundColor(.white)
-                                        .shadow(color: Color(red: 0.498, green: 0.075, blue: 0.929).opacity(0.5), radius: 15)
+                                        .font(AppTheme.Typography.display)
+                                        .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
+                                        .shadow(color: AppTheme.Colors.accent.opacity(0.5), radius: 15)
                                 }
 
                                 // Central Lock Icon
                                 ZStack {
                                     Circle()
-                                        .fill(Color(red: 0.498, green: 0.075, blue: 0.929).opacity(0.3))
+                                        .fill(AppTheme.Colors.accent.opacity(0.3))
                                         .blur(radius: 30).frame(width: 192, height: 192)
                                     Circle()
-                                        .strokeBorder(Color.white.opacity(0.1), lineWidth: 1)
+                                        .strokeBorder(AppTheme.Colors.textPrimary(colorScheme).opacity(0.1), lineWidth: 1)
                                         .frame(width: 192, height: 192)
                                     VStack {
                                         Image(systemName: "lock.fill").font(.system(size: 40))
-                                            .foregroundColor(Color(red: 0.596, green: 0.283, blue: 0.941))
-                                            .shadow(color: Color(red: 0.596, green: 0.283, blue: 0.941).opacity(0.8), radius: 10)
-                                        Text("SEALED")
-                                            .font(.system(size: 12, weight: .bold)).tracking(2.4)
-                                            .foregroundColor(.white.opacity(0.5))
+                                            .foregroundColor(AppTheme.Colors.accentSecondary)
+                                            .shadow(color: AppTheme.Colors.accentSecondary.opacity(0.8), radius: 10)
+                                        Text(locManager.t("capsule.sealed").uppercased())
+                                            .font(AppTheme.Typography.micro).fontWeight(.bold)
+                                            .tracking(2.4)
+                                            .foregroundColor(AppTheme.Colors.textPrimary(colorScheme).opacity(0.5))
                                     }
                                 }
                                 .frame(height: 200)
                             }
-                            .padding(.horizontal, 24)
+                            .padding(.horizontal, AppTheme.Spacing.lg)
 
                             // Sealed Memories Section
                             if !viewModel.capsules.isEmpty {
-                                VStack(alignment: .leading, spacing: 16) {
+                                VStack(alignment: .leading, spacing: AppTheme.Spacing.md) {
                                     HStack {
-                                        Text("Sealed Memories")
-                                            .font(.system(size: 18, weight: .bold)).foregroundColor(.white)
+                                        Text(locManager.t("capsule.sealed_memories"))
+                                            .font(AppTheme.Typography.heading3)
+                                            .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
                                         Spacer()
-                                        Text("\(viewModel.capsules.filter(\.isSealed).count) Pending")
-                                            .font(.system(size: 13, weight: .semibold))
-                                            .foregroundColor(Color(red: 0.596, green: 0.283, blue: 0.941))
+                                        Text(String(format: locManager.t("capsule.pending_fmt"), viewModel.capsules.filter(\.isSealed).count))
+                                            .font(AppTheme.Typography.caption).fontWeight(.semibold)
+                                            .foregroundColor(AppTheme.Colors.accentSecondary)
                                     }
-                                    .padding(.horizontal, 24)
+                                    .padding(.horizontal, AppTheme.Spacing.lg)
 
-                                    VStack(spacing: 12) {
+                                    VStack(spacing: AppTheme.Spacing.sm) {
                                         ForEach(viewModel.capsules) { capsule in
                                             APISealedMemoryCard(capsule: capsule)
                                         }
                                     }
-                                    .padding(.horizontal, 24)
+                                    .padding(.horizontal, AppTheme.Spacing.lg)
                                 }
                             }
 
                             // Record Button
                             Button(action: { viewModel.showCreateSheet = true }) {
                                 HStack {
-                                    Image(systemName: "mic.fill").font(.system(size: 16, weight: .semibold))
-                                    Text("Record Message to Future Self").font(.system(size: 16, weight: .semibold))
+                                    Image(systemName: "mic.fill").font(AppTheme.Typography.bodyEm)
+                                    Text(locManager.t("capsule.record_future_self")).font(AppTheme.Typography.bodyEm)
                                 }
                                 .frame(maxWidth: .infinity).padding(.vertical, 14)
-                                .background(Color(red: 0.498, green: 0.075, blue: 0.929))
-                                .foregroundColor(.white).cornerRadius(9999)
+                                .background(AppTheme.Gradients.accent)
+                                .foregroundColor(.white)
+                                .cornerRadius(AppTheme.Spacing.radiusFull)
+                                .shadow(color: AppTheme.Colors.accent.opacity(0.4), radius: 12, y: 4)
                             }
-                            .padding(.horizontal, 24).padding(.bottom, 40)
+                            .padding(.horizontal, AppTheme.Spacing.lg)
+                            .padding(.bottom, AppTheme.Spacing.xxl)
                         }
-                        .padding(.top, 32)
+                        .padding(.top, AppTheme.Spacing.xl)
+                    }
+                    .refreshable {
+                        await viewModel.refresh()
                     }
                 }
             }
 
             if isMenuOpen {
-                HStack(spacing: 0) {
-                    HamburgerMenuView(isMenuOpen: $isMenuOpen, selectedTab: $selectedTab)
-                        .frame(maxWidth: 250)
-                    Spacer()
-                }
-                .transition(.move(edge: .leading))
-                .zIndex(1)
+                HamburgerMenuView(isMenuOpen: $isMenuOpen, selectedTab: $selectedTab)
+                    .transition(.move(edge: .leading))
+                    .zIndex(10)
+                    .ignoresSafeArea()
             }
         }
         .onAppear { viewModel.loadCapsules() }
+        .onDisappear { viewModel.cancelAll() }
         .sheet(isPresented: $viewModel.showCreateSheet) {
             CreateCapsuleSheet(viewModel: viewModel)
         }
     }
 }
 
-// MARK: — API Sealed Memory Card
+// MARK: - API Sealed Memory Card
 
 struct APISealedMemoryCard: View {
     let capsule: APITimeCapsule
+    @Environment(\.colorScheme) var colorScheme
+    @EnvironmentObject var locManager: LocalizationManager
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: AppTheme.Spacing.sm) {
             Image(systemName: capsule.isSealed ? "lock.fill" : "lock.open.fill")
                 .font(.system(size: 18))
-                .foregroundColor(Color(red: 0.596, green: 0.283, blue: 0.941))
+                .foregroundColor(.white)
                 .frame(width: 40, height: 40)
+                .background(AppTheme.Gradients.accent)
+                .cornerRadius(AppTheme.Spacing.radiusSm)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(capsule.title ?? capsule.capsuleContentType.displayTitle + " Capsule")
-                    .font(.system(size: 15, weight: .semibold)).foregroundColor(.white).lineLimit(1)
-                Text(capsule.capsuleContentType.displayTitle + " • Unlock \(capsule.unlockDateFormatted)")
-                    .font(.system(size: 12)).foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
+                Text(capsule.title ?? String(format: locManager.t("capsule.default_title_fmt"), capsule.contentType.capitalized))
+                    .font(AppTheme.Typography.body).fontWeight(.semibold)
+                    .foregroundColor(AppTheme.Colors.textPrimary(colorScheme)).lineLimit(1)
+                Text("\(capsule.contentType.capitalized) • \(locManager.t("capsule.unlock")) \(capsule.unlockDateFormatted)")
+                    .font(AppTheme.Typography.label)
+                    .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
             }
 
             Spacer()
 
             VStack(alignment: .trailing, spacing: 4) {
                 Text(capsule.sealedDateShort)
-                    .font(.system(size: 12)).foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
+                    .font(AppTheme.Typography.label)
+                    .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
                 Image(systemName: "chevron.right")
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
+                    .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
             }
         }
-        .padding(12)
-        .background(Color(red: 0.141, green: 0.098, blue: 0.188).opacity(0.5))
-        .cornerRadius(12)
-        .overlay(RoundedRectangle(cornerRadius: 12)
-            .strokeBorder(Color(red: 0.498, green: 0.075, blue: 0.929).opacity(0.2), lineWidth: 1))
+        .padding(AppTheme.Spacing.sm)
+        .background(AppTheme.Colors.surfaceElevated(colorScheme).opacity(0.5))
+        .cornerRadius(AppTheme.Spacing.radiusMd)
+        .overlay(RoundedRectangle(cornerRadius: AppTheme.Spacing.radiusMd)
+            .strokeBorder(AppTheme.Colors.accent.opacity(0.2), lineWidth: 1))
     }
 }
 
-// MARK: — Create Capsule Sheet
+// MARK: - Create Capsule Sheet
 
 struct CreateCapsuleSheet: View {
     @ObservedObject var viewModel: TimeCapsuleViewModel
+    @Environment(\.colorScheme) var colorScheme
+    @EnvironmentObject var locManager: LocalizationManager
 
     var body: some View {
         NavigationView {
             ZStack {
-                Color(red: 0.098, green: 0.063, blue: 0.133).ignoresSafeArea()
+                AppTheme.Colors.background(colorScheme).ignoresSafeArea()
 
-                VStack(spacing: 24) {
+                VStack(spacing: AppTheme.Spacing.lg) {
                     // Title
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Title (optional)")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
-                        TextField("Give your capsule a title", text: $viewModel.capsuleTitle)
-                            .font(.system(size: 14)).foregroundColor(.white)
-                            .padding(12).background(Color.white.opacity(0.05)).cornerRadius(12)
+                    VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
+                        Text(locManager.t("capsule.title_optional"))
+                            .font(AppTheme.Typography.label).fontWeight(.bold)
+                            .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
+                        TextField(locManager.t("capsule.title_placeholder"), text: $viewModel.capsuleTitle)
+                            .font(AppTheme.Typography.caption)
+                            .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
+                            .padding(AppTheme.Spacing.sm)
+                            .background(AppTheme.Colors.surface(colorScheme))
+                            .cornerRadius(AppTheme.Spacing.radiusMd)
                     }
 
                     // Unlock in
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Unlock in \(viewModel.unlockInDays) days")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
-                        HStack(spacing: 12) {
+                    VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
+                        Text(String(format: locManager.t("capsule.unlock_days_fmt"), viewModel.unlockInDays))
+                            .font(AppTheme.Typography.label).fontWeight(.bold)
+                            .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
+                        HStack(spacing: AppTheme.Spacing.sm) {
                             ForEach([30, 90, 180, 365], id: \.self) { days in
                                 Button(action: { viewModel.unlockInDays = days }) {
-                                    Text("\(days)d")
-                                        .font(.system(size: 13, weight: .semibold))
-                                        .foregroundColor(viewModel.unlockInDays == days ? .white : Color(red: 0.612, green: 0.639, blue: 0.686))
-                                        .padding(.horizontal, 12).padding(.vertical, 8)
+                                    Text(String(format: locManager.t("capsule.days_short_fmt"), days))
+                                        .font(AppTheme.Typography.caption).fontWeight(.semibold)
+                                        .foregroundColor(viewModel.unlockInDays == days
+                                            ? .white : AppTheme.Colors.textMuted(colorScheme))
+                                        .padding(.horizontal, AppTheme.Spacing.sm)
+                                        .padding(.vertical, AppTheme.Spacing.sm)
                                         .background(viewModel.unlockInDays == days
-                                            ? Color(red: 0.498, green: 0.075, blue: 0.929)
-                                            : Color.white.opacity(0.05))
-                                        .cornerRadius(8)
+                                            ? AppTheme.Colors.accent
+                                            : AppTheme.Colors.surface(colorScheme))
+                                        .cornerRadius(AppTheme.Spacing.radiusSm)
                                 }
                             }
                         }
                     }
 
                     // Record
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Voice Message")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
+                    VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
+                        Text(locManager.t("capsule.voice_message"))
+                            .font(AppTheme.Typography.label).fontWeight(.bold)
+                            .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
                         Button(action: { viewModel.toggleRecording() }) {
-                            HStack(spacing: 8) {
+                            HStack(spacing: AppTheme.Spacing.sm) {
                                 Image(systemName: viewModel.isRecording ? "stop.circle.fill" : "mic.circle.fill")
                                     .font(.system(size: 20))
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text(viewModel.isRecording ? "Recording…" : "Tap to record")
-                                        .font(.system(size: 12, weight: .semibold))
-                                    Text(viewModel.recordingTime).font(.system(size: 10))
+                                    Text(viewModel.isRecording ? locManager.t("capsule.recording") : locManager.t("voice.tap_to_record"))
+                                        .font(AppTheme.Typography.label).fontWeight(.semibold)
+                                    Text(viewModel.recordingTime).font(AppTheme.Typography.micro)
                                 }
                             }
-                            .frame(maxWidth: .infinity, alignment: .leading).padding(12)
-                            .foregroundColor(viewModel.isRecording ? Color(red: 0.937, green: 0.267, blue: 0.267) : .white)
-                            .background(viewModel.isRecording
-                                ? Color(red: 0.937, green: 0.267, blue: 0.267).opacity(0.2)
-                                : Color.white.opacity(0.05))
-                            .cornerRadius(12)
-                        }
-                    }
-
-                    if let errorMessage = viewModel.errorMessage {
-                        Text(errorMessage)
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(Color(red: 0.937, green: 0.267, blue: 0.267))
                             .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(AppTheme.Spacing.sm)
+                            .foregroundColor(viewModel.isRecording ? AppTheme.Colors.destructive : AppTheme.Colors.textPrimary(colorScheme))
+                            .background(viewModel.isRecording
+                                ? AppTheme.Colors.destructive.opacity(0.2)
+                                : AppTheme.Colors.surface(colorScheme))
+                            .cornerRadius(AppTheme.Spacing.radiusMd)
+                        }
                     }
 
                     Spacer()
@@ -260,25 +285,27 @@ struct CreateCapsuleSheet: View {
                         if viewModel.isCreating {
                             ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .white))
                         } else {
-                            Text("Seal Capsule 🔒")
-                                .font(.system(size: 16, weight: .semibold)).foregroundColor(.white)
+                            Text(locManager.t("capsule.seal_capsule"))
+                                .font(AppTheme.Typography.bodyEm).foregroundColor(.white)
                         }
                     }
                     .frame(maxWidth: .infinity).frame(height: 52)
-                    .background(Color(red: 0.498, green: 0.075, blue: 0.929)).cornerRadius(16)
+                    .background(AppTheme.Gradients.accent)
+                    .cornerRadius(AppTheme.Spacing.radiusLg)
                     .disabled(viewModel.isCreating)
                 }
-                .padding(24)
+                .padding(AppTheme.Spacing.lg)
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    Text("New Time Capsule")
-                        .font(.system(size: 16, weight: .bold)).foregroundColor(.white)
+                    Text(locManager.t("capsule.new"))
+                        .font(AppTheme.Typography.heading3)
+                        .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
                 }
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") { viewModel.showCreateSheet = false }
-                        .foregroundColor(Color(red: 0.498, green: 0.075, blue: 0.929))
+                    Button(locManager.t("common.cancel")) { viewModel.showCreateSheet = false }
+                        .foregroundColor(AppTheme.Colors.accent)
                 }
             }
         }

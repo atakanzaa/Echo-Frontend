@@ -1,363 +1,161 @@
 import SwiftUI
 
 struct PremiumView: View {
-    @Binding var selectedTab: AppTab
-    @Environment(\.openURL) private var openURL
+    @Binding var selectedTab: String
     @State private var selectedPlan: String = "yearly"
-    @State private var isMenuOpen = false
-    @State private var purchaseMessage: String?
-    
+    @Environment(\.colorScheme) var colorScheme
+    @EnvironmentObject var locManager: LocalizationManager
+    @EnvironmentObject private var tabNavigation: TabNavigationManager
+
     var body: some View {
         ZStack {
-            Color(red: 0.133, green: 0.114, blue: 0.063)
-                .ignoresSafeArea()
-            
+            // Gold-tinted dark background
+            LinearGradient(
+                gradient: Gradient(stops: [
+                    .init(color: Color(red: 0.220, green: 0.160, blue: 0.040).opacity(0.7), location: 0),
+                    .init(color: Color(red: 0.133, green: 0.114, blue: 0.063), location: 0.5),
+                    .init(color: Color(red: 0.078, green: 0.039, blue: 0.114), location: 1.0)
+                ]),
+                startPoint: .topLeading, endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
+
             VStack(spacing: 0) {
-                // Hero Section
-                VStack(alignment: .leading, spacing: 0) {
-                    // Close Button
-                    HStack {
-                        Button(action: { isMenuOpen.toggle() }) {
-                            Image(systemName: "line.3.horizontal")
-                                .font(.system(size: 18, weight: .semibold))
-                                .foregroundColor(.white)
-                        }
-                        .frame(width: 40, height: 40)
-                        .background(Color(red: 0.149, green: 0.098, blue: 0.196))
-                        .cornerRadius(20)
-                        
-                        Spacer()
-                        
-                        Button(action: { selectedTab = .profile }) {
-                            Image(systemName: "xmark")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(.white)
-                                .frame(width: 32, height: 32)
-                                .background(Color(red: 0.0, green: 0.0, blue: 0.0).opacity(0.2))
-                                .cornerRadius(9999)
-                        }
-                    }
-                    .padding(.horizontal, 24)
-                    .padding(.top, 24)
-                    
+                // Top bar
+                HStack {
                     Spacer()
-                    
-                    // Icon and Title
-                    VStack(spacing: 16) {
-                        ZStack {
-                            Circle()
-                                .strokeBorder(Color(red: 0.933, green: 0.741, blue: 0.169).opacity(0.2), lineWidth: 1)
-                                .background(
-                                    LinearGradient(
-                                        gradient: Gradient(colors: [
-                                            Color(red: 0.933, green: 0.741, blue: 0.169).opacity(0.2),
-                                            Color(red: 0.933, green: 0.741, blue: 0.169).opacity(0.05)
-                                        ]),
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                                .frame(width: 64, height: 64)
-                                .overlay(
-                                    Circle()
-                                        .strokeBorder(Color(red: 0.933, green: 0.741, blue: 0.169).opacity(0.2), lineWidth: 1)
-                                )
-                                .shadow(color: Color(red: 0.933, green: 0.741, blue: 0.169).opacity(0.15), radius: 15)
-                            
-                            Image(systemName: "sparkles")
-                                .font(.system(size: 22, weight: .semibold))
-                                .foregroundColor(Color(red: 0.933, green: 0.741, blue: 0.169))
-                        }
-                        
-                        Text("Unlock Full Insight")
-                            .font(.system(size: 30, weight: .bold))
-                            .foregroundColor(.white)
-                        
-                        Text("Analyze your emotional journey with\ndeep AI intelligence.")
-                            .font(.system(size: 16, weight: .medium))
+                    Button(action: {
+                        selectedTab = tabNavigation.goBack(from: selectedTab, fallback: "home")
+                    }) {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(.white.opacity(0.7))
-                            .multilineTextAlignment(.center)
+                            .frame(width: 32, height: 32)
+                            .background(Color.black.opacity(0.2))
+                            .cornerRadius(AppTheme.Spacing.radiusFull)
                     }
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 80)
                 }
-                .frame(height: 320)
-                .background(
-                    LinearGradient(
-                        gradient: Gradient(stops: [
-                            .init(color: Color(red: 0.400, green: 0.300, blue: 0.100).opacity(0.6), location: 0),
-                            .init(color: Color(red: 0.133, green: 0.114, blue: 0.063), location: 1)
-                        ]),
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                
-                ScrollView {
-                    VStack(spacing: 24) {
-                        // Features List
-                        VStack(spacing: 12) {
-                            FeatureItemView(
-                                icon: "mic.fill",
-                                title: "Unlimited Recordings",
-                                subtitle: "Capture every moment without limits"
-                            )
-                            
-                            FeatureItemView(
-                                icon: "brain.head.profile",
-                                title: "Deep AI Analysis",
-                                subtitle: "Weekly insights into your habits"
-                            )
-                            
-                            FeatureItemView(
-                                icon: "square.grid.2x2",
-                                title: "Emotional Heatmaps",
-                                subtitle: "Visualize your mood trends"
-                            )
-                        }
-                        .padding(.horizontal, 20)
-                        
-                        // Plan Selection
-                        VStack(spacing: 12) {
-                            HStack(spacing: 8) {
-                                Text("Monthly")
-                                    .font(.system(size: 16, weight: .semibold))
-                                    .foregroundColor(selectedPlan == "monthly" ? .white : Color(red: 0.612, green: 0.639, blue: 0.686))
-                                
-                                Spacer()
-                                
-                                Text("Yearly")
-                                    .font(.system(size: 16, weight: .semibold))
-                                    .foregroundColor(selectedPlan == "yearly" ? .white : Color(red: 0.612, green: 0.639, blue: 0.686))
-                            }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 4)
-                            .background(Color(red: 0.098, green: 0.063, blue: 0.133))
-                            .cornerRadius(9999)
-                            .onTapGesture { selectedPlan = "monthly" }
-                            
-                            HStack(spacing: 12) {
-                                // Monthly Plan
-                                VStack(alignment: .leading, spacing: 12) {
-                                    HStack {
-                                        if selectedPlan == "monthly" {
-                                            Circle()
-                                                .fill(Color(red: 0.933, green: 0.741, blue: 0.169))
-                                                .frame(width: 20, height: 20)
-                                                .overlay(
-                                                    Image(systemName: "checkmark")
-                                                        .font(.system(size: 10, weight: .bold))
-                                                        .foregroundColor(.black)
-                                                )
-                                        } else {
-                                            Circle()
-                                                .strokeBorder(Color(red: 0.612, green: 0.639, blue: 0.686), lineWidth: 1.5)
-                                                .frame(width: 20, height: 20)
-                                        }
-                                        
-                                        Text("Monthly")
-                                            .font(.system(size: 14, weight: .semibold))
-                                            .foregroundColor(.white)
-                                        
-                                        Spacer()
-                                    }
-                                    
-                                    Text("Flexible plan")
-                                        .font(.system(size: 12, weight: .regular))
-                                        .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
-                                    
-                                    Text("₹99")
-                                        .font(.system(size: 18, weight: .bold))
-                                        .foregroundColor(.white)
-                                    
-                                    Text("/mo")
-                                        .font(.system(size: 12, weight: .regular))
-                                        .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
-                                }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(12)
-                                .background(Color(red: 0.098, green: 0.063, blue: 0.133))
-                                .cornerRadius(12)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .strokeBorder(
-                                            selectedPlan == "monthly" ? Color(red: 0.933, green: 0.741, blue: 0.169).opacity(0.3) : Color(red: 0.612, green: 0.639, blue: 0.686).opacity(0.1),
-                                            lineWidth: 1
-                                        )
-                                )
-                                .onTapGesture { selectedPlan = "monthly" }
-                                
-                                // Yearly Plan (Best Value)
-                                VStack(alignment: .leading, spacing: 12) {
-                                    HStack {
-                                        if selectedPlan == "yearly" {
-                                            Circle()
-                                                .fill(Color(red: 0.933, green: 0.741, blue: 0.169))
-                                                .frame(width: 20, height: 20)
-                                                .overlay(
-                                                    Image(systemName: "checkmark")
-                                                        .font(.system(size: 10, weight: .bold))
-                                                        .foregroundColor(.black)
-                                                )
-                                        } else {
-                                            Circle()
-                                                .strokeBorder(Color(red: 0.612, green: 0.639, blue: 0.686), lineWidth: 1.5)
-                                                .frame(width: 20, height: 20)
-                                        }
-                                        
-                                        Text("Yearly")
-                                            .font(.system(size: 14, weight: .semibold))
-                                            .foregroundColor(.white)
-                                        
-                                        Spacer()
-                                        
-                                        Text("BEST VALUE")
-                                            .font(.system(size: 11, weight: .bold))
-                                            .tracking(0.5)
-                                            .foregroundColor(.black)
-                                            .padding(.horizontal, 8)
-                                            .padding(.vertical, 3)
-                                            .background(Color(red: 0.933, green: 0.741, blue: 0.169))
-                                            .cornerRadius(4)
-                                    }
-                                    
-                                    Text("Save 20%")
-                                        .font(.system(size: 12, weight: .regular))
-                                        .foregroundColor(Color(red: 0.933, green: 0.741, blue: 0.169))
-                                    
-                                    Text("₹999")
-                                        .font(.system(size: 18, weight: .bold))
-                                        .foregroundColor(Color(red: 0.933, green: 0.741, blue: 0.169))
-                                    
-                                    Text("/yr")
-                                        .font(.system(size: 12, weight: .regular))
-                                        .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
-                                }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(12)
-                                .background(Color(red: 0.098, green: 0.063, blue: 0.133))
-                                .cornerRadius(12)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .strokeBorder(
-                                            selectedPlan == "yearly" ? Color(red: 0.933, green: 0.741, blue: 0.169).opacity(0.3) : Color(red: 0.612, green: 0.639, blue: 0.686).opacity(0.1),
-                                            lineWidth: 1
-                                        )
-                                )
-                                .onTapGesture { selectedPlan = "yearly" }
-                            }
-                        }
-                        .padding(.horizontal, 20)
-                        
-                        // CTA Button
-                        Button(action: { purchaseMessage = "Purchases will be available soon." }) {
-                            Text("Start Free Trial")
-                                .font(.system(size: 16, weight: .bold))
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 14)
-                                .background(Color(red: 0.933, green: 0.741, blue: 0.169))
-                                .foregroundColor(.black)
-                                .cornerRadius(9999)
-                        }
-                        .padding(.horizontal, 20)
-                        
-                        // Trial Info
-                        Text("7-day free trial, then ₹999/year. Cancel anytime.")
-                            .font(.system(size: 12, weight: .regular))
-                            .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 20)
-                        
-                        // Footer Links
-                        HStack(spacing: 12) {
-                            Button(action: { purchaseMessage = "Restore purchases will be available soon." }) {
-                                Text("Restore Purchase")
-                                    .font(.system(size: 12, weight: .regular))
-                                    .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
-                            }
-                            
-                            Text("•")
-                                .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
-                            
-                            Button(action: { openURL(AppConstants.Links.terms) }) {
-                                Text("Terms of Service")
-                                    .font(.system(size: 12, weight: .regular))
-                                    .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
-                            }
-                            
-                            Text("•")
-                                .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
-                            
-                            Button(action: { openURL(AppConstants.Links.privacy) }) {
-                                Text("Privacy Policy")
-                                    .font(.system(size: 12, weight: .regular))
-                                    .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
-                            }
-                        }
-                        .padding(.horizontal, 20)
-                        .padding(.bottom, 40)
+                .padding(.horizontal, AppTheme.Spacing.lg)
+                .padding(.top, AppTheme.Spacing.lg)
+
+                // Hero
+                VStack(spacing: AppTheme.Spacing.md) {
+                    ZStack {
+                        Circle()
+                            .fill(AppTheme.Colors.gold.opacity(0.15))
+                            .blur(radius: 20).frame(width: 100, height: 100)
+                        Circle()
+                            .fill(LinearGradient(colors: [AppTheme.Colors.gold.opacity(0.25), AppTheme.Colors.gold.opacity(0.05)],
+                                                 startPoint: .topLeading, endPoint: .bottomTrailing))
+                            .overlay(Circle().strokeBorder(AppTheme.Colors.gold.opacity(0.3), lineWidth: 1))
+                            .frame(width: 72, height: 72)
+                            .shadow(color: AppTheme.Colors.gold.opacity(0.2), radius: 20)
+                        Image(systemName: "sparkles").font(.system(size: 24, weight: .semibold)).foregroundColor(AppTheme.Colors.gold)
                     }
-                    .padding(.top, 32)
+                    Text(locManager.t("premium.unlock_full")).font(AppTheme.Typography.heading1).foregroundColor(.white)
+                    Text(locManager.t("premium.hero_subtitle"))
+                        .font(AppTheme.Typography.bodyEm).foregroundColor(.white.opacity(0.6)).multilineTextAlignment(.center)
+                }
+                .padding(.horizontal, AppTheme.Spacing.lg)
+                .padding(.vertical, AppTheme.Spacing.xl)
+
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: AppTheme.Spacing.lg) {
+                        VStack(spacing: AppTheme.Spacing.sm) {
+                            FeatureItemView(icon: "mic.fill",           title: locManager.t("premium.feature.unlimited_recordings"), subtitle: locManager.t("premium.feature.unlimited_recordings_sub"))
+                            FeatureItemView(icon: "brain.head.profile", title: locManager.t("premium.feature.deep_ai"), subtitle: locManager.t("premium.feature.deep_ai_sub"))
+                            FeatureItemView(icon: "square.grid.2x2",   title: locManager.t("premium.feature.heatmaps"), subtitle: locManager.t("premium.feature.heatmaps_sub"))
+                        }
+                        .padding(.horizontal, AppTheme.Spacing.md)
+
+                        HStack(spacing: AppTheme.Spacing.sm) {
+                            planCard("monthly", title: locManager.t("premium.monthly"), desc: locManager.t("premium.flexible_plan"), price: "₹99", period: locManager.t("premium.period_month"), badge: nil)
+                            planCard("yearly",  title: locManager.t("premium.yearly"),  desc: locManager.t("premium.save_20"),      price: "₹999", period: locManager.t("premium.period_year"), badge: locManager.t("premium.best_value"))
+                        }
+                        .padding(.horizontal, AppTheme.Spacing.md)
+
+                        Button(action: {}) {
+                            Text(locManager.t("premium.start_trial")).font(AppTheme.Typography.bodyEm)
+                                .frame(maxWidth: .infinity).padding(.vertical, 16)
+                                .background(AppTheme.Colors.gold).foregroundColor(.black)
+                                .cornerRadius(AppTheme.Spacing.radiusFull)
+                        }
+                        .padding(.horizontal, AppTheme.Spacing.md)
+
+                        Text(String(format: locManager.t("premium.trial_footer_fmt"),
+                                    selectedPlan == "yearly" ? "₹999/year" : "₹99/month"))
+                            .font(AppTheme.Typography.label).foregroundColor(.white.opacity(0.4))
+                            .multilineTextAlignment(.center).padding(.horizontal, AppTheme.Spacing.md)
+
+                        HStack(spacing: AppTheme.Spacing.sm) {
+                            Button(action: {}) { Text(locManager.t("premium.restore_purchase")).font(AppTheme.Typography.label).foregroundColor(.white.opacity(0.3)) }
+                            Text("•").foregroundColor(.white.opacity(0.2))
+                            Button(action: {}) { Text(locManager.t("auth.terms")).font(AppTheme.Typography.label).foregroundColor(.white.opacity(0.3)) }
+                            Text("•").foregroundColor(.white.opacity(0.2))
+                            Button(action: {}) { Text(locManager.t("auth.privacy")).font(AppTheme.Typography.label).foregroundColor(.white.opacity(0.3)) }
+                        }
+                        .padding(.horizontal, AppTheme.Spacing.md)
+                        .padding(.bottom, AppTheme.Spacing.xxl)
+                    }
+                    .padding(.top, AppTheme.Spacing.sm)
                 }
             }
-            
-            if isMenuOpen {
-                HStack(spacing: 0) {
-                    HamburgerMenuView(isMenuOpen: $isMenuOpen, selectedTab: $selectedTab)
-                        .frame(maxWidth: 250)
-                    Spacer()
+        }
+    }
+
+    @ViewBuilder
+    private func planCard(_ plan: String, title: String, desc: String, price: String, period: String, badge: String?) -> some View {
+        let isActive = selectedPlan == plan
+        VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
+            HStack {
+                if isActive {
+                    Circle().fill(AppTheme.Colors.gold).frame(width: 20, height: 20)
+                        .overlay(Image(systemName: "checkmark").font(.system(size: 10, weight: .bold)).foregroundColor(.black))
+                } else {
+                    Circle().strokeBorder(.white.opacity(0.3), lineWidth: 1.5).frame(width: 20, height: 20)
                 }
-                .transition(.move(edge: .leading))
-                .zIndex(1)
+                Text(title).font(AppTheme.Typography.caption).fontWeight(.semibold).foregroundColor(.white)
+                Spacer()
+                if let badge = badge {
+                    Text(badge).font(AppTheme.Typography.micro).fontWeight(.bold).tracking(0.5)
+                        .foregroundColor(.black).padding(.horizontal, AppTheme.Spacing.sm).padding(.vertical, 3)
+                        .background(AppTheme.Colors.gold).cornerRadius(4)
+                }
+            }
+            Text(desc).font(AppTheme.Typography.label).foregroundColor(isActive ? AppTheme.Colors.gold : .white.opacity(0.4))
+            HStack(alignment: .lastTextBaseline, spacing: 2) {
+                Text(price).font(AppTheme.Typography.heading3).foregroundColor(isActive ? AppTheme.Colors.gold : .white)
+                Text(period).font(AppTheme.Typography.label).foregroundColor(.white.opacity(0.4))
             }
         }
-        .alert("Coming Soon", isPresented: .init(
-            get: { purchaseMessage != nil },
-            set: { if !$0 { purchaseMessage = nil } }
-        )) {
-            Button("OK") { purchaseMessage = nil }
-        } message: {
-            Text(purchaseMessage ?? "")
-        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(AppTheme.Spacing.sm)
+        .background(Color(red: 0.100, green: 0.080, blue: 0.050).opacity(0.8))
+        .cornerRadius(AppTheme.Spacing.radiusMd)
+        .overlay(RoundedRectangle(cornerRadius: AppTheme.Spacing.radiusMd)
+            .strokeBorder(isActive ? AppTheme.Colors.gold.opacity(0.5) : .white.opacity(0.1), lineWidth: 1))
+        .onTapGesture { selectedPlan = plan }
     }
 }
 
 struct FeatureItemView: View {
-    let icon: String
-    let title: String
-    let subtitle: String
-    
+    let icon: String; let title: String; let subtitle: String
+
     var body: some View {
-        HStack(spacing: 16) {
-            Image(systemName: icon)
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundColor(Color(red: 0.933, green: 0.741, blue: 0.169))
-                .frame(width: 40, height: 40)
-                .background(Color(red: 0.933, green: 0.741, blue: 0.169).opacity(0.1))
-                .cornerRadius(8)
-            
+        HStack(spacing: AppTheme.Spacing.md) {
+            Image(systemName: icon).font(.system(size: 16, weight: .semibold))
+                .foregroundColor(AppTheme.Colors.gold).frame(width: 40, height: 40)
+                .background(AppTheme.Colors.gold.opacity(0.12)).cornerRadius(AppTheme.Spacing.radiusSm)
             VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.white)
-                
-                Text(subtitle)
-                    .font(.system(size: 12, weight: .regular))
-                    .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686).opacity(0.5))
+                Text(title).font(AppTheme.Typography.caption).fontWeight(.semibold).foregroundColor(.white)
+                Text(subtitle).font(AppTheme.Typography.label).foregroundColor(.white.opacity(0.4))
             }
-            
             Spacer()
-            
-            Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 20))
-                .foregroundColor(Color(red: 0.933, green: 0.741, blue: 0.169))
+            Image(systemName: "checkmark.circle.fill").font(.system(size: 18)).foregroundColor(AppTheme.Colors.gold)
         }
-        .padding(13)
-        .background(Color(red: 1.0, green: 1.0, blue: 1.0).opacity(0.05))
-        .cornerRadius(12)
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .strokeBorder(Color(red: 1.0, green: 1.0, blue: 1.0).opacity(0.05), lineWidth: 1)
-        )
+        .padding(12)
+        .background(Color.white.opacity(0.05))
+        .cornerRadius(AppTheme.Spacing.radiusMd)
+        .overlay(RoundedRectangle(cornerRadius: AppTheme.Spacing.radiusMd).strokeBorder(.white.opacity(0.05), lineWidth: 1))
     }
 }

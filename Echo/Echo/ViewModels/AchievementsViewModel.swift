@@ -7,6 +7,7 @@ final class AchievementsViewModel: ObservableObject {
     @Published var data:         APIAchievementsResponse?
     @Published var isLoading     = false
     @Published var errorMessage: String?
+    private let loadTask = TaskGuard()
 
     var currentStreak: Int    { data?.currentStreak ?? 0 }
     var longestStreak: Int    { data?.longestStreak  ?? 0 }
@@ -38,19 +39,36 @@ final class AchievementsViewModel: ObservableObject {
     }
 
     func load() {
-        isLoading    = true
+        loadTask.run { [weak self] in
+            await self?.performLoad()
+        }
+    }
+
+    func refresh() async {
+        await loadTask.runAsync { [weak self] in
+            await self?.performLoad()
+        }
+    }
+
+    func cancelAll() {
+        loadTask.cancel()
+    }
+
+    private func performLoad() async {
+        isLoading = true
         errorMessage = nil
-        Task {
-            do {
-                let result: APIAchievementsResponse = try await APIClient.shared.requestWithAutoRefresh(
-                    .getAchievements
-                )
-                data      = result
-                isLoading = false
-            } catch {
-                errorMessage = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
-                isLoading    = false
-            }
+        do {
+            let result: APIAchievementsResponse = try await APIClient.shared.requestWithAutoRefresh(
+                .getAchievements
+            )
+            guard !Task.isCancelled else { return }
+            data = result
+            isLoading = false
+        } catch is CancellationError {
+            isLoading = false
+        } catch {
+            errorMessage = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
+            isLoading = false
         }
     }
 }

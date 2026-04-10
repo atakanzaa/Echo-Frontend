@@ -1,284 +1,254 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @Binding var selectedTab: AppTab
-    @Environment(\.openURL) private var openURL
+    @Binding var selectedTab: String
+    @EnvironmentObject var locManager: LocalizationManager
+    @AppStorage("darkMode") private var darkMode = true
     @State private var notificationsEnabled = true
     @State private var dailyReminder = true
-    @State private var darkMode = true
     @State private var privateMode = false
     @State private var soundEnabled = true
     @State private var showDeleteAlert = false
     @State private var isMenuOpen = false
-    @State private var infoMessage: String?
-    
+    @Environment(\.colorScheme) var colorScheme
+
     var body: some View {
         ZStack {
-            Color(red: 0.098, green: 0.063, blue: 0.133)
-                .ignoresSafeArea()
-            
+            AppTheme.Colors.background(colorScheme).ignoresSafeArea()
+
             VStack(spacing: 0) {
                 // Header
                 HStack {
-                    VStack(alignment: .leading) {
-                        Text("Settings")
-                            .font(.system(size: 20, weight: .bold))
-                            .foregroundColor(.white)
-                            .tracking(-0.5)
-                    }
-                    
+                    Text(locManager.t("settings.title"))
+                        .font(AppTheme.Typography.heading3)
+                        .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
                     Spacer()
-                    
+
                     Button(action: { isMenuOpen.toggle() }) {
                         Image(systemName: "line.3.horizontal")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(.white)
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
                     }
                     .frame(width: 40, height: 40)
-                    .background(Color(red: 0.149, green: 0.098, blue: 0.196))
-                    .cornerRadius(20)
+                    .background(AppTheme.Colors.surface(colorScheme))
+                    .cornerRadius(AppTheme.Spacing.radiusFull)
                 }
-                .padding(.horizontal, 24)
-                .padding(.vertical, 12)
-                .frame(height: 56)
-                .background(Color.black.opacity(0.3))
-                
+                .padding(.horizontal, AppTheme.Layout.screenHorizontal)
+                .padding(.top, AppTheme.Layout.headerTop)
+                .padding(.bottom, AppTheme.Layout.headerBottom)
+
                 ScrollView {
-                    VStack(spacing: 24) {
+                    VStack(spacing: AppTheme.Spacing.lg) {
                         // Account Section
-                        SettingsSectionView(title: "Account") {
+                        SettingsSectionView(title: locManager.t("settings.account")) {
                             SettingsItemView(
                                 icon: "person.crop.circle",
-                                title: "Profile",
-                                subtitle: "View and edit profile",
+                                title: locManager.t("settings.profile"),
+                                subtitle: locManager.t("settings.profile_sub"),
                                 showArrow: true
                             )
-                            
-                            Divider()
-                                .background(Color.white.opacity(0.05))
-                            
+
+                            Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
+
                             SettingsItemView(
                                 icon: "lock",
-                                title: "Privacy",
-                                subtitle: "Manage privacy settings",
+                                title: locManager.t("settings.privacy"),
+                                subtitle: locManager.t("settings.privacy_sub"),
                                 showArrow: true
                             )
                         }
-                        
+
                         // Notifications Section
-                        SettingsSectionView(title: "Notifications") {
+                        SettingsSectionView(title: locManager.t("settings.notifications")) {
                             SettingsToggleView(
                                 icon: "bell.circle.fill",
-                                title: "Push Notifications",
-                                subtitle: "Receive notifications",
+                                title: locManager.t("settings.push"),
+                                subtitle: locManager.t("settings.push_sub"),
                                 isOn: $notificationsEnabled
                             )
-                            
-                            Divider()
-                                .background(Color.white.opacity(0.05))
-                            
+
+                            Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
+
                             SettingsToggleView(
                                 icon: "clock.circle.fill",
-                                title: "Daily Reminder",
-                                subtitle: "9:00 AM daily",
+                                title: locManager.t("settings.daily"),
+                                subtitle: locManager.t("settings.daily_sub"),
                                 isOn: $dailyReminder
                             )
-                            
-                            Divider()
-                                .background(Color.white.opacity(0.05))
-                            
+
+                            Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
+
                             SettingsToggleView(
                                 icon: "speaker.wave.2.circle.fill",
-                                title: "Sound Effects",
-                                subtitle: "Audio feedback",
+                                title: locManager.t("settings.sound"),
+                                subtitle: locManager.t("settings.sound_sub"),
                                 isOn: $soundEnabled
                             )
                         }
-                        
+
                         // Appearance Section
-                        SettingsSectionView(title: "Appearance") {
+                        SettingsSectionView(title: locManager.t("settings.appearance")) {
                             SettingsToggleView(
                                 icon: "moon.circle.fill",
-                                title: "Dark Mode",
-                                subtitle: "Always enabled",
+                                title: locManager.t("settings.dark_mode"),
+                                subtitle: locManager.t("settings.dark_mode_sub"),
                                 isOn: $darkMode
                             )
-                            
-                            Divider()
-                                .background(Color.white.opacity(0.05))
-                            
+
+                            Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
+
                             SettingsItemView(
                                 icon: "textformat.size",
-                                title: "Text Size",
-                                subtitle: "Medium",
+                                title: locManager.t("settings.text_size"),
+                                subtitle: locManager.t("settings.text_size_sub"),
                                 showArrow: true
                             )
                         }
-                        
+
+                        SettingsSectionView(title: locManager.t("settings.language")) {
+                            Picker(locManager.t("settings.language"), selection: $locManager.currentLanguage) {
+                                Text(locManager.t("settings.language_segment_tr")).tag("tr")
+                                Text(locManager.t("settings.language_segment_en")).tag("en")
+                            }
+                            .pickerStyle(.segmented)
+                        }
+
                         // Privacy & Security Section
-                        SettingsSectionView(title: "Privacy & Security") {
+                        SettingsSectionView(title: locManager.t("settings.privacy_security")) {
                             SettingsToggleView(
                                 icon: "eye.slash.circle.fill",
-                                title: "Private Mode",
-                                subtitle: "Hide sensitive data",
+                                title: locManager.t("settings.private_mode"),
+                                subtitle: locManager.t("settings.private_mode_sub"),
                                 isOn: $privateMode
                             )
-                            
-                            Divider()
-                                .background(Color.white.opacity(0.05))
-                            
+
+                            Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
+
                             SettingsItemView(
                                 icon: "hand.raised.circle.fill",
-                                title: "Data & Privacy",
-                                subtitle: "Learn about our practices",
-                                showArrow: true,
-                                action: { openURL(AppConstants.Links.privacy) }
+                                title: locManager.t("settings.data_privacy"),
+                                subtitle: locManager.t("settings.data_privacy_sub"),
+                                showArrow: true
                             )
                         }
-                        
+
                         // Support Section
-                        SettingsSectionView(title: "Support") {
+                        SettingsSectionView(title: locManager.t("settings.support")) {
                             SettingsItemView(
                                 icon: "questionmark.circle.fill",
-                                title: "Help & FAQ",
-                                subtitle: "Get answers and tips",
-                                showArrow: true,
-                                action: { selectedTab = .help }
+                                title: locManager.t("settings.help_faq"),
+                                subtitle: locManager.t("settings.help_faq_sub"),
+                                showArrow: true
                             )
-                            
-                            Divider()
-                                .background(Color.white.opacity(0.05))
-                            
+
+                            Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
+
                             SettingsItemView(
                                 icon: "envelope.circle.fill",
-                                title: "Contact Support",
-                                subtitle: "Get in touch with us",
-                                showArrow: true,
-                                action: {
-                                    if let url = URL(string: "mailto:\(AppConstants.Links.supportEmail)") {
-                                        openURL(url)
-                                    }
-                                }
+                                title: locManager.t("settings.contact_support"),
+                                subtitle: locManager.t("settings.contact_support_sub"),
+                                showArrow: true
                             )
-                            
-                            Divider()
-                                .background(Color.white.opacity(0.05))
-                            
+
+                            Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
+
                             SettingsItemView(
                                 icon: "star.circle.fill",
-                                title: "Rate Our App",
-                                subtitle: "Share your feedback",
-                                showArrow: true,
-                                action: {
-                                    infoMessage = "App Store ratings will be enabled when Echo launches publicly."
-                                }
+                                title: locManager.t("settings.rate_app"),
+                                subtitle: locManager.t("settings.rate_app_sub"),
+                                showArrow: true
                             )
                         }
-                        
+
                         // About Section
-                        SettingsSectionView(title: "About") {
+                        SettingsSectionView(title: locManager.t("settings.about")) {
                             SettingsStaticItemView(
                                 icon: "info.circle.fill",
-                                title: "App Version",
-                                subtitle: AppConstants.AppInfo.shortVersion
+                                title: locManager.t("settings.app_version"),
+                                subtitle: "1.0.0"
                             )
-                            
-                            Divider()
-                                .background(Color.white.opacity(0.05))
-                            
+
+                            Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
+
                             SettingsItemView(
                                 icon: "doc.circle.fill",
-                                title: "Terms of Service",
-                                subtitle: "Read our terms",
-                                showArrow: true,
-                                action: { openURL(AppConstants.Links.terms) }
+                                title: locManager.t("settings.terms"),
+                                subtitle: locManager.t("settings.terms_sub"),
+                                showArrow: true
                             )
                         }
-                        
+
                         // Danger Zone
-                        VStack(alignment: .leading, spacing: 12) {
+                        VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
                             Button(action: { showDeleteAlert = true }) {
-                                HStack(spacing: 12) {
+                                HStack(spacing: AppTheme.Spacing.sm) {
                                     Image(systemName: "trash.circle.fill")
                                         .font(.system(size: 20))
-                                        .foregroundColor(Color(red: 0.937, green: 0.267, blue: 0.267))
-                                    
+                                        .foregroundColor(AppTheme.Colors.destructive)
+
                                     VStack(alignment: .leading, spacing: 2) {
-                                        Text("Delete All Data")
-                                            .font(.system(size: 14, weight: .semibold))
-                                            .foregroundColor(Color(red: 0.937, green: 0.267, blue: 0.267))
-                                        
-                                        Text("Permanently delete all entries")
-                                            .font(.system(size: 12, weight: .regular))
-                                            .foregroundColor(Color(red: 0.937, green: 0.267, blue: 0.267).opacity(0.7))
+                                        Text(locManager.t("settings.delete_all_data"))
+                                            .font(AppTheme.Typography.caption).fontWeight(.semibold)
+                                            .foregroundColor(AppTheme.Colors.destructive)
+                                        Text(locManager.t("settings.delete_all_data_sub"))
+                                            .font(AppTheme.Typography.label)
+                                            .foregroundColor(AppTheme.Colors.destructive.opacity(0.7))
                                     }
-                                    
+
                                     Spacer()
                                 }
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(16)
-                                .background(Color(red: 0.937, green: 0.267, blue: 0.267).opacity(0.1))
-                                .border(Color(red: 0.937, green: 0.267, blue: 0.267).opacity(0.3))
-                                .cornerRadius(12)
+                                .padding(AppTheme.Spacing.md)
+                                .background(AppTheme.Colors.destructive.opacity(0.1))
+                                .cornerRadius(AppTheme.Spacing.radiusMd)
+                                .overlay(RoundedRectangle(cornerRadius: AppTheme.Spacing.radiusMd)
+                                    .strokeBorder(AppTheme.Colors.destructive.opacity(0.3), lineWidth: 1))
                             }
                         }
-                        .padding(.horizontal, 16)
+                        .padding(.horizontal, AppTheme.Spacing.md)
                     }
-                    .padding(.vertical, 24)
+                    .padding(.vertical, AppTheme.Spacing.lg)
                 }
-                
-                Spacer()
-                
-                BottomNavigationView(currentTab: .settings, selectedTab: $selectedTab)
+
             }
-            .alert("Delete All Data?", isPresented: $showDeleteAlert) {
-                Button("Cancel", role: .cancel) { }
-                Button("Delete", role: .destructive) { }
+            .alert(locManager.t("settings.delete_alert_title"), isPresented: $showDeleteAlert) {
+                Button(locManager.t("common.cancel"), role: .cancel) { }
+                Button(locManager.t("common.delete"), role: .destructive) { }
             } message: {
-                Text("This action cannot be undone. All journal entries and data will be permanently deleted.")
+                Text(locManager.t("settings.delete_alert_body"))
             }
-            .alert("Coming Soon", isPresented: .init(
-                get: { infoMessage != nil },
-                set: { if !$0 { infoMessage = nil } }
-            )) {
-                Button("OK") { infoMessage = nil }
-            } message: {
-                Text(infoMessage ?? "")
-            }
-            
+
             if isMenuOpen {
-                HStack(spacing: 0) {
-                    HamburgerMenuView(isMenuOpen: $isMenuOpen, selectedTab: $selectedTab)
-                        .frame(maxWidth: 250)
-                    Spacer()
-                }
-                .transition(.move(edge: .leading))
-                .zIndex(1)
+                HamburgerMenuView(isMenuOpen: $isMenuOpen, selectedTab: $selectedTab)
+                    .transition(.move(edge: .leading))
+                    .zIndex(10)
+                    .ignoresSafeArea()
             }
         }
+        .preferredColorScheme(darkMode ? .dark : .light)
     }
 }
 
 struct SettingsSectionView<Content: View>: View {
     let title: String
     @ViewBuilder let content: Content
-    
+    @Environment(\.colorScheme) var colorScheme
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
             Text(title.uppercased())
-                .font(.system(size: 12, weight: .bold))
+                .font(AppTheme.Typography.label).fontWeight(.bold)
                 .tracking(0.6)
-                .foregroundColor(Color(red: 0.420, green: 0.447, blue: 0.502))
-                .padding(.horizontal, 16)
-            
+                .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
+                .padding(.horizontal, AppTheme.Spacing.md)
+
             VStack(spacing: 0) {
                 content
             }
-            .padding(16)
-            .background(Color(red: 0.165, green: 0.114, blue: 0.212).opacity(0.5))
-            .border(Color.white.opacity(0.05))
-            .cornerRadius(16)
-            .padding(.horizontal, 16)
+            .padding(AppTheme.Spacing.md)
+            .background(AppTheme.Colors.surfaceElevated(colorScheme).opacity(0.5))
+            .cornerRadius(AppTheme.Spacing.radiusLg)
+            .padding(.horizontal, AppTheme.Spacing.md)
         }
     }
 }
@@ -288,37 +258,19 @@ struct SettingsItemView: View {
     let title: String
     let subtitle: String
     let showArrow: Bool
-    var action: (() -> Void)? = nil
-    
+    @Environment(\.colorScheme) var colorScheme
+
     var body: some View {
-        Button(action: { action?() }) {
-            HStack(spacing: 16) {
-                Image(systemName: icon)
-                    .font(.system(size: 18))
-                    .foregroundColor(Color(red: 0.498, green: 0.075, blue: 0.929))
-                    .frame(width: 24)
-                
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(title)
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.white)
-                    
-                    Text(subtitle)
-                        .font(.system(size: 12, weight: .regular))
-                        .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
-                }
-                
-                Spacer()
-                
-                if showArrow && action != nil {
+        Button(action: {}) {
+            SettingsRowLayout(icon: icon, title: title, subtitle: subtitle) {
+                if showArrow {
                     Image(systemName: "chevron.right")
                         .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
+                        .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
                 }
             }
         }
         .buttonStyle(.plain)
-        .allowsHitTesting(action != nil)
     }
 }
 
@@ -326,25 +278,11 @@ struct SettingsStaticItemView: View {
     let icon: String
     let title: String
     let subtitle: String
-    
+    @Environment(\.colorScheme) var colorScheme
+
     var body: some View {
-        HStack(spacing: 16) {
-            Image(systemName: icon)
-                .font(.system(size: 18))
-                .foregroundColor(Color(red: 0.498, green: 0.075, blue: 0.929))
-                .frame(width: 24)
-            
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.white)
-                
-                Text(subtitle)
-                    .font(.system(size: 12, weight: .regular))
-                    .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
-            }
-            
-            Spacer()
+        SettingsRowLayout(icon: icon, title: title, subtitle: subtitle) {
+            EmptyView()
         }
     }
 }
@@ -354,28 +292,50 @@ struct SettingsToggleView: View {
     let title: String
     let subtitle: String
     @Binding var isOn: Bool
-    
+    @Environment(\.colorScheme) var colorScheme
+
     var body: some View {
-        HStack(spacing: 16) {
-            Image(systemName: icon)
-                .font(.system(size: 18))
-                .foregroundColor(Color(red: 0.498, green: 0.075, blue: 0.929))
-                .frame(width: 24)
-            
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.white)
-                
-                Text(subtitle)
-                    .font(.system(size: 12, weight: .regular))
-                    .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
-            }
-            
-            Spacer()
-            
+        SettingsRowLayout(icon: icon, title: title, subtitle: subtitle) {
             Toggle("", isOn: $isOn)
-                .tint(Color(red: 0.498, green: 0.075, blue: 0.929))
+                .labelsHidden()
+                .tint(AppTheme.Colors.accent)
         }
+    }
+}
+
+private struct SettingsRowLayout<Trailing: View>: View {
+    let icon: String
+    let title: String
+    let subtitle: String
+    @ViewBuilder let trailing: Trailing
+    @Environment(\.colorScheme) var colorScheme
+
+    private let iconWidth: CGFloat = 24
+    private let rowSpacing: CGFloat = AppTheme.Spacing.md
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(alignment: .center, spacing: rowSpacing) {
+                Image(systemName: icon)
+                    .font(.system(size: 18))
+                    .foregroundColor(AppTheme.Colors.accent)
+                    .frame(width: iconWidth, alignment: .center)
+
+                Text(title)
+                    .font(AppTheme.Typography.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
+
+                Spacer()
+                trailing
+            }
+
+            Text(subtitle)
+                .font(AppTheme.Typography.label)
+                .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
+                .padding(.leading, iconWidth + rowSpacing)
+        }
+        .frame(maxWidth: .infinity, minHeight: 52, alignment: .leading)
+        .padding(.vertical, AppTheme.Spacing.xs)
     }
 }

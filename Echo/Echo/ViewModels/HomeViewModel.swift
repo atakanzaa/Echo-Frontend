@@ -6,14 +6,18 @@ import AVFoundation
 final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
 
     // MARK: — Published State
-    @Published var isRecording         = false
-    @Published var recordingTime       = "0:00"
-    @Published var statusMessage       = "Ready to listen"
-    @Published var transcript          = ""
-    @Published var isUploading         = false
-    @Published var isProcessing        = false   // transcribing / analyzing
-    @Published var awaitingConfirmation = false  // recorded, waiting for Send/Discard
-    @Published var errorMessage: String?
+    @Published var isRecording          = false
+    @Published var recordingTime        = "0:00"
+    @Published var statusKey            = "voice.status.ready"
+    @Published var statusFallback: String?
+    @Published var transcript           = ""
+    @Published var isUploading          = false
+    @Published var isProcessing         = false   // transcribing / analyzing
+    @Published var awaitingConfirmation = false   // recorded, waiting for Send/Discard
+    @Published var errorMessage:        String?
+    @Published var recentEntries:       [APIJournalEntry] = []
+    @Published var currentStreak:       Int = 0
+    @Published var onThisDayEntries:    [APIOnThisDayEntry] = []
 
     // Live date header
     var dateLabel: String { formatDateLabel(Date()) }
@@ -25,39 +29,37 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
     private var elapsedSeconds = 0
     private var audioFileURL: URL?
     private var pollingTask: Task<Void, Never>?
+    private let loadRecentTask = TaskGuard()
 
-    deinit {
-        timer?.invalidate()
-        pollingTask?.cancel()
-        recorder?.stop()
+    // MARK: — Recent Entries
+
+    func loadRecent(limit: Int = 5) {
+        loadRecentTask.run { [weak self] in
+            await self?.performLoadRecent(limit: limit)
+        }
+        Task { [weak self] in
+            await self?.loadOnThisDay()
+        }
+    }
+
+    private func loadOnThisDay() async {
+        do {
+            let response: APIOnThisDayResponse = try await APIClient.shared.requestWithAutoRefresh(.getOnThisDay)
+            onThisDayEntries = response.entries
+        } catch {
+            // Non-critical — silently fail
+        }
     }
 
     // MARK: — Recording
 
     func toggleRecording() {
-        if isRecording {
-            stopRecording()
-        } else {
-            Task { await startRecording() }
-        }
+        isRecording ? stopRecording() : startRecording()
     }
 
-    private func startRecording() async {
+    func startRecording() {
         errorMessage = nil
         transcript   = ""
-        statusMessage = "Ready to listen"
-
-        let permission = await MicrophonePermission.requestAccess()
-        guard permission == .granted else {
-            errorMessage = permission.errorMessage
-            statusMessage = "Microphone permission required"
-            return
-        }
-
-        beginRecording()
-    }
-
-    private func beginRecording() {
         let session  = AVAudioSession.sharedInstance()
         do {
             try session.setCategory(.playAndRecord, mode: .default,
@@ -80,12 +82,10 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
 
             isRecording    = true
             elapsedSeconds = 0
-            statusMessage  = "Recording…"
-            Log.record.info("Started journal recording")
+            setStatus("voice.status.recording")
             startTimer()
         } catch {
             errorMessage = "Microphone access error: \(error.localizedDescription)"
-            Log.record.error("Unable to start journal recording")
         }
     }
 
@@ -99,34 +99,32 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
 
         recorder?.stop()   // triggers audioRecorderDidFinishRecording when file is flushed
         timer?.invalidate()
-        timer = nil
         isRecording   = false
-        statusMessage = "Processing…"
-        Log.record.info("Stopped journal recording")
+        setStatus("voice.status.processing")
         // upload is initiated in the delegate once the file is fully written to disk
     }
 
     // MARK: — Upload
 
     private func uploadRecording() async {
-        guard elapsedSeconds >= AppConstants.Recording.minimumDurationSeconds else {
-            errorMessage  = "Recording too short. Please record at least \(AppConstants.Recording.minimumDurationSeconds) seconds."
-            statusMessage = "Ready to listen"
+        guard elapsedSeconds >= 3 else {
+            errorMessage  = "Recording too short. Please record at least 3 seconds."
+            setStatus("voice.status.ready")
             return
         }
         guard let url = audioFileURL,
               let data = try? Data(contentsOf: url),
               !data.isEmpty else {
             errorMessage  = "Could not read audio file."
-            statusMessage = "Ready to listen"
+            setStatus("voice.status.ready")
             return
         }
 
         isUploading = true
-        let isoNow  = DateFormatting.iso8601String(from: Date())
+        let isoNow  = ISO8601DateFormatter().string(from: Date())
 
         do {
-            let entry: APIJournalEntry = try await APIClient.shared.uploadWithAutoRefresh(
+            let entry: APIJournalEntry = try await APIClient.shared.upload(
                 .uploadJournalEntry(
                     audioData:       data,
                     filename:        url.lastPathComponent,
@@ -135,13 +133,11 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
                 )
             )
             isUploading = false
-            Log.record.info("Journal upload completed")
             startPolling(entryId: entry.id)
         } catch {
             isUploading   = false
-            statusMessage = "Ready to listen"
+            setStatus("voice.status.ready")
             errorMessage  = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
-            Log.record.error("Journal upload failed")
         }
 
         // Clean up temp file
@@ -153,45 +149,44 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
 
     private func startPolling(entryId: String) {
         isProcessing  = true
-        statusMessage = "Analyzing…"
+        setStatus("voice.status.analyzing")
         pollingTask?.cancel()
         pollingTask = Task {
             var attemptCount = 0
-            let maxAttempts  = AppConstants.Polling.journalStatusMaxAttempts
+            let maxAttempts  = 30  // 30 × 2s = 60s max wait
             while !Task.isCancelled && attemptCount < maxAttempts {
                 attemptCount += 1
                 do {
                     let status: APIEntryStatus = try await APIClient.shared.requestWithAutoRefresh(
                         .getJournalEntryStatus(id: entryId)
                     )
-                    switch status.entryStatus {
-                    case .complete:
+                    switch status.status {
+                    case "complete":
                         let entry: APIJournalEntry = try await APIClient.shared.requestWithAutoRefresh(
                             .getJournalEntry(id: entryId)
                         )
                         transcript    = entry.transcript ?? ""
-                        statusMessage = "Analysis complete ✓"
+                        setStatus("voice.status.complete")
                         isProcessing  = false
                         return
-                    case .failed:
+                    case "failed":
                         errorMessage  = status.errorMessage ?? "Processing failed."
-                        statusMessage = "Ready to listen"
+                        setStatus("voice.status.failed")
                         isProcessing  = false
                         return
                     default:
-                        statusMessage = status.entryStatus.displayTitle + "…"
+                        setStatus("voice.status.processing", fallback: status.status.capitalized + "…")
                     }
                 } catch {
                     // polling sırasında hata → devam et
                 }
-                try? await Task.sleep(nanoseconds: AppConstants.Polling.journalStatusDelayNanoseconds)
+                try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 sn
             }
             // Zaman aşımı
             if !Task.isCancelled {
                 errorMessage  = "Analysis timed out. Please try again later."
-                statusMessage = "Ready to listen"
+                setStatus("voice.status.timeout")
                 isProcessing  = false
-                Log.record.warning("Journal processing timed out")
             }
         }
     }
@@ -199,7 +194,6 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
     // MARK: — Helpers
 
     private func startTimer() {
-        timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             guard let self else { return }
             Task { @MainActor in
@@ -212,7 +206,9 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
     }
 
     private func formatDateLabel(_ date: Date) -> String {
-        DateFormatting.weekdayMonthDayUppercased(from: date)
+        let f = DateFormatter()
+        f.dateFormat = "EEEE, MMM d"
+        return f.string(from: date).uppercased()
     }
 
     private func greetingForHour(_ hour: Int) -> String {
@@ -222,6 +218,11 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
         case 17..<21: return "Evening Reflection"
         default:      return "Night Journal"
         }
+    }
+
+    private func setStatus(_ key: String, fallback: String? = nil) {
+        statusKey = key
+        statusFallback = fallback
     }
 
     // MARK: — Confirmation Actions
@@ -237,10 +238,9 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
             audioFileURL = nil
         }
         awaitingConfirmation = false
-        pollingTask?.cancel()
         elapsedSeconds = 0
         recordingTime  = "0:00"
-        statusMessage  = "Ready to listen"
+        setStatus("voice.status.ready")
     }
 
     // MARK: — AVAudioRecorderDelegate
@@ -251,11 +251,43 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
         Task { @MainActor in
             if flag {
                 self.awaitingConfirmation = true
-                self.statusMessage = "Kayıt hazır"
+                self.setStatus("voice.status.recording_ready")
             } else {
                 self.errorMessage  = "Recording failed. Please try again."
-                self.statusMessage = "Ready to listen"
+                self.setStatus("voice.status.failed")
             }
+        }
+    }
+
+    func refresh() async {
+        await loadRecentTask.runAsync { [weak self] in
+            await self?.performLoadRecent(limit: 5)
+        }
+    }
+
+    func cancelAll() {
+        loadRecentTask.cancel()
+        pollingTask?.cancel()
+        pollingTask = nil
+    }
+
+    private func performLoadRecent(limit: Int) async {
+        async let entriesTask: [APIJournalEntry] = APIClient.shared.requestWithAutoRefresh(
+            .getRecentJournalEntries(limit: limit)
+        )
+        async let profileTask: APIUser = APIClient.shared.requestWithAutoRefresh(.me)
+
+        do {
+            recentEntries = try await entriesTask
+        } catch {
+            // recent entries could not be loaded; keep previous state
+        }
+
+        do {
+            let profile = try await profileTask
+            currentStreak = profile.currentStreak
+        } catch {
+            // profile could not be loaded; keep previous state
         }
     }
 }

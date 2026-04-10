@@ -46,6 +46,10 @@ enum AppConstants {
         static let defaultPageSize = 20
     }
 
+    enum OAuth {
+        static let googleClientId = "965240810843-ibiovp5mr1pr9vmnpqpjn11n1bnketf1.apps.googleusercontent.com"
+    }
+
     enum AppInfo {
         static let shortVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"
         static let buildNumber = Bundle.main.object(forInfoDictionaryKey: kCFBundleVersionKey as String) as? String ?? "1"

@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 import Combine
 
 /// Merkezi HTTP istemci. Tüm API çağrıları buradan geçer.

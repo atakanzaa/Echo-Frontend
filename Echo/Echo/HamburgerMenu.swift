@@ -1,216 +1,218 @@
-//
-//  HamburgerMenu.swift
-//  Echo
-//
-//  Created by yeniMac on 22.02.2026.
-
 import SwiftUI
 
 struct HamburgerMenuView: View {
     @Binding var isMenuOpen: Bool
-    @Binding var selectedTab: AppTab
+    @Binding var selectedTab: String
+    var userName: String = "User"
+    var unreadNotificationCount: Int? = nil
     var onLogout: (() -> Void)? = nil
-    
-    var body: some View {
-        VStack(spacing: 0) {
-            // Menu Items
-            ScrollView {
-                VStack(spacing: 12) {
-                    // Main Navigation
-                    Text("MAIN")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundColor(Color(red: 0.576, green: 0.639, blue: 0.725))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                    
-                    MenuItemButton(
-                        icon: "house.fill",
-                        title: "Home",
-                        action: {
-                            selectedTab = .home
-                            isMenuOpen = false
-                        }
-                    )
-                    
-                    MenuItemButton(
-                        icon: "book.fill",
-                        title: "Community",
-                        action: {
-                            selectedTab = .community
-                            isMenuOpen = false
-                        }
-                    )
-                    
-                    MenuItemButton(
-                        icon: "star.fill",
-                        title: "Coach",
-                        action: {
-                            selectedTab = .coach
-                            isMenuOpen = false
-                        }
-                    )
-                    
-                    MenuItemButton(
-                        icon: "person.fill",
-                        title: "Profile",
-                        action: {
-                            selectedTab = .profile
-                            isMenuOpen = false
-                        }
-                    )
-                    
-                    Divider()
-                        .background(Color(red: 1, green: 1, blue: 1, opacity: 0.1))
-                        .padding(.vertical, 8)
-                    
-                    // Additional Pages
-                    Text("EXPLORE")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundColor(Color(red: 0.576, green: 0.639, blue: 0.725))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                    
-                    MenuItemButton(
-                        icon: "book.circle.fill",
-                        title: "Journal",
-                        action: {
-                            selectedTab = .journal
-                            isMenuOpen = false
-                        }
-                    )
-                    
-                    MenuItemButton(
-                        icon: "calendar",
-                        title: "Calendar",
-                        action: {
-                            selectedTab = .calendar
-                            isMenuOpen = false
-                        }
-                    )
-                    
-                    MenuItemButton(
-                        icon: "chart.bar.fill",
-                        title: "Insights",
-                        action: {
-                            selectedTab = .insights
-                            isMenuOpen = false
-                        }
-                    )
-                    
-                    MenuItemButton(
-                        icon: "sparkles",
-                        title: "AI Insights",
-                        action: {
-                            selectedTab = .aiInsights
-                            isMenuOpen = false
-                        }
-                    )
-                    
-                    MenuItemButton(
-                        icon: "trophy.fill",
-                        title: "Achievements",
-                        action: {
-                            selectedTab = .achievements
-                            isMenuOpen = false
-                        }
-                    )
-                    
-                    MenuItemButton(
-                        icon: "time",
-                        title: "Time Capsule",
-                        action: {
-                            selectedTab = .timeCapsule
-                            isMenuOpen = false
-                        }
-                    )
-                    
-                    MenuItemButton(
-                        icon: "crown.fill",
-                        title: "Premium",
-                        color: Color(red: 0.937, green: 0.722, blue: 0.267),
-                        action: {
-                            selectedTab = .premium
-                            isMenuOpen = false
-                        }
-                    )
-                    
-                    Divider()
-                        .background(Color(red: 1, green: 1, blue: 1, opacity: 0.1))
-                        .padding(.vertical, 8)
-                    
-                    // Settings & More
-                    Text("SETTINGS")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundColor(Color(red: 0.576, green: 0.639, blue: 0.725))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                    
-                    MenuItemButton(
-                        icon: "gear",
-                        title: "Settings",
-                        action: {
-                            selectedTab = .settings
-                            isMenuOpen = false
-                        }
-                    )
-                    
-                    MenuItemButton(
-                        icon: "questionmark.circle",
-                        title: "Help & Support",
-                        action: {
-                            selectedTab = .help
-                            isMenuOpen = false
-                        }
-                    )
-                    
-                    MenuItemButton(
-                        icon: "arrow.backward.circle",
-                        title: "Logout",
-                        color: Color(red: 0.937, green: 0.267, blue: 0.267),
-                        action: {
-                            isMenuOpen = false
-                            onLogout?()
-                        }
-                    )
-                }
-                .padding(.vertical, 16)
-                .padding(.horizontal, 16)
-            }
-            
-            Spacer()
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(red: 0.098, green: 0.063, blue: 0.133))
-    }
-}
+    @EnvironmentObject var locManager: LocalizationManager
+    @EnvironmentObject private var notificationVM: NotificationViewModel
+    @Environment(\.colorScheme) var colorScheme
 
-struct MenuItemButton: View {
-    let icon: String
-    let title: String
-    var color: Color = Color(red: 0.078, green: 0.357, blue: 0.933)
-    let action: () -> Void
+    private let accentLight = Color(red: 0.769, green: 0.604, blue: 1.0) // #c49aff
+
+    private var effectiveUnreadCount: Int {
+        unreadNotificationCount ?? notificationVM.unreadCount
+    }
     
+    private var userInitials: String {
+        let components = userName.split(separator: " ").map(String.init)
+        if components.count >= 2 {
+            return (String(components[0].prefix(1)) + String(components[1].prefix(1))).uppercased()
+        }
+        return String(userName.prefix(2)).uppercased()
+    }
+
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: 12) {
+        ZStack(alignment: .leading) {
+            // Backdrop
+            Color.black.opacity(0.5)
+                .ignoresSafeArea()
+                .onTapGesture { withAnimation(.easeInOut(duration: 0.25)) { isMenuOpen = false } }
+
+            // Drawer
+            VStack(spacing: 0) {
+                // Header — Echo wordmark + close
+                HStack {
+                    Text("Echo")
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundStyle(AppTheme.Gradients.accent)
+                    Spacer()
+                    Button(action: { withAnimation(.easeInOut(duration: 0.25)) { isMenuOpen = false } }) {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(accentLight)
+                            .frame(width: 32, height: 32)
+                            .background(Color(red: 0.165, green: 0.102, blue: 0.212))
+                            .clipShape(Circle())
+                    }
+                }
+                .padding(.horizontal, AppTheme.Spacing.md)
+                .padding(.top, AppTheme.Spacing.xl)
+                .padding(.bottom, AppTheme.Spacing.md)
+
+                // Profile Card
+                HStack(spacing: AppTheme.Spacing.sm) {
+                    ZStack {
+                        LinearGradient(
+                            colors: [AppTheme.Colors.accent, AppTheme.Colors.accentSecondary],
+                            startPoint: .topLeading, endPoint: .bottomTrailing
+                        )
+                        .clipShape(Circle())
+                        .frame(width: 44, height: 44)
+
+                        Text(userInitials)
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundColor(.white)
+                    }
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(locManager.t("nav.profile"))
+                            .font(AppTheme.Typography.caption).fontWeight(.semibold)
+                            .foregroundColor(.white)
+                        Text(locManager.t("hamburger.profile_sub"))
+                            .font(AppTheme.Typography.label)
+                            .foregroundColor(accentLight.opacity(0.7))
+                    }
+                    Spacer()
+                }
+                .padding(AppTheme.Spacing.sm)
+                .background(Color(red: 0.165, green: 0.114, blue: 0.212))
+                .cornerRadius(AppTheme.Spacing.radiusMd)
+                .padding(.horizontal, AppTheme.Spacing.md)
+                .padding(.bottom, AppTheme.Spacing.md)
+                .onTapGesture { navigate("profile") }
+
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 4) {
+                        // Main nav
+                        drawerItem(icon: "house.fill",        label: locManager.t("nav.home"),         tab: "home")
+                        drawerItem(icon: "book.fill",         label: locManager.t("nav.journal"),      tab: "journal")
+                        drawerItem(icon: "person.3.fill",     label: locManager.t("nav.community"),    tab: "community")
+                        drawerItem(icon: "sparkles",          label: locManager.t("hamburger.ai_coach"), tab: "coach")
+
+                        Divider()
+                            .background(Color.white.opacity(0.08))
+                            .padding(.vertical, AppTheme.Spacing.sm)
+
+                        drawerItem(icon: "calendar",          label: locManager.t("nav.calendar"),     tab: "calendar")
+                        drawerItem(icon: "chart.bar.fill",    label: locManager.t("nav.insights"),     tab: "insights")
+                        drawerItem(icon: "brain.head.profile",label: locManager.t("nav.ai_insights"),  tab: "aiinsights")
+                        drawerItem(icon: "trophy.fill",       label: locManager.t("nav.achievements"), tab: "achievements")
+                        drawerItem(icon: "clock.fill",        label: locManager.t("nav.time_capsule"), tab: "timecapsule")
+
+                        Divider()
+                            .background(Color.white.opacity(0.08))
+                            .padding(.vertical, AppTheme.Spacing.sm)
+
+                        // Premium card
+                        Button(action: { navigate("premium") }) {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(locManager.t("hamburger.echo_premium"))
+                                        .font(AppTheme.Typography.caption).fontWeight(.bold)
+                                        .foregroundColor(AppTheme.Colors.gold)
+                                    Text(locManager.t("hamburger.echo_premium_sub"))
+                                        .font(AppTheme.Typography.label)
+                                        .foregroundColor(AppTheme.Colors.gold.opacity(0.7))
+                                }
+                                Spacer()
+                                Image(systemName: "sparkles")
+                                    .font(.system(size: 18))
+                                    .foregroundColor(AppTheme.Colors.gold)
+                            }
+                            .padding(AppTheme.Spacing.sm)
+                            .background(
+                                LinearGradient(
+                                    colors: [
+                                        Color(red: 0.400, green: 0.300, blue: 0.100).opacity(0.4),
+                                        Color(red: 0.200, green: 0.150, blue: 0.050).opacity(0.4)
+                                    ],
+                                    startPoint: .leading, endPoint: .trailing
+                                )
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: AppTheme.Spacing.radiusMd)
+                                    .strokeBorder(AppTheme.Colors.gold.opacity(0.25), lineWidth: 1)
+                            )
+                            .cornerRadius(AppTheme.Spacing.radiusMd)
+                        }
+
+                        Divider()
+                            .background(Color.white.opacity(0.08))
+                            .padding(.vertical, AppTheme.Spacing.sm)
+
+                        drawerItem(icon: "gear", label: locManager.t("nav.settings"), tab: "settings")
+                        drawerItem(
+                            icon: "bell.fill",
+                            label: locManager.t("notifications.title"),
+                            tab: "notification_list",
+                            badgeCount: effectiveUnreadCount
+                        )
+                        drawerItem(icon: "questionmark.circle", label: locManager.t("nav.help_support"), tab: "help")
+
+                        // Logout
+                        Button(action: { isMenuOpen = false; onLogout?() }) {
+                            HStack(spacing: AppTheme.Spacing.sm) {
+                                Image(systemName: "arrow.right.square")
+                                    .font(.system(size: 16))
+                                    .foregroundColor(AppTheme.Colors.destructive)
+                                    .frame(width: 28, height: 28)
+                                Text(locManager.t("hamburger.sign_out"))
+                                    .font(AppTheme.Typography.body)
+                                    .foregroundColor(AppTheme.Colors.destructive)
+                                Spacer()
+                            }
+                            .padding(.vertical, 10)
+                            .padding(.horizontal, AppTheme.Spacing.sm)
+                        }
+                    }
+                    .padding(.horizontal, AppTheme.Spacing.md)
+                    .padding(.bottom, AppTheme.Spacing.xxl)
+                }
+
+                Spacer(minLength: 0)
+
+                // Version
+                Text("Echo v2.4.0")
+                    .font(AppTheme.Typography.micro)
+                    .foregroundColor(Color.white.opacity(0.2))
+                    .padding(.bottom, AppTheme.Spacing.lg)
+            }
+            .frame(width: 280)
+            .background(Color(red: 0.098, green: 0.055, blue: 0.137))
+            .ignoresSafeArea()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+    }
+
+    private func navigate(_ tab: String) {
+        selectedTab = tab
+        withAnimation(.easeInOut(duration: 0.25)) { isMenuOpen = false }
+    }
+
+    @ViewBuilder
+    private func drawerItem(icon: String, label: String, tab: String, badgeCount: Int = 0) -> some View {
+        let isActive = selectedTab == tab
+        Button(action: { navigate(tab) }) {
+            HStack(spacing: AppTheme.Spacing.sm) {
                 Image(systemName: icon)
-                    .font(.system(size: 18))
-                    .foregroundColor(color)
-                    .frame(width: 24)
-                
-                Text(title)
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(.white)
-                
+                    .font(.system(size: 16))
+                    .foregroundColor(isActive ? AppTheme.Colors.accent : Color(red: 0.678, green: 0.573, blue: 0.792))
+                    .frame(width: 28, height: 28)
+                Text(label)
+                    .font(AppTheme.Typography.body)
+                    .foregroundColor(isActive ? Color(red: 0.769, green: 0.604, blue: 1.0) : .white)
+                if badgeCount > 0 {
+                    NotificationBadge(count: badgeCount)
+                }
                 Spacer()
             }
-            .padding(.vertical, 12)
-            .padding(.horizontal, 12)
-            .background(Color(red: 1, green: 1, blue: 1, opacity: 0.05))
-            .cornerRadius(8)
+            .padding(.vertical, 10)
+            .padding(.horizontal, AppTheme.Spacing.sm)
+            .background(isActive ? Color(red: 0.153, green: 0.102, blue: 0.200) : Color.clear)
+            .cornerRadius(AppTheme.Spacing.radiusSm)
         }
     }
 }

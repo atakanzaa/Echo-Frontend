@@ -1,158 +1,319 @@
 import SwiftUI
 
 struct ProfileView: View {
+    @Binding var selectedTab: String
+    @EnvironmentObject var locManager: LocalizationManager
+    @EnvironmentObject private var tabNavigation: TabNavigationManager
     @StateObject private var viewModel = ProfileViewModel()
+    @State private var isMenuOpen = false
+    @State private var showLanguagePicker = false
+    @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
         ZStack {
-            Color(red: 0.098, green: 0.063, blue: 0.133).ignoresSafeArea()
+            AppTheme.Colors.background(colorScheme).ignoresSafeArea()
 
             VStack(spacing: 0) {
                 // Header
                 HStack {
-                    Color.clear.frame(width: 24, height: 24)
+                    Button(action: {
+                        selectedTab = tabNavigation.goBack(from: selectedTab, fallback: "home")
+                    }) {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
+                    }
                     Spacer()
-                    Text("Profile").font(.system(size: 18, weight: .bold)).foregroundColor(.white)
+                    Text(locManager.t("nav.profile"))
+                        .font(AppTheme.Typography.heading3)
+                        .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
                     Spacer()
-                    Color.clear.frame(width: 24, height: 24)
+                    Button(action: { withAnimation(.easeInOut(duration: 0.25)) { isMenuOpen.toggle() } }) {
+                        Image(systemName: "line.3.horizontal")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
+                    }
+                    .frame(width: 40, height: 40)
+                    .background(AppTheme.Colors.surface(colorScheme))
+                    .cornerRadius(AppTheme.Spacing.radiusFull)
                 }
-                .padding(.horizontal, 16).padding(.vertical, 16)
+                .padding(.horizontal, AppTheme.Spacing.md)
+                .padding(.vertical, AppTheme.Spacing.md)
 
                 if viewModel.isLoading {
                     Spacer()
-                    ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .white))
+                    ProgressView().progressViewStyle(CircularProgressViewStyle(tint: AppTheme.Colors.accent))
                     Spacer()
                 } else {
                     ScrollView {
-                        VStack(spacing: 24) {
-                            // Profile Header
-                            VStack(spacing: 16) {
-                                ZStack(alignment: .bottomTrailing) {
-                                    Circle()
-                                        .fill(Color(red: 0.498, green: 0.075, blue: 0.929))
-                                        .blur(radius: 4).frame(width: 112, height: 112).opacity(0.4)
-                                    Circle()
-                                        .strokeBorder(Color(red: 0.098, green: 0.063, blue: 0.133), lineWidth: 4)
-                                        .background(Circle().fill(Color(red: 0.141, green: 0.098, blue: 0.188)))
-                                        .frame(width: 112, height: 112)
-                                        .overlay(Image(systemName: "person.fill").font(.system(size: 40))
-                                            .foregroundColor(Color(red: 0.498, green: 0.075, blue: 0.929)))
-                                    Circle()
-                                        .fill(Color(red: 0.498, green: 0.075, blue: 0.929))
-                                        .strokeBorder(Color(red: 0.098, green: 0.063, blue: 0.133), lineWidth: 2)
-                                        .frame(width: 28, height: 28)
-                                        .overlay(Image(systemName: "pencil").font(.system(size: 10, weight: .semibold)).foregroundColor(.white))
-                                }
+                        VStack(spacing: AppTheme.Spacing.lg) {
+                            // Avatar + Name
+                            VStack(spacing: AppTheme.Spacing.md) {
+                                UserInitialsView(displayName: viewModel.displayName, size: 96)
 
                                 VStack(spacing: 4) {
                                     Text(viewModel.displayName)
-                                        .font(.system(size: 24, weight: .bold)).foregroundColor(.white)
+                                        .font(AppTheme.Typography.heading2)
+                                        .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
                                     Text(viewModel.email)
-                                        .font(.system(size: 14)).foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
+                                        .font(AppTheme.Typography.caption)
+                                        .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
+                                }
+                            }
+                            .padding(.top, AppTheme.Spacing.sm)
+
+                            // Echo Knows You — tappable row navigates to detail page
+                            if let summary = viewModel.profileSummary,
+                               summary.userProfile != nil || summary.emotionalPatterns != nil {
+                                echoKnowsYouCard(summary: summary)
+                            }
+
+                            // Account Settings section
+                            profileSection(locManager.t("settings.account")) {
+                                profileRow(icon: "person.circle", label: locManager.t("profile.edit_profile"), color: AppTheme.Colors.accent) {
+                                    selectedTab = "edit-profile"
+                                }
+                                Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
+                                profileRow(icon: "shield.fill", label: locManager.t("settings.privacy_security"), color: AppTheme.Colors.moodVeryPositive) { }
+                                Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
+                                profileRow(icon: "bell.fill", label: locManager.t("nav.notifications"), color: AppTheme.Colors.accent) { selectedTab = "notifications" }
+                            }
+
+                            // Experience section
+                            profileSection(locManager.t("profile.experience")) {
+                                HStack {
+                                    HStack(spacing: AppTheme.Spacing.sm) {
+                                        Image(systemName: "crown.fill")
+                                            .font(.system(size: 16))
+                                            .foregroundColor(AppTheme.Colors.gold)
+                                            .frame(width: 32, height: 32)
+                                            .background(AppTheme.Colors.gold.opacity(0.12))
+                                            .cornerRadius(AppTheme.Spacing.radiusSm)
+                                        Text(locManager.t("nav.premium"))
+                                            .font(AppTheme.Typography.body)
+                                            .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
+                                    }
+                                    Spacer()
+                                    Text(locManager.t("common.active"))
+                                        .font(AppTheme.Typography.label).fontWeight(.semibold)
+                                        .foregroundColor(AppTheme.Colors.gold)
+                                        .padding(.horizontal, AppTheme.Spacing.sm).padding(.vertical, 4)
+                                        .background(AppTheme.Colors.gold.opacity(0.15))
+                                        .cornerRadius(AppTheme.Spacing.radiusFull)
+                                }
+                                .padding(.vertical, 4)
+                                Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
+                                profileRow(icon: "trophy.fill", label: locManager.t("nav.achievements"), color: AppTheme.Colors.gold) { selectedTab = "achievements" }
+                                Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
+                                profileRow(icon: "globe", label: locManager.t("settings.language"), color: AppTheme.Colors.textMuted(colorScheme)) {
+                                    showLanguagePicker = true
                                 }
                             }
 
-                            // Stats Row
-                            HStack(spacing: 32) {
-                                VStack(spacing: 4) {
-                                    Text("\(viewModel.totalEntries)")
-                                        .font(.system(size: 20, weight: .bold)).foregroundColor(.white)
-                                    Text("ENTRIES").font(.system(size: 12, weight: .medium)).tracking(0.6)
-                                        .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
-                                }
-                                Divider().frame(height: 32).opacity(0.1)
-                                VStack(spacing: 4) {
-                                    Text("\(viewModel.currentStreak)")
-                                        .font(.system(size: 20, weight: .bold)).foregroundColor(.white)
-                                    Text("STREAK").font(.system(size: 12, weight: .medium)).tracking(0.6)
-                                        .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
-                                }
-                                Divider().frame(height: 32).opacity(0.1)
-                                VStack(spacing: 4) {
-                                    Text(viewModel.moodAvgText)
-                                        .font(.system(size: 20, weight: .bold)).foregroundColor(.white)
-                                    Text("MOOD AVG").font(.system(size: 12, weight: .medium)).tracking(0.6)
-                                        .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
-                                }
-                                Spacer()
-                            }
-                            .padding(.horizontal, 24)
-
-                            // Settings
-                            VStack(spacing: 12) {
-                                Text("PERSONAL").font(.system(size: 12, weight: .medium)).tracking(0.5)
-                                    .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding(.horizontal, 24).padding(.top, 8)
-                                SettingItemView(icon: "person.fill", iconColor: Color(red: 0.498, green: 0.075, blue: 0.929),
-                                               title: "Account Settings", subtitle: "Email, password, profile details")
-                                SettingItemView(icon: "shield.fill", iconColor: Color(red: 0.157, green: 0.631, blue: 0.569),
-                                               title: "Privacy & Security", subtitle: "Manage data access & visibility", badge: "SAFE")
+                            // More section
+                            profileSection(locManager.t("profile.more")) {
+                                profileRow(icon: "questionmark.circle.fill", label: locManager.t("profile.help_center"), color: AppTheme.Colors.moodVeryPositive) { selectedTab = "help" }
+                                Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
+                                profileRow(icon: "gear", label: locManager.t("nav.settings"), color: AppTheme.Colors.textMuted(colorScheme)) { selectedTab = "settings" }
                             }
 
-                            VStack(spacing: 12) {
-                                Text("DATA & PLAN").font(.system(size: 12, weight: .medium)).tracking(0.5)
-                                    .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding(.horizontal, 24).padding(.top, 8)
-                                SettingItemView(icon: "arrow.down.circle.fill", iconColor: Color(red: 1.0, green: 0.576, blue: 0.0),
-                                               title: "Export Data", subtitle: "Download journal as PDF")
-                                SettingItemView(icon: "heart.fill", iconColor: Color(red: 0.949, green: 0.216, blue: 0.522),
-                                               title: "Subscription Status", subtitle: "Manage renewal and billing", badge: "PRO")
-                            }
-
-                            // Log Out
+                            // Logout
                             Button(action: { viewModel.logout() }) {
-                                if viewModel.isLoggingOut {
-                                    ProgressView().progressViewStyle(CircularProgressViewStyle(tint: Color(red: 0.949, green: 0.271, blue: 0.345)))
-                                } else {
-                                    HStack {
-                                        Image(systemName: "arrow.right.square.fill").font(.system(size: 16, weight: .semibold))
-                                        Text("Log Out").font(.system(size: 16, weight: .semibold))
+                                HStack(spacing: 10) {
+                                    if viewModel.isLoggingOut {
+                                        ProgressView().progressViewStyle(CircularProgressViewStyle(tint: AppTheme.Colors.destructive))
+                                    } else {
+                                        Image(systemName: "arrow.right.square").font(.system(size: 16))
+                                        Text(locManager.t("hamburger.sign_out")).font(AppTheme.Typography.bodyEm)
                                     }
                                 }
+                                .foregroundColor(AppTheme.Colors.destructive)
+                                .frame(maxWidth: .infinity).padding(.vertical, AppTheme.Spacing.sm + 4)
+                                .background(AppTheme.Colors.destructive.opacity(0.08))
+                                .overlay(RoundedRectangle(cornerRadius: AppTheme.Spacing.radiusMd)
+                                    .strokeBorder(AppTheme.Colors.destructive.opacity(0.3), lineWidth: 1))
+                                .cornerRadius(AppTheme.Spacing.radiusMd)
                             }
-                            .frame(maxWidth: .infinity).padding(.vertical, 12)
-                            .foregroundColor(Color(red: 0.949, green: 0.271, blue: 0.345))
-                            .padding(.horizontal, 24).padding(.top, 16)
+                            .padding(.horizontal, AppTheme.Spacing.md)
                             .disabled(viewModel.isLoggingOut)
 
-                            Text("Version \(AppConstants.AppInfo.shortVersion)")
-                                .font(.system(size: 12)).foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686).opacity(0.6))
-                                .padding(.top, 24).padding(.bottom, 40)
+                            Text("Echo v2.4.0")
+                                .font(AppTheme.Typography.micro)
+                                .foregroundColor(AppTheme.Colors.textDisabled(colorScheme))
+                                .padding(.bottom, AppTheme.Spacing.xxl)
                         }
-                        .padding(.top, 16)
+                        .padding(.top, AppTheme.Spacing.sm)
                     }
                 }
             }
+
+            if isMenuOpen {
+                HamburgerMenuView(isMenuOpen: $isMenuOpen, selectedTab: $selectedTab,
+                                  onLogout: { viewModel.logout() })
+                    .transition(.move(edge: .leading))
+                    .zIndex(10)
+                    .ignoresSafeArea()
+            }
         }
         .onAppear { viewModel.loadProfile() }
+        .confirmationDialog(locManager.t("settings.language"), isPresented: $showLanguagePicker, titleVisibility: .visible) {
+            Button(locManager.t("settings.language_segment_en")) {
+                viewModel.updateLanguage("en")
+                locManager.currentLanguage = "en"
+            }
+            Button(locManager.t("settings.language_segment_tr"))  {
+                viewModel.updateLanguage("tr")
+                locManager.currentLanguage = "tr"
+            }
+            Button(locManager.t("common.cancel"), role: .cancel) { }
+        } message: {
+            Text(locManager.t("profile.language_help"))
+        }
+    }
+
+    // MARK: - Echo Knows You Card
+
+    @ViewBuilder
+    private func echoKnowsYouCard(summary: APIProfileSummary) -> some View {
+        Button(action: { selectedTab = "ai-profile" }) {
+            HStack(spacing: AppTheme.Spacing.sm) {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(AppTheme.Colors.accent)
+                    .frame(width: 40, height: 40)
+                    .background(AppTheme.Colors.accent.opacity(0.12))
+                    .cornerRadius(AppTheme.Spacing.radiusMd)
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(locManager.t("profile.ai_profile"))
+                        .font(AppTheme.Typography.bodyEm)
+                        .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
+
+                    if let profile = summary.userProfile, !profile.isEmpty {
+                        Text(profile)
+                            .font(AppTheme.Typography.caption)
+                            .foregroundColor(AppTheme.Colors.textSecondary(colorScheme))
+                            .lineLimit(2)
+                            .multilineTextAlignment(.leading)
+                    }
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
+            }
+            .padding(AppTheme.Spacing.md)
+            .background(AppTheme.Colors.surfaceElevated(colorScheme))
+            .cornerRadius(AppTheme.Spacing.radiusLg)
+        }
+        .padding(.horizontal, AppTheme.Spacing.md)
+    }
+
+    // MARK: - Helpers
+
+    @ViewBuilder
+    private func profileSection<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
+            Text(title.uppercased())
+                .font(AppTheme.Typography.label).fontWeight(.bold)
+                .tracking(0.6)
+                .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
+                .padding(.horizontal, AppTheme.Spacing.md)
+
+            VStack(spacing: 0) {
+                content()
+            }
+            .padding(AppTheme.Spacing.md)
+            .background(AppTheme.Colors.surfaceElevated(colorScheme))
+            .cornerRadius(AppTheme.Spacing.radiusLg)
+            .padding(.horizontal, AppTheme.Spacing.md)
+        }
+    }
+
+    @ViewBuilder
+    private func profileRow(icon: String, label: String, color: Color, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: AppTheme.Spacing.sm) {
+                Image(systemName: icon)
+                    .font(.system(size: 16))
+                    .foregroundColor(color)
+                    .frame(width: 32, height: 32)
+                    .background(color.opacity(0.12))
+                    .cornerRadius(AppTheme.Spacing.radiusSm)
+                Text(label)
+                    .font(AppTheme.Typography.body)
+                    .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
+            }
+            .padding(.vertical, 4)
+        }
     }
 }
 
+// MARK: - Profile Stat Cell (kept for potential reuse)
+
+struct ProfileStatCell: View {
+    let value: String
+    let label: String
+    let unit: String?
+    @Environment(\.colorScheme) var colorScheme
+
+    var body: some View {
+        VStack(spacing: 4) {
+            HStack(alignment: .lastTextBaseline, spacing: 2) {
+                Text(value)
+                    .font(AppTheme.Typography.heading2)
+                    .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
+                if let unit = unit {
+                    Text(unit)
+                        .font(AppTheme.Typography.micro)
+                        .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
+                }
+            }
+            Text(label)
+                .font(AppTheme.Typography.label)
+                .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
+// Retain SettingItemView for SettingsView (used there)
 struct SettingItemView: View {
     let icon: String; let iconColor: Color; let title: String; let subtitle: String
     var badge: String? = nil
+    @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon).font(.system(size: 16, weight: .semibold))
-                .foregroundColor(iconColor).frame(width: 32, height: 32)
+        HStack(spacing: AppTheme.Spacing.sm) {
+            Image(systemName: icon).font(.system(size: 16))
+                .foregroundColor(iconColor)
+                .frame(width: 32, height: 32)
+                .background(iconColor.opacity(0.12))
+                .cornerRadius(AppTheme.Spacing.radiusSm)
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.system(size: 16, weight: .semibold)).foregroundColor(.white)
-                Text(subtitle).font(.system(size: 13)).foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
+                Text(title).font(AppTheme.Typography.body)
+                    .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
+                Text(subtitle).font(AppTheme.Typography.label)
+                    .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
             }
             Spacer()
             if let badge = badge {
-                Text(badge).font(.system(size: 11, weight: .bold)).foregroundColor(.white)
+                Text(badge).font(AppTheme.Typography.micro).fontWeight(.bold).foregroundColor(.white)
                     .padding(.horizontal, 8).padding(.vertical, 4)
-                    .background(Color(red: 0.498, green: 0.075, blue: 0.929).opacity(0.3)).cornerRadius(4)
+                    .background(AppTheme.Colors.accent.opacity(0.3)).cornerRadius(4)
             }
-            Image(systemName: "chevron.right").font(.system(size: 14, weight: .semibold))
-                .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
+            Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold))
+                .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
         }
-        .padding(.horizontal, 16).padding(.vertical, 12)
-        .background(Color(red: 0.141, green: 0.098, blue: 0.188)).cornerRadius(12)
-        .padding(.horizontal, 24)
+        .padding(.horizontal, AppTheme.Spacing.md).padding(.vertical, AppTheme.Spacing.sm + 2)
+        .background(AppTheme.Colors.surfaceElevated(colorScheme))
+        .cornerRadius(AppTheme.Spacing.radiusMd)
+        .padding(.horizontal, AppTheme.Spacing.md)
     }
 }

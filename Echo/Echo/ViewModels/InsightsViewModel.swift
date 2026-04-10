@@ -7,6 +7,7 @@ final class InsightsViewModel: ObservableObject {
     @Published var summary:      APISummaryResponse?
     @Published var isLoading     = false
     @Published var errorMessage: String?
+    private let summaryTask = TaskGuard()
 
     // MARK: — Gerçek veri bazlı haftalık mood scores (placeholder kaldırıldı)
 
@@ -19,7 +20,14 @@ final class InsightsViewModel: ObservableObject {
     /// Haftalık chart için gün etiketleri (gerçek tarihlerden)
     var weeklyDayLabels: [String] {
         guard let scores = summary?.dailyMoodScores, !scores.isEmpty else { return [] }
-        return scores.suffix(7).compactMap { DateFormatting.weekdayAbbreviation(from: $0.date) }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        let dayFormatter = DateFormatter()
+        dayFormatter.dateFormat = "EEE"
+        dayFormatter.locale = Locale(identifier: "tr_TR")
+        return scores.suffix(7).compactMap { score in
+            formatter.date(from: score.date).map { dayFormatter.string(from: $0) }
+        }
     }
 
     var totalEntriesText: String { summary.map { "\($0.recordedDays)" } ?? "—" }
@@ -27,67 +35,69 @@ final class InsightsViewModel: ObservableObject {
     /// Mood score: backend 0-1 skalası → frontend 0-10 skalası olarak gösterir
     var avgMoodText: String { summary.map { String(format: "%.1f", $0.averageMoodScore * 10) } ?? "—" }
 
-    /// Gerçek veri bazlı emotion distribution (dailyMoodScores moodLabel sayımlarından)
-    var emotionStats: [(emotion: EmotionalState, label: String, percentage: Int)] {
+    var emotionStats: [(emotion: EmotionalState, label: String, percentage: Int, count: Int)] {
+        guard let dist = summary?.moodCategoryDistribution, !dist.isEmpty else { return [] }
         guard let scores = summary?.dailyMoodScores, !scores.isEmpty else { return [] }
+        let total = scores.count
 
-        // moodLabel'lara göre say
-        var labelCounts: [String: Int] = [:]
-        for score in scores {
-            let label = score.moodLabel ?? "neutral"
-            labelCounts[label, default: 0] += 1
+        let order: [(key: String, state: EmotionalState)] = [
+            ("STRESS", .stress),
+            ("NEUTRAL", .neutral),
+            ("CALM", .calm),
+            ("MOTIVATED", .motivated)
+        ]
+
+        var raw: [(emotion: EmotionalState, label: String, pct: Double, count: Int)] = []
+        for item in order {
+            guard let pct = dist[item.key], pct > 0 else { continue }
+            let count = Int((Double(total) * pct / 100.0).rounded())
+            raw.append((emotion: item.state, label: item.key.capitalized, pct: pct, count: max(count, 1)))
         }
 
-        let total = scores.count
-        return labelCounts
-            .sorted { $0.value > $1.value }
-            .prefix(4)
-            .map { key, count in
-                let pct = Int(Double(count) / Double(total) * 100)
-                return (emotionFromName(key), key.capitalized, max(pct, 1))
-            }
+        guard !raw.isEmpty else { return [] }
+
+        var percents = raw.map { Int($0.pct.rounded()) }
+        let diff = 100 - percents.reduce(0, +)
+        if diff != 0, let targetIndex = raw.indices.max(by: { raw[$0].pct < raw[$1].pct }) {
+            percents[targetIndex] += diff
+        }
+
+        return raw.enumerated().map { idx, item in
+            (item.emotion, item.label, max(0, percents[idx]), item.count)
+        }
     }
 
     func loadSummary(period: Int = 30) {
-        isLoading    = true
-        errorMessage = nil
-        Task {
-            do {
-                let result: APISummaryResponse = try await APIClient.shared.requestWithAutoRefresh(
-                    .getSummary(period: period, endDate: nil)
-                )
-                summary   = result
-                isLoading = false
-            } catch {
-                errorMessage = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
-                isLoading    = false
-            }
+        summaryTask.run { [weak self] in
+            await self?.performLoadSummary(period: period)
         }
     }
 
-    /// Mood label → EmotionalState eşlemesi (İngilizce + Türkçe destekli)
-    private func emotionFromName(_ name: String) -> EmotionalState {
-        switch name.lowercased() {
-        // İngilizce
-        case let n where n.contains("stress") || n.contains("anxi") || n.contains("negative") || n.contains("very_negative"):
-            return .stress
-        case let n where n.contains("calm") || n.contains("peace") || n.contains("positive"):
-            return .calm
-        case let n where n.contains("motiv") || n.contains("energy") || n.contains("very_positive"):
-            return .motivated
-        case let n where n.contains("mix"):
-            return .neutral
-        // Türkçe
-        case let n where n.contains("stres") || n.contains("kayg") || n.contains("gergin") || n.contains("üzg"):
-            return .stress
-        case let n where n.contains("huzur") || n.contains("sakin") || n.contains("mutlu") || n.contains("olumlu"):
-            return .calm
-        case let n where n.contains("motiv") || n.contains("enerj") || n.contains("heyecan") || n.contains("coşku"):
-            return .motivated
-        case let n where n.contains("karış") || n.contains("karmas"):
-            return .neutral
-        default:
-            return .neutral
+    func refresh(period: Int = 30) async {
+        await summaryTask.runAsync { [weak self] in
+            await self?.performLoadSummary(period: period)
+        }
+    }
+
+    func cancelAll() {
+        summaryTask.cancel()
+    }
+
+    private func performLoadSummary(period: Int) async {
+        isLoading = true
+        errorMessage = nil
+        do {
+            let result: APISummaryResponse = try await APIClient.shared.requestWithAutoRefresh(
+                .getSummary(period: period, endDate: nil)
+            )
+            guard !Task.isCancelled else { return }
+            summary = result
+            isLoading = false
+        } catch is CancellationError {
+            isLoading = false
+        } catch {
+            errorMessage = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
+            isLoading = false
         }
     }
 }

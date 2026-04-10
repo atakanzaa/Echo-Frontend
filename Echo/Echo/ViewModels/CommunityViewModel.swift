@@ -5,67 +5,36 @@ import Combine
 final class CommunityViewModel: ObservableObject {
 
     @Published var posts:          [APICommunityPost] = []
-    @Published var selectedTab: CommunityTab = .global
+    @Published var selectedTab     = "global"
     @Published var isLoading       = false
     @Published var isLoadingMore   = false
     @Published var showCreatePost  = false
-    @Published var selectedPost:   APICommunityPost? = nil
     @Published var errorMessage:   String?
 
     private var currentPage  = 0
     private var hasMore      = true
-    private let pageSize     = AppConstants.Pagination.defaultPageSize
+    private let pageSize     = 20
+    private let feedTask     = TaskGuard()
+    private let loadMoreTask = TaskGuard()
+    private let likeMutations = MutationGuard()
 
     // MARK: — Feed
 
-    func loadFeed(tab: CommunityTab? = nil, reset: Bool = true) {
+    func loadFeed(tab: String? = nil, reset: Bool = true) {
         let activeTab = tab ?? selectedTab
         if tab != nil { selectedTab = activeTab }
-        if reset {
-            currentPage = 0
-            hasMore     = true
-            posts       = []
-        }
-        guard hasMore else { return }
-        isLoading    = true
-        errorMessage = nil
-        Task {
-            do {
-                let paged: APIPagedResponse<APICommunityPost> = try await APIClient.shared.requestWithAutoRefresh(
-                    .getCommunityFeed(tab: activeTab, page: currentPage, size: pageSize)
-                )
-                guard self.selectedTab == activeTab else { return }
-                if reset {
-                    posts = paged.content
-                } else {
-                    appendPosts(paged.content)
-                }
-                hasMore     = !paged.last
-                currentPage = paged.page + 1
-                isLoading   = false
-            } catch {
-                errorMessage = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
-                isLoading    = false
-            }
+        feedTask.run { [weak self] in
+            await self?.performLoadFeed(activeTab: activeTab, reset: reset)
         }
     }
 
     func loadMore() {
         guard !isLoading, !isLoadingMore, hasMore else { return }
         isLoadingMore = true
-        Task {
-            do {
-                let paged: APIPagedResponse<APICommunityPost> = try await APIClient.shared.requestWithAutoRefresh(
-                    .getCommunityFeed(tab: selectedTab, page: currentPage, size: pageSize)
-                )
-                appendPosts(paged.content)
-                hasMore       = !paged.last
-                currentPage   = paged.page + 1
-                isLoadingMore = false
-            } catch {
-                errorMessage = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
-                isLoadingMore = false
-            }
+        let tab = selectedTab
+        let page = currentPage
+        loadMoreTask.run { [weak self] in
+            await self?.performLoadMore(activeTab: tab, page: page)
         }
     }
 
@@ -73,10 +42,27 @@ final class CommunityViewModel: ObservableObject {
 
     func toggleLike(post: APICommunityPost) {
         guard let idx = posts.firstIndex(where: { $0.id == post.id }) else { return }
+        guard likeMutations.start(id: post.id) else { return }
         let liked    = posts[idx].isLikedByMe
-        let newCount = liked ? posts[idx].likesCount - 1 : posts[idx].likesCount + 1
-        posts[idx]   = post.copy(likesCount: newCount, isLikedByMe: !liked)
+        let newCount = max(0, liked ? posts[idx].likesCount - 1 : posts[idx].likesCount + 1)
+        posts[idx]   = APICommunityPost(
+            id:            post.id,
+            userId:        post.userId,
+            displayName:   post.displayName,
+            content:       post.content,
+            contentType:   post.contentType,
+            audioUrl:      post.audioUrl,
+            audioDuration: post.audioDuration,
+            imageUrl:      post.imageUrl,
+            emoji:         post.emoji,
+            isAnonymous:   post.isAnonymous,
+            likesCount:    newCount,
+            commentsCount: post.commentsCount,
+            isLikedByMe:   !liked,
+            createdAt:     post.createdAt
+        )
         Task {
+            defer { likeMutations.finish(id: post.id) }
             do {
                 if liked {
                     let _: APIVoidResponse = try await APIClient.shared.requestWithAutoRefresh(
@@ -93,6 +79,10 @@ final class CommunityViewModel: ObservableObject {
                 }
             }
         }
+    }
+
+    func isLikeInFlight(postId: String) -> Bool {
+        likeMutations.isInFlight(id: postId)
     }
 
     // MARK: — Create Post
@@ -159,22 +149,100 @@ final class CommunityViewModel: ObservableObject {
         }
     }
 
-    private func appendPosts(_ newPosts: [APICommunityPost]) {
-        let existingIDs = Set(posts.map(\.id))
-        posts.append(contentsOf: newPosts.filter { !existingIDs.contains($0.id) })
+    /// Keeps feed cards in sync when an inline comment action mutates a post snapshot.
+    func updatePostSnapshot(_ updated: APICommunityPost) {
+        guard let idx = posts.firstIndex(where: { $0.id == updated.id }) else { return }
+        posts[idx] = updated
+    }
+
+    func refresh() async {
+        let tab = selectedTab
+        await feedTask.runAsync { [weak self] in
+            await self?.performLoadFeed(activeTab: tab, reset: true)
+        }
+    }
+
+    func cancelAll() {
+        feedTask.cancel()
+        loadMoreTask.cancel()
+        likeMutations.reset()
+    }
+
+    private func performLoadFeed(activeTab: String, reset: Bool) async {
+        if reset {
+            currentPage = 0
+            hasMore = true
+            posts = []
+        }
+
+        guard hasMore else {
+            isLoading = false
+            return
+        }
+
+        isLoading = true
+        errorMessage = nil
+        do {
+            let page = currentPage
+            let tabValue = CommunityTab(rawValue: activeTab) ?? .global
+            let paged: APIPagedResponse<APICommunityPost> = try await APIClient.shared.requestWithAutoRefresh(
+                .getCommunityFeed(tab: tabValue, page: page, size: pageSize)
+            )
+            guard !Task.isCancelled else { return }
+            guard selectedTab == activeTab else {
+                isLoading = false
+                return
+            }
+            if reset {
+                posts = paged.content
+            } else {
+                posts.appendDeduplicating(contentsOf: paged.content)
+            }
+            hasMore = !paged.last
+            currentPage = paged.page + 1
+            isLoading = false
+        } catch is CancellationError {
+            isLoading = false
+        } catch {
+            errorMessage = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
+            isLoading = false
+        }
+    }
+
+    private func performLoadMore(activeTab: String, page: Int) async {
+        do {
+            let tabValue = CommunityTab(rawValue: activeTab) ?? .global
+            let paged: APIPagedResponse<APICommunityPost> = try await APIClient.shared.requestWithAutoRefresh(
+                .getCommunityFeed(tab: tabValue, page: page, size: pageSize)
+            )
+            guard !Task.isCancelled else { return }
+            guard selectedTab == activeTab else {
+                isLoadingMore = false
+                return
+            }
+            posts.appendDeduplicating(contentsOf: paged.content)
+            hasMore = !paged.last
+            currentPage = paged.page + 1
+            isLoadingMore = false
+        } catch is CancellationError {
+            isLoadingMore = false
+        } catch {
+            isLoadingMore = false
+        }
     }
 }
 
 extension APICommunityPost {
     var relativeTime: String {
-        guard let date = DateFormatting.parseISO8601(createdAt) else { return "" }
+        guard let date = ISO8601DateFormatter().date(from: createdAt) else { return "" }
         let diff = Int(Date().timeIntervalSince(date))
         switch diff {
         case 0..<60:     return "\(diff)s ago"
         case 60..<3600:  return "\(diff/60)m ago"
         case 3600..<86400: return "\(diff/3600)h ago"
         default:
-            return DateFormatting.shortDate(from: date)
+            let f = DateFormatter(); f.dateStyle = .short
+            return f.string(from: date)
         }
     }
 

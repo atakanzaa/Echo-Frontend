@@ -1,72 +1,97 @@
 import SwiftUI
 
 struct EmotionalHeatmapCalendarView: View {
-    @Binding var selectedTab: AppTab
+    @Binding var selectedTab: String
     @StateObject private var viewModel = CalendarViewModel()
     @State private var isMenuOpen = false
+    @Environment(\.colorScheme) var colorScheme
+    @EnvironmentObject var locManager: LocalizationManager
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
         ZStack {
-            Color(red: 0.098, green: 0.063, blue: 0.133)
-                .ignoresSafeArea()
+            AppTheme.Colors.background(colorScheme).ignoresSafeArea()
 
             VStack(spacing: 0) {
                 // Header
                 HStack {
-                    VStack(alignment: .leading) {
-                        Text("Calendar")
-                            .font(.system(size: 20, weight: .bold))
-                            .foregroundColor(.white)
-                            .tracking(-0.5)
-                    }
+                    Text(locManager.t("nav.calendar"))
+                        .font(AppTheme.Typography.heading3)
+                        .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
                     Spacer()
                     Button(action: { isMenuOpen.toggle() }) {
                         Image(systemName: "line.3.horizontal")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(.white)
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
                     }
                     .frame(width: 40, height: 40)
-                    .background(Color(red: 0.149, green: 0.098, blue: 0.196))
-                    .cornerRadius(20)
+                    .background(AppTheme.Colors.surface(colorScheme))
+                    .cornerRadius(AppTheme.Spacing.radiusFull)
                 }
-                .padding(.horizontal, 24)
-                .padding(.vertical, 12)
-                .frame(height: 56)
-                .background(Color.black.opacity(0.3))
+                .padding(.horizontal, AppTheme.Layout.screenHorizontal)
+                .padding(.top, AppTheme.Layout.headerTop)
+                .padding(.bottom, AppTheme.Layout.headerBottom)
 
                 ScrollView {
-                    VStack(spacing: 24) {
+                    VStack(spacing: AppTheme.Spacing.lg) {
                         // Month Selector
-                        HStack(spacing: 16) {
+                        HStack(spacing: AppTheme.Spacing.md) {
                             Button(action: { viewModel.prevMonth() }) {
                                 Image(systemName: "chevron.left")
                                     .font(.system(size: 10, weight: .medium))
-                                    .foregroundColor(.white)
+                                    .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
                                     .frame(width: 32, height: 32)
-                                    .background(Color.white.opacity(0.05))
+                                    .background(AppTheme.Colors.surface(colorScheme))
                                     .clipShape(Circle())
                             }
                             Spacer()
                             Text(viewModel.displayMonthYear)
-                                .font(.system(size: 22, weight: .bold))
-                                .foregroundColor(.white)
+                                .font(AppTheme.Typography.heading2)
+                                .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
                             Spacer()
                             Button(action: { viewModel.nextMonth() }) {
                                 Image(systemName: "chevron.right")
                                     .font(.system(size: 10, weight: .medium))
-                                    .foregroundColor(.white)
+                                    .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
                                     .frame(width: 32, height: 32)
-                                    .background(Color.white.opacity(0.05))
+                                    .background(AppTheme.Colors.surface(colorScheme))
                                     .clipShape(Circle())
                             }
                         }
-                        .padding(.horizontal, 24)
+                        .padding(.horizontal, AppTheme.Spacing.lg)
+
+                        // Month Summary Bar
+                        if let summary = viewModel.calendarData?.monthSummary {
+                            HStack(spacing: AppTheme.Spacing.md) {
+                                if let avg = summary.averageMood {
+                                    CalendarStatPill(
+                                        icon: "face.smiling",
+                                        value: String(format: "%.1f", avg * 10),
+                                        label: locManager.t("calendar.avg_mood")
+                                    )
+                                }
+                                CalendarStatPill(
+                                    icon: "doc.text",
+                                    value: "\(summary.totalEntries)",
+                                    label: locManager.t("calendar.entries")
+                                )
+                                CalendarStatPill(
+                                    icon: "flame",
+                                    value: "\(summary.streakDays)",
+                                    label: locManager.t("calendar.active_days")
+                                )
+                            }
+                            .padding(.horizontal, AppTheme.Spacing.lg)
+                        }
 
                         if viewModel.isLoading {
                             ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                .progressViewStyle(CircularProgressViewStyle(tint: AppTheme.Colors.accent))
                                 .padding()
+                        } else if let error = viewModel.errorMessage, viewModel.calendarData == nil {
+                            ErrorStateView(message: error) {
+                                viewModel.loadMonth()
+                            }
                         } else if let calData = viewModel.calendarData {
                             // Calendar Grid
                             APICalendarGridView(
@@ -80,32 +105,36 @@ struct EmotionalHeatmapCalendarView: View {
                             // Day Details
                             if let entry = viewModel.selectedEntry {
                                 APISelectedDayView(entry: entry, selectedTab: $selectedTab)
-                                    .padding(.horizontal, 16)
-                                    .padding(.bottom, 16)
+                                    .padding(.horizontal, AppTheme.Spacing.md)
+                                    .padding(.bottom, AppTheme.Spacing.md)
                             }
+                        } else {
+                            EmptyStateView(
+                                icon: "calendar",
+                                title: locManager.t("nav.calendar"),
+                                subtitle: locManager.t("calendar.no_entry_for_day")
+                            )
                         }
                     }
-                    .padding(.vertical, 16)
+                    .padding(.vertical, AppTheme.Spacing.md)
+                }
+                .refreshable {
+                    await viewModel.refresh()
                 }
 
-                Spacer()
-                BottomNavigationView(currentTab: .calendar, selectedTab: $selectedTab)
             }
 
             // Hamburger Menu Overlay
             if isMenuOpen {
-                HStack(spacing: 0) {
-                    HamburgerMenuView(isMenuOpen: $isMenuOpen, selectedTab: $selectedTab)
-                        .frame(maxWidth: 250)
-                    Spacer()
-                }
-                .transition(.move(edge: .leading))
-                .zIndex(1)
+                HamburgerMenuView(isMenuOpen: $isMenuOpen, selectedTab: $selectedTab)
+                    .transition(.move(edge: .leading))
+                    .zIndex(10)
+                    .ignoresSafeArea()
             }
         }
         .onAppear { viewModel.loadMonth() }
+        .onDisappear { viewModel.cancelAll() }
         }
-        .navigationViewStyle(.stack)
     }
 }
 
@@ -119,35 +148,44 @@ struct APICalendarGridView: View {
     @Binding var selectedDay: Int?
     let onSelectDay: (Int) -> Void
     let emotionalState: (APICalendarDay) -> EmotionalState
+    @Environment(\.colorScheme) var colorScheme
+    @EnvironmentObject var locManager: LocalizationManager
 
     let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 7)
-    let days = ["S", "M", "T", "W", "T", "F", "S"]
+    let dayKeys = ["calendar.day.sun", "calendar.day.mon", "calendar.day.tue", "calendar.day.wed", "calendar.day.thu", "calendar.day.fri", "calendar.day.sat"]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
             HStack {
-                ForEach(days, id: \.self) { day in
-                    Text(day)
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(Color(red: 0.608, green: 0.639, blue: 0.686))
+                ForEach(dayKeys, id: \.self) { key in
+                    Text(locManager.t(key))
+                        .font(AppTheme.Typography.label)
+                        .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
                         .frame(maxWidth: .infinity)
                 }
             }
-            .padding(.horizontal, 8)
+            .padding(.horizontal, AppTheme.Spacing.sm)
 
-            LazyVGrid(columns: columns, spacing: 8) {
+            LazyVGrid(columns: columns, spacing: AppTheme.Spacing.sm) {
                 ForEach(calendarData.days, id: \.day) { apiDay in
+                    let isToday = Calendar.current.isDate(
+                        Calendar.current.date(from: DateComponents(year: calendarData.year, month: calendarData.month, day: apiDay.day)) ?? Date(),
+                        inSameDayAs: Date()
+                    )
                     DayButtonView(
                         day: apiDay.day,
                         emotion: emotionalState(apiDay),
                         isSelected: selectedDay == apiDay.day,
+                        isToday: isToday,
+                        entryCount: apiDay.entryCount ?? (apiDay.entryId != nil ? 1 : 0),
+                        hasCoachSession: apiDay.hasCoachSession ?? false,
                         action: { onSelectDay(apiDay.day) }
                     )
                 }
             }
-            .padding(.horizontal, 8)
+            .padding(.horizontal, AppTheme.Spacing.sm)
         }
-        .padding(.horizontal, 8)
+        .padding(.horizontal, AppTheme.Spacing.sm)
     }
 }
 
@@ -155,25 +193,30 @@ struct APICalendarGridView: View {
 
 struct APISelectedDayView: View {
     let entry: APIJournalEntry
-    @Binding var selectedTab: AppTab
+    @Binding var selectedTab: String
+    @Environment(\.colorScheme) var colorScheme
+    @EnvironmentObject var locManager: LocalizationManager
 
     var formattedDate: String {
-        guard let date = DateFormatting.parseISO8601(entry.recordedAt) else { return entry.entryDate }
-        return DateFormatting.calendarDetailDate(from: date)
+        guard let date = ISO8601DateFormatter().date(from: entry.recordedAt) else { return entry.entryDate }
+        let f = DateFormatter()
+        f.dateFormat = "EEEE, d MMM"
+        f.locale = Locale(identifier: locManager.currentLanguage == "tr" ? "tr_TR" : "en_US")
+        return f.string(from: date)
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            // Header: tarih, sure, mood badge + score
-            HStack(spacing: 8) {
+        VStack(alignment: .leading, spacing: AppTheme.Spacing.md) {
+            // Header: date, duration, mood badge + score
+            HStack(spacing: AppTheme.Spacing.sm) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(formattedDate)
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(.white)
+                        .font(AppTheme.Typography.heading3)
+                        .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
                     if !entry.formattedDuration.isEmpty {
-                        Text("\(entry.formattedDuration) Audio")
-                            .font(.system(size: 12, weight: .regular))
-                            .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
+                        Text("\(entry.formattedDuration) \(locManager.t("calendar.audio"))")
+                            .font(AppTheme.Typography.label)
+                            .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
                     }
                 }
                 Spacer()
@@ -183,36 +226,36 @@ struct APISelectedDayView: View {
                             Circle()
                                 .fill(entry.emotionalState.color)
                                 .frame(width: 8, height: 8)
-                            Text((analysis.moodLabel ?? "neutral").uppercased())
-                                .font(.system(size: 10, weight: .bold))
+                            Text(locManager.t(analysis.moodLocalizationKey).uppercased(with: Locale(identifier: locManager.currentLanguage == "tr" ? "tr_TR" : "en_US")))
+                                .font(AppTheme.Typography.micro).fontWeight(.bold)
                                 .tracking(0.5)
                                 .foregroundColor(entry.emotionalState.color)
                         }
                         if let score = analysis.moodScore {
                             Text(String(format: "%.1f/10", score * 10))
-                                .font(.system(size: 10, weight: .medium))
-                                .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
+                                .font(AppTheme.Typography.micro)
+                                .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
                         }
                     }
                     .padding(.vertical, 4)
                     .padding(.horizontal, 10)
                     .background(entry.emotionalState.color.opacity(0.15))
-                    .cornerRadius(12)
+                    .cornerRadius(AppTheme.Spacing.radiusMd)
                 }
             }
 
-            // Key Emotions chip'leri
+            // Key Emotions chips
             if let emotions = entry.analysis?.keyEmotions, !emotions.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 6) {
                         ForEach(emotions.prefix(4), id: \.self) { emotion in
                             Text(emotion)
-                                .font(.system(size: 11, weight: .semibold))
-                                .foregroundColor(.white.opacity(0.9))
-                                .padding(.horizontal, 8)
+                                .font(AppTheme.Typography.micro).fontWeight(.semibold)
+                                .foregroundColor(AppTheme.Colors.textPrimary(colorScheme).opacity(0.9))
+                                .padding(.horizontal, AppTheme.Spacing.sm)
                                 .padding(.vertical, 4)
-                                .background(Color(red: 0.498, green: 0.075, blue: 0.929).opacity(0.25))
-                                .cornerRadius(8)
+                                .background(AppTheme.Colors.accentSoft(colorScheme))
+                                .cornerRadius(AppTheme.Spacing.radiusSm)
                         }
                     }
                 }
@@ -220,62 +263,62 @@ struct APISelectedDayView: View {
 
             if let analysis = entry.analysis {
                 VStack(alignment: .leading, spacing: 7) {
-                    HStack(spacing: 8) {
+                    HStack(spacing: AppTheme.Spacing.sm) {
                         Image(systemName: "sparkles")
-                            .font(.system(size: 12))
-                            .foregroundColor(Color(red: 0.498, green: 0.075, blue: 0.929).opacity(0.8))
-                        Text("AI SUMMARY")
-                            .font(.system(size: 12, weight: .bold))
+                            .font(AppTheme.Typography.label)
+                            .foregroundColor(AppTheme.Colors.accent.opacity(0.8))
+                        Text(locManager.t("calendar.ai_summary"))
+                            .font(AppTheme.Typography.label).fontWeight(.bold)
                             .tracking(0.6)
-                            .foregroundColor(Color(red: 0.498, green: 0.075, blue: 0.929).opacity(0.8))
+                            .foregroundColor(AppTheme.Colors.accent.opacity(0.8))
                     }
                     Text(analysis.summary ?? "")
-                        .font(.system(size: 14, weight: .regular))
-                        .foregroundColor(Color(red: 0.820, green: 0.839, blue: 0.855))
+                        .font(AppTheme.Typography.caption)
+                        .foregroundColor(AppTheme.Colors.textSecondary(colorScheme))
                         .lineSpacing(2)
                 }
                 .padding(17)
-                .background(Color.black.opacity(0.2))
-                .cornerRadius(24)
+                .background(AppTheme.Colors.background(colorScheme).opacity(0.5))
+                .cornerRadius(AppTheme.Spacing.radiusXl)
 
                 if let question = analysis.reflectiveQuestion, !question.isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("REFLECTION QUESTION")
-                            .font(.system(size: 12, weight: .bold))
+                    VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
+                        Text(locManager.t("calendar.reflection_question"))
+                            .font(AppTheme.Typography.micro).fontWeight(.bold)
                             .tracking(0.6)
-                            .foregroundColor(Color(red: 0.420, green: 0.447, blue: 0.502))
-                        HStack(alignment: .top, spacing: 12) {
+                            .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
+                        HStack(alignment: .top, spacing: AppTheme.Spacing.sm) {
                             Circle()
-                                .fill(Color(red: 0.498, green: 0.075, blue: 0.929))
+                                .fill(AppTheme.Colors.accent)
                                 .frame(width: 6, height: 6)
                                 .padding(.top, 6)
                             Text(question)
-                                .font(.system(size: 14, weight: .regular))
-                                .foregroundColor(Color(red: 0.820, green: 0.839, blue: 0.855))
+                                .font(AppTheme.Typography.caption)
+                                .foregroundColor(AppTheme.Colors.textSecondary(colorScheme))
                         }
                     }
                 }
             }
 
-            // Detay butonu
+            // Detail button
             NavigationLink(destination: JournalDetailView(entry: entry, selectedTab: $selectedTab)) {
-                HStack(spacing: 8) {
+                HStack(spacing: AppTheme.Spacing.sm) {
                     Image(systemName: "arrow.right.circle.fill")
-                        .font(.system(size: 14))
-                    Text("Detayi Gor")
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(AppTheme.Typography.caption)
+                    Text(locManager.t("calendar.view_details"))
+                        .font(AppTheme.Typography.caption).fontWeight(.semibold)
                 }
-                .foregroundColor(Color(red: 0.498, green: 0.075, blue: 0.929))
+                .foregroundColor(AppTheme.Colors.accent)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 10)
-                .background(Color(red: 0.498, green: 0.075, blue: 0.929).opacity(0.12))
-                .cornerRadius(12)
+                .background(AppTheme.Colors.accentSoft(colorScheme))
+                .cornerRadius(AppTheme.Spacing.radiusMd)
             }
             .buttonStyle(PlainButtonStyle())
         }
-        .padding(25)
-        .background(Color(red: 0.165, green: 0.114, blue: 0.212))
-        .cornerRadius(24)
+        .padding(AppTheme.Spacing.lg - 1)
+        .background(AppTheme.Colors.surfaceElevated(colorScheme))
+        .cornerRadius(AppTheme.Spacing.radiusXl)
     }
 }
 
@@ -288,21 +331,31 @@ enum EmotionalState {
 
     var color: Color {
         switch self {
-        case .stress:    return Color(red: 0.937, green: 0.267, blue: 0.267) // #EF4444
-        case .neutral:   return Color(red: 0.612, green: 0.639, blue: 0.686) // #9CA3AF
-        case .calm:      return Color(red: 0.235, green: 0.808, blue: 0.996) // #3CCEFF
-        case .motivated: return Color(red: 0.133, green: 0.769, blue: 0.368) // #22C45E
+        case .stress:    return AppTheme.Colors.destructive
+        case .neutral:   return Color(red: 0.612, green: 0.639, blue: 0.686)
+        case .calm:      return Color(red: 0.235, green: 0.808, blue: 0.996)
+        case .motivated: return AppTheme.Colors.success
         case .empty:     return Color.clear
         }
     }
 
     var label: String {
         switch self {
-        case .stress:    return "Stress"
-        case .neutral:   return "Neutral"
-        case .calm:      return "Calm"
-        case .motivated: return "Motivated"
+        case .stress:    return "calendar.emotion.stress"
+        case .neutral:   return "calendar.emotion.neutral"
+        case .calm:      return "calendar.emotion.calm"
+        case .motivated: return "calendar.emotion.motivated"
         case .empty:     return ""
+        }
+    }
+
+    var emoji: String {
+        switch self {
+        case .stress:    return "😔"
+        case .neutral:   return "😌"
+        case .calm:      return "🌿"
+        case .motivated: return "⚡️"
+        case .empty:     return "📓"
         }
     }
 }
@@ -311,7 +364,11 @@ struct DayButtonView: View {
     let day: Int
     let emotion: EmotionalState
     let isSelected: Bool
+    let isToday: Bool
+    var entryCount: Int = 0
+    var hasCoachSession: Bool = false
     let action: () -> Void
+    @Environment(\.colorScheme) var colorScheme
 
     private var hasEntry: Bool { emotion != .empty }
 
@@ -319,24 +376,48 @@ struct DayButtonView: View {
         Button(action: action) {
             VStack(spacing: 4) {
                 Text("\(day)")
-                    .font(.system(size: 15, weight: hasEntry ? .semibold : .regular))
-                    .foregroundColor(hasEntry ? .white : Color(red: 0.420, green: 0.360, blue: 0.460))
+                    .font(.system(size: 15, weight: hasEntry || isToday ? .semibold : .regular))
+                    .foregroundColor(isToday ? AppTheme.Colors.accent : (hasEntry ? AppTheme.Colors.textPrimary(colorScheme) : AppTheme.Colors.textMuted(colorScheme)))
 
-                // Mood dot — only visible when entry exists
-                Circle()
-                    .fill(emotion.color)
-                    .frame(width: 6, height: 6)
-                    .opacity(hasEntry ? 1 : 0)
+                // Mood dot row — mood + optional coach indicator
+                HStack(spacing: 3) {
+                    if hasEntry {
+                        Circle()
+                            .fill(emotion.color)
+                            .frame(width: 6, height: 6)
+                    } else if isToday {
+                        Circle()
+                            .fill(AppTheme.Colors.accent)
+                            .frame(width: 6, height: 6)
+                    } else {
+                        Circle()
+                            .frame(width: 6, height: 6)
+                            .opacity(0)
+                    }
+
+                    if hasCoachSession {
+                        Circle()
+                            .fill(AppTheme.Colors.gold)
+                            .frame(width: 4, height: 4)
+                    }
+                }
+
+                // Multiple entries indicator
+                if entryCount > 1 {
+                    Text("\(entryCount)")
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
+                }
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 48)
+            .frame(height: 52)
             .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(isSelected ? Color.white.opacity(0.12) : Color.clear)
+                RoundedRectangle(cornerRadius: AppTheme.Spacing.radiusMd)
+                    .fill(isSelected ? AppTheme.Colors.surface(colorScheme) : (isToday ? AppTheme.Colors.accentSoft(colorScheme).opacity(0.5) : Color.clear))
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(isSelected ? Color.white.opacity(0.6) : Color.clear, lineWidth: 1.5)
+                RoundedRectangle(cornerRadius: AppTheme.Spacing.radiusMd)
+                    .stroke(isSelected ? AppTheme.Colors.border(colorScheme) : (isToday ? AppTheme.Colors.accent.opacity(0.3) : Color.clear), lineWidth: 1.5)
             )
         }
     }
@@ -344,59 +425,96 @@ struct DayButtonView: View {
 
 struct LegendView: View {
     private let legends: [(EmotionalState, String)] = [
-        (.stress, "Stress"), (.neutral, "Neutral"), (.calm, "Calm"), (.motivated, "Motivated")
+        (.stress, "calendar.emotion.stress"), (.neutral, "calendar.emotion.neutral"), (.calm, "calendar.emotion.calm"), (.motivated, "calendar.emotion.motivated")
     ]
+    @Environment(\.colorScheme) var colorScheme
+    @EnvironmentObject var locManager: LocalizationManager
 
     var body: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: AppTheme.Spacing.md) {
             ForEach(legends, id: \.1) { state, label in
                 HStack(spacing: 6) {
                     Circle()
                         .fill(state.color)
                         .frame(width: 8, height: 8)
-                    Text(label)
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
+                    Text(locManager.t(label))
+                        .font(AppTheme.Typography.micro)
+                        .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
                 }
             }
             Spacer()
         }
-        .padding(.horizontal, 24)
+        .padding(.horizontal, AppTheme.Spacing.lg)
+    }
+}
+
+// MARK: - Calendar Stat Pill
+
+struct CalendarStatPill: View {
+    let icon: String
+    let value: String
+    let label: String
+    @Environment(\.colorScheme) var colorScheme
+
+    var body: some View {
+        VStack(spacing: 4) {
+            HStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.system(size: 11))
+                    .foregroundColor(AppTheme.Colors.accent)
+                Text(value)
+                    .font(AppTheme.Typography.bodyEm)
+                    .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
+            }
+            Text(label)
+                .font(AppTheme.Typography.micro)
+                .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, AppTheme.Spacing.sm)
+        .background(AppTheme.Colors.surfaceElevated(colorScheme))
+        .cornerRadius(AppTheme.Spacing.radiusMd)
     }
 }
 
 struct BottomNavigationView: View {
-    let currentTab: AppTab
-    @Binding var selectedTab: AppTab
+    let currentPage: String
+    @Binding var selectedTab: String
+    @Environment(\.colorScheme) var colorScheme
+    @EnvironmentObject var locManager: LocalizationManager
 
-    private static let items: [(icon: String, label: String, tab: AppTab)] = [
-        ("book.fill",      "Journal",  .journal),
-        ("calendar",       "Calendar", .calendar),
-        ("chart.bar.fill", "Insights", .insights),
-        ("gear",           "Settings", .settings)
+    private static let items: [(icon: String, label: String, tab: String)] = [
+        ("book.fill",      "nav.journal",  "journal"),
+        ("calendar",       "nav.calendar", "calendar"),
+        ("chart.bar.fill", "nav.insights", "insights"),
+        ("gear",           "nav.settings", "settings")
     ]
 
     var body: some View {
         VStack(spacing: 0) {
-            Divider().background(Color.white.opacity(0.05))
+            Divider().background(AppTheme.Colors.border(colorScheme))
             HStack(spacing: 0) {
                 ForEach(Self.items, id: \.tab) { item in
                     Button(action: { selectedTab = item.tab }) {
                         VStack(spacing: 4) {
                             Image(systemName: item.icon)
                                 .font(.system(size: 16))
-                                .foregroundColor(item.tab == currentTab ? .white : Color(red: 0.612, green: 0.639, blue: 0.686))
-                            Text(item.label)
-                                .font(.system(size: 10, weight: .medium))
-                                .foregroundColor(item.tab == currentTab ? .white : Color(red: 0.612, green: 0.639, blue: 0.686))
+                                .foregroundColor(item.tab == currentPage
+                                    ? AppTheme.Colors.textPrimary(colorScheme)
+                                    : AppTheme.Colors.textMuted(colorScheme))
+                            Text(locManager.t(item.label))
+                                .font(AppTheme.Typography.micro)
+                                .foregroundColor(item.tab == currentPage
+                                    ? AppTheme.Colors.textPrimary(colorScheme)
+                                    : AppTheme.Colors.textMuted(colorScheme))
                         }
                         .frame(maxWidth: .infinity)
                         .frame(height: 60)
                     }
                 }
             }
-            .padding(.horizontal, 24)
+            .padding(.horizontal, AppTheme.Spacing.lg)
         }
-        .background(Color(red: 0.102, green: 0.067, blue: 0.133).opacity(0.95))
+        .background(AppTheme.Colors.surface(colorScheme).opacity(0.95))
     }
 }

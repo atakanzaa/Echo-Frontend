@@ -6,11 +6,16 @@
 //
 
 import SwiftUI
+#if canImport(GoogleSignIn)
+import GoogleSignIn
+#endif
 
 @main
 struct EchoApp: App {
 
     @StateObject private var appState = AppState.shared
+    @StateObject private var locManager = LocalizationManager.shared
+    @StateObject private var notificationVM = NotificationViewModel.shared
 
     var body: some Scene {
         WindowGroup {
@@ -41,8 +46,15 @@ struct EchoApp: App {
                 }
             }
             .environmentObject(appState)
+            .environmentObject(locManager)
+            .environmentObject(notificationVM)
             .animation(.easeInOut(duration: 0.3), value: appState.isAuthenticated)
             .animation(.easeInOut(duration: 0.2), value: appState.isRestoringSession)
+            .onOpenURL { url in
+#if canImport(GoogleSignIn)
+                GIDSignIn.sharedInstance.handle(url)
+#endif
+            }
         }
     }
 }

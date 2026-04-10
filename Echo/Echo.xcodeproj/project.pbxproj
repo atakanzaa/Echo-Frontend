@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		E8F100002F99900100000001 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = E8F100022F99900100000001 /* GoogleSignIn */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		E814CFB22F464EF10074518B /* Echo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Echo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E8F100002F99900100000001 /* GoogleSignIn in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +70,7 @@
 			);
 			name = Echo;
 			packageProductDependencies = (
+				E8F100022F99900100000001 /* GoogleSignIn */,
 			);
 			productName = Echo;
 			productReference = E814CFB22F464EF10074518B /* Echo.app */;
@@ -94,6 +100,9 @@
 			);
 			mainGroup = E814CFA92F464EF10074518B;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				E8F100012F99900100000001 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = E814CFB32F464EF10074518B /* Products */;
 			projectDirPath = "";
@@ -253,7 +262,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = U2RDLR8RH2;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Echo uses the microphone so you can record voice journal entries and time capsules.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -286,7 +296,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = U2RDLR8RH2;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Echo uses the microphone so you can record voice journal entries and time capsules.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -332,6 +343,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		E8F100012F99900100000001 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		E8F100022F99900100000001 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E8F100012F99900100000001 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = E814CFAA2F464EF10074518B /* Project object */;
 }

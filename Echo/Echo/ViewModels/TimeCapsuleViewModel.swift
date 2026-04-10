@@ -19,58 +19,27 @@ final class TimeCapsuleViewModel: NSObject, ObservableObject, AVAudioRecorderDel
     private var timer:            Timer?
     private var elapsedSeconds    = 0
     private var audioFileURL:     URL?
+    private let capsulesTask      = TaskGuard()
 
     // Create sheet form
     @Published var capsuleTitle   = ""
     @Published var unlockInDays   = 90
 
-    deinit {
-        timer?.invalidate()
-        recorder?.stop()
-    }
-
     // MARK: — Load
 
     func loadCapsules() {
-        isLoading    = true
-        errorMessage = nil
-        Task {
-            do {
-                let result: [APITimeCapsule] = try await APIClient.shared.requestWithAutoRefresh(
-                    .getCapsules
-                )
-                capsules  = result
-                isLoading = false
-            } catch {
-                errorMessage = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
-                isLoading    = false
-            }
+        capsulesTask.run { [weak self] in
+            await self?.performLoadCapsules()
         }
     }
 
     // MARK: — Recording
 
     func toggleRecording() {
-        if isRecording {
-            stopAndPrepare()
-        } else {
-            Task { await startRecording() }
-        }
+        isRecording ? stopAndPrepare() : startRecording()
     }
 
-    private func startRecording() async {
-        errorMessage = nil
-
-        let permission = await MicrophonePermission.requestAccess()
-        guard permission == .granted else {
-            errorMessage = permission.errorMessage
-            return
-        }
-
-        beginRecording()
-    }
-
-    private func beginRecording() {
+    private func startRecording() {
         let session = AVAudioSession.sharedInstance()
         do {
             try session.setCategory(.playAndRecord, mode: .default, options: .defaultToSpeaker)
@@ -98,14 +67,13 @@ final class TimeCapsuleViewModel: NSObject, ObservableObject, AVAudioRecorderDel
     private func stopAndPrepare() {
         recorder?.stop()
         timer?.invalidate()
-        timer = nil
         isRecording = false
     }
 
     func createCapsule() {
         isCreating = true
         let unlockDate = Calendar.current.date(byAdding: .day, value: unlockInDays, to: Date()) ?? Date()
-        let iso = DateFormatting.iso8601String(from: unlockDate)
+        let iso = ISO8601DateFormatter().string(from: unlockDate)
         let body = CreateCapsuleBody(
             title:       capsuleTitle.isEmpty ? nil : capsuleTitle,
             contentText: nil,
@@ -117,12 +85,11 @@ final class TimeCapsuleViewModel: NSObject, ObservableObject, AVAudioRecorderDel
             do {
                 var audioData: Data? = nil
                 var filename:  String? = nil
-                let fileURLToDelete = audioFileURL
                 if let url = audioFileURL {
                     audioData = try? Data(contentsOf: url)
                     filename  = url.lastPathComponent
                 }
-                let capsule: APITimeCapsule = try await APIClient.shared.uploadWithAutoRefresh(
+                let capsule: APITimeCapsule = try await APIClient.shared.upload(
                     .createCapsule(audioData: audioData, filename: filename, body: body)
                 )
                 capsules.insert(capsule, at: 0)
@@ -130,10 +97,9 @@ final class TimeCapsuleViewModel: NSObject, ObservableObject, AVAudioRecorderDel
                 showCreateSheet  = false
                 capsuleTitle     = ""
                 unlockInDays     = 90
-                isRecording      = false
                 audioFileURL     = nil
                 recordingTime    = "0:00"
-                if let url = fileURLToDelete { try? FileManager.default.removeItem(at: url) }
+                if let url = audioFileURL { try? FileManager.default.removeItem(at: url) }
             } catch {
                 errorMessage = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
                 isCreating   = false
@@ -144,15 +110,14 @@ final class TimeCapsuleViewModel: NSObject, ObservableObject, AVAudioRecorderDel
     // MARK: — Helpers
 
     var nextUnlockCountdown: String {
-        guard let next = capsules.filter({ $0.capsuleStatus == .sealed })
-            .compactMap({ DateFormatting.parseISO8601($0.unlockAt) })
+        guard let next = capsules.filter({ $0.status == "sealed" })
+            .compactMap({ ISO8601DateFormatter().date(from: $0.unlockAt) })
             .sorted().first else { return "No sealed capsules" }
         let days = Calendar.current.dateComponents([.day], from: Date(), to: next).day ?? 0
         return days > 0 ? "\(days) Days" : "Unlocked!"
     }
 
     private func startTimer() {
-        timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             guard let self else { return }
             Task { @MainActor in
@@ -165,18 +130,48 @@ final class TimeCapsuleViewModel: NSObject, ObservableObject, AVAudioRecorderDel
     }
 
     nonisolated func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {}
+
+    func refresh() async {
+        await capsulesTask.runAsync { [weak self] in
+            await self?.performLoadCapsules()
+        }
+    }
+
+    func cancelAll() {
+        capsulesTask.cancel()
+    }
+
+    private func performLoadCapsules() async {
+        isLoading = true
+        errorMessage = nil
+        do {
+            let result: [APITimeCapsule] = try await APIClient.shared.requestWithAutoRefresh(
+                .getCapsules
+            )
+            guard !Task.isCancelled else { return }
+            capsules = result
+            isLoading = false
+        } catch is CancellationError {
+            isLoading = false
+        } catch {
+            errorMessage = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
+            isLoading = false
+        }
+    }
 }
 
 extension APITimeCapsule {
-    var isSealed: Bool { capsuleStatus == .sealed }
+    var isSealed: Bool { status == "sealed" }
 
     var unlockDateFormatted: String {
-        guard let date = DateFormatting.parseISO8601(unlockAt) else { return unlockAt }
-        return DateFormatting.mediumDate(from: date)
+        guard let d = ISO8601DateFormatter().date(from: unlockAt) else { return unlockAt }
+        let f = DateFormatter(); f.dateStyle = .medium
+        return f.string(from: d)
     }
 
     var sealedDateShort: String {
-        guard let date = DateFormatting.parseISO8601(sealedAt) else { return "" }
-        return DateFormatting.shortMonthYear(from: date)
+        guard let d = ISO8601DateFormatter().date(from: sealedAt) else { return "" }
+        let f = DateFormatter(); f.dateFormat = "MMM yyyy"
+        return f.string(from: d)
     }
 }

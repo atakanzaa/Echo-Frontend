@@ -3,262 +3,329 @@ import Combine
 
 struct JournalDetailView: View {
     let entry: APIJournalEntry
-    @Binding var selectedTab: AppTab
+    @Binding var selectedTab: String
+    @EnvironmentObject var locManager: LocalizationManager
+    @StateObject private var goalViewModel = GoalViewModel()
     @State private var showTranscript = false
-    @State private var navigateToCoach = false
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
         ZStack {
-            Color(red: 0.098, green: 0.063, blue: 0.133)
-                .ignoresSafeArea()
+            AppTheme.Colors.background(colorScheme).ignoresSafeArea()
 
             ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-
-                    // MARK: — Header
+                VStack(alignment: .leading, spacing: AppTheme.Spacing.md) {
                     headerSection
 
-                    // MARK: — AI Summary
+                    if let message = goalViewModel.successMessage {
+                        InlineBannerView(message: message, type: .info) {
+                            goalViewModel.successMessage = nil
+                        }
+                        .padding(.horizontal, AppTheme.Spacing.md)
+                    }
+
+                    if let message = goalViewModel.errorMessage {
+                        InlineBannerView(message: message, type: .error) {
+                            goalViewModel.errorMessage = nil
+                        }
+                        .padding(.horizontal, AppTheme.Spacing.md)
+                    }
+
+                    if isAnalysisProcessing {
+                        analysisProcessingCard
+                    }
+
                     if let summary = entry.analysis?.summary, !summary.isEmpty {
-                        sectionCard(title: "AI Summary", icon: "sparkles") {
-                            Text(summary)
-                                .font(.system(size: 15, weight: .regular))
-                                .foregroundColor(Color(red: 0.820, green: 0.839, blue: 0.855))
-                                .lineSpacing(3)
-                        }
+                        aiSynthesisCard(summary: summary)
                     }
 
-                    // MARK: — Key Emotions
+                    if !goalViewModel.journalSuggestions.isEmpty {
+                        goalSuggestionsSection
+                    }
+
                     if let emotions = entry.analysis?.keyEmotions, !emotions.isEmpty {
-                        sectionCard(title: "Duygular", icon: "heart.text.square") {
-                            FlowLayout(spacing: 8) {
-                                ForEach(emotions, id: \.self) { emotion in
-                                    Text(emotion)
-                                        .font(.system(size: 13, weight: .semibold))
-                                        .foregroundColor(.white)
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 6)
-                                        .background(emotionColor(emotion).opacity(0.3))
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 12)
-                                                .stroke(emotionColor(emotion).opacity(0.5), lineWidth: 1)
-                                        )
-                                        .cornerRadius(12)
-                                }
-                            }
-                        }
+                        keyEmotionsSection(emotions: emotions)
                     }
 
-                    // MARK: — Topics
-                    if let topics = entry.analysis?.topics, !topics.isEmpty {
-                        sectionCard(title: "Konular", icon: "tag") {
-                            FlowLayout(spacing: 8) {
-                                ForEach(topics, id: \.self) { topic in
-                                    HStack(spacing: 4) {
-                                        Image(systemName: "number")
-                                            .font(.system(size: 10))
-                                        Text(topic)
-                                            .font(.system(size: 13, weight: .medium))
-                                    }
-                                    .foregroundColor(Color(red: 0.498, green: 0.075, blue: 0.929))
-                                    .padding(.horizontal, 10)
-                                    .padding(.vertical, 5)
-                                    .background(Color(red: 0.498, green: 0.075, blue: 0.929).opacity(0.12))
-                                    .cornerRadius(10)
-                                }
-                            }
-                        }
-                    }
-
-                    // MARK: — Energy Level
                     if let energy = entry.analysis?.energyLevel, !energy.isEmpty {
-                        sectionCard(title: "Enerji Seviyesi", icon: "bolt.fill") {
-                            HStack(spacing: 12) {
-                                energyIndicator(level: energy)
-                                Text(energy.capitalized)
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(.white)
-                            }
-                        }
+                        energySection(level: energy)
                     }
 
-                    // MARK: — Reflective Question
                     if let question = entry.analysis?.reflectiveQuestion, !question.isEmpty {
-                        sectionCard(title: "Yansıma Sorusu", icon: "questionmark.bubble") {
-                            Text(question)
-                                .font(.system(size: 15, weight: .regular))
-                                .foregroundColor(Color(red: 0.820, green: 0.839, blue: 0.855))
-                                .lineSpacing(3)
-                                .italic()
-                        }
+                        reflectionCard(question: question)
                     }
 
-                    // MARK: — Transcript (genisletilebilir)
                     if let transcript = entry.transcript, !transcript.isEmpty {
-                        VStack(alignment: .leading, spacing: 12) {
-                            Button(action: { withAnimation { showTranscript.toggle() } }) {
-                                HStack(spacing: 8) {
-                                    Image(systemName: "doc.text")
-                                        .font(.system(size: 14))
-                                        .foregroundColor(Color(red: 0.498, green: 0.075, blue: 0.929))
-                                    Text("Transkript")
-                                        .font(.system(size: 13, weight: .bold))
-                                        .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
-                                    Spacer()
-                                    Image(systemName: showTranscript ? "chevron.up" : "chevron.down")
-                                        .font(.system(size: 12))
-                                        .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
-                                }
-                            }
-                            if showTranscript {
-                                Text(transcript)
-                                    .font(.system(size: 14, weight: .regular))
-                                    .foregroundColor(Color(red: 0.820, green: 0.839, blue: 0.855))
-                                    .lineSpacing(4)
-                                    .transition(.opacity.combined(with: .move(edge: .top)))
-                            }
-                        }
-                        .padding(16)
-                        .background(Color(red: 0.165, green: 0.114, blue: 0.212).opacity(0.5))
-                        .cornerRadius(16)
-                        .padding(.horizontal, 16)
+                        transcriptSection(transcript)
                     }
 
-                    // MARK: — Coach ile Konuş butonu
-                    Button(action: {
-                        CoachJournalContext.shared.pendingJournalEntryId = entry.id
-                        selectedTab = .coach
-                        dismiss()
-                    }) {
-                        HStack(spacing: 10) {
-                            Image(systemName: "bubble.left.and.bubble.right.fill")
-                                .font(.system(size: 16))
-                            Text("Coach ile Konuş")
-                                .font(.system(size: 16, weight: .bold))
-                        }
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(
-                            LinearGradient(
-                                gradient: Gradient(colors: [
-                                    Color(red: 0.498, green: 0.075, blue: 0.929),
-                                    Color(red: 0.596, green: 0.283, blue: 0.941)
-                                ]),
-                                startPoint: .leading, endPoint: .trailing
-                            )
-                        )
-                        .cornerRadius(16)
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 32)
+                    coachButton
+                        .padding(.bottom, AppTheme.Spacing.xxl)
                 }
-                .padding(.top, 16)
+                .padding(.top, AppTheme.Spacing.md)
             }
         }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
-                Text("Journal Detay")
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundColor(.white)
+                Text(formattedDate)
+                    .font(AppTheme.Typography.heading3)
+                    .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
             }
+        }
+        .onAppear {
+            if entry.analysis != nil {
+                goalViewModel.loadJournalSuggestions(entryId: entry.id)
+            }
+        }
+        .onDisappear {
+            goalViewModel.cancelAll()
         }
     }
 
-    // MARK: — Header Section
+    private var goalSuggestionsSection: some View {
+        VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
+            HStack(spacing: AppTheme.Spacing.sm) {
+                Image(systemName: "target")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(AppTheme.Colors.accent)
+                Text(locManager.t("goal.suggestions.title"))
+                    .font(AppTheme.Typography.caption)
+                    .fontWeight(.bold)
+                    .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
+            }
+            ForEach(goalViewModel.journalSuggestions) { suggestion in
+                GoalSuggestionCardView(
+                    suggestion: suggestion,
+                    isLoading: goalViewModel.isInFlight(goalId: suggestion.id),
+                    onPrimary: { goalViewModel.acceptSuggestion(suggestion) },
+                    onSecondary: { goalViewModel.rejectSuggestion(suggestion) }
+                )
+            }
+        }
+        .padding(.horizontal, AppTheme.Spacing.md)
+    }
 
     private var headerSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(formattedDate)
-                        .font(.system(size: 20, weight: .bold))
-                        .foregroundColor(.white)
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
+                HStack(spacing: AppTheme.Spacing.sm) {
                     if !entry.formattedDuration.isEmpty {
-                        HStack(spacing: 6) {
-                            Image(systemName: "waveform")
-                                .font(.system(size: 12))
-                            Text(entry.formattedDuration)
-                                .font(.system(size: 13))
+                        HStack(spacing: 5) {
+                            Image(systemName: "waveform").font(.system(size: 11))
+                            Text(entry.formattedDuration.uppercased()).font(AppTheme.Typography.label).fontWeight(.semibold)
                         }
-                        .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
+                        .foregroundColor(AppTheme.Colors.accent)
+                        .padding(.horizontal, AppTheme.Spacing.sm).padding(.vertical, 4)
+                        .background(AppTheme.Colors.accentSoft(colorScheme))
+                        .cornerRadius(AppTheme.Spacing.radiusFull)
+                    }
+
+                    if let analysis = entry.analysis {
+                        HStack(spacing: 5) {
+                            Circle().fill(entry.emotionalState.color).frame(width: 7, height: 7)
+                            Text(locManager.t(analysis.moodLocalizationKey))
+                                .font(AppTheme.Typography.label).fontWeight(.semibold)
+                                .foregroundColor(entry.emotionalState.color)
+                            if let score = analysis.moodScore {
+                                Text("· \(Int(score * 100))%")
+                                    .font(AppTheme.Typography.label)
+                                    .foregroundColor(entry.emotionalState.color.opacity(0.7))
+                            }
+                        }
+                        .padding(.horizontal, AppTheme.Spacing.sm).padding(.vertical, 4)
+                        .background(entry.emotionalState.color.opacity(0.12))
+                        .cornerRadius(AppTheme.Spacing.radiusFull)
                     }
                 }
-                Spacer()
-                // Mood badge
-                if let analysis = entry.analysis {
-                    VStack(spacing: 4) {
-                        Circle()
-                            .fill(entry.emotionalState.color)
-                            .frame(width: 12, height: 12)
-                        Text((analysis.moodLabel ?? "neutral").capitalized)
-                            .font(.system(size: 11, weight: .bold))
-                            .foregroundColor(entry.emotionalState.color)
-                        if let score = analysis.moodScore {
-                            Text(String(format: "%.0f/10", score * 10))
-                                .font(.system(size: 10, weight: .medium))
-                                .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
-                        }
-                    }
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 12)
-                    .background(entry.emotionalState.color.opacity(0.15))
-                    .cornerRadius(12)
+            }
+            Spacer()
+        }
+        .padding(AppTheme.Spacing.md)
+        .background(AppTheme.Colors.surfaceElevated(colorScheme))
+        .cornerRadius(AppTheme.Spacing.radiusLg)
+        .overlay(RoundedRectangle(cornerRadius: AppTheme.Spacing.radiusLg)
+            .strokeBorder(AppTheme.Colors.borderSubtle(colorScheme), lineWidth: 1))
+        .padding(.horizontal, AppTheme.Spacing.md)
+    }
+
+    private func aiSynthesisCard(summary: String) -> some View {
+        VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
+            HStack(spacing: AppTheme.Spacing.sm) {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 14))
+                    .foregroundStyle(AppTheme.Gradients.accent)
+                Text(locManager.t("journal.ai_synthesis"))
+                    .font(AppTheme.Typography.caption).fontWeight(.bold)
+                    .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
+            }
+            Text(summary)
+                .font(AppTheme.Typography.body)
+                .foregroundColor(AppTheme.Colors.textSecondary(colorScheme))
+                .lineSpacing(4)
+        }
+        .padding(AppTheme.Spacing.md)
+        .background(AppTheme.Colors.accentSoft(colorScheme))
+        .cornerRadius(AppTheme.Spacing.radiusLg)
+        .overlay(RoundedRectangle(cornerRadius: AppTheme.Spacing.radiusLg)
+            .strokeBorder(AppTheme.Colors.accent.opacity(0.25), lineWidth: 1))
+        .padding(.horizontal, AppTheme.Spacing.md)
+    }
+
+    private var analysisProcessingCard: some View {
+        HStack(alignment: .center, spacing: AppTheme.Spacing.sm) {
+            ProgressView()
+                .progressViewStyle(CircularProgressViewStyle(tint: AppTheme.Colors.accent))
+                .scaleEffect(0.9)
+            Text(locManager.t("journal.analysis_processing"))
+                .font(AppTheme.Typography.caption)
+                .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
+            Spacer()
+        }
+        .padding(AppTheme.Spacing.md)
+        .background(AppTheme.Colors.surfaceElevated(colorScheme))
+        .cornerRadius(AppTheme.Spacing.radiusLg)
+        .overlay(
+            RoundedRectangle(cornerRadius: AppTheme.Spacing.radiusLg)
+                .strokeBorder(AppTheme.Colors.borderSubtle(colorScheme), lineWidth: 1)
+        )
+        .padding(.horizontal, AppTheme.Spacing.md)
+    }
+
+    private func keyEmotionsSection(emotions: [String]) -> some View {
+        VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
+            sectionLabel(icon: "heart.text.square", title: locManager.t("journal.key_emotions"))
+            FlowLayout(spacing: AppTheme.Spacing.sm) {
+                ForEach(emotions, id: \.self) { emotion in
+                    Text(emotion)
+                        .font(AppTheme.Typography.caption).fontWeight(.semibold)
+                        .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
+                        .padding(.horizontal, AppTheme.Spacing.sm).padding(.vertical, AppTheme.Spacing.xs + 2)
+                        .background(AppTheme.Colors.surface(colorScheme))
+                        .overlay(RoundedRectangle(cornerRadius: AppTheme.Spacing.radiusMd)
+                            .stroke(emotionColor(emotion).opacity(0.4), lineWidth: 1))
+                        .cornerRadius(AppTheme.Spacing.radiusMd)
                 }
             }
         }
-        .padding(16)
-        .background(Color(red: 0.165, green: 0.114, blue: 0.212).opacity(0.5))
-        .cornerRadius(16)
-        .padding(.horizontal, 16)
+        .padding(AppTheme.Spacing.md)
+        .background(AppTheme.Colors.surfaceElevated(colorScheme).opacity(0.6))
+        .cornerRadius(AppTheme.Spacing.radiusLg)
+        .padding(.horizontal, AppTheme.Spacing.md)
     }
 
-    // MARK: — Helpers
+    private func energySection(level: String) -> some View {
+        VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
+            sectionLabel(icon: "bolt.fill", title: locManager.t("journal.energy_state"))
+            HStack(spacing: AppTheme.Spacing.md) {
+                energyBar(level: level)
+                Text(level.capitalized)
+                    .font(AppTheme.Typography.caption).fontWeight(.semibold)
+                    .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
+            }
+        }
+        .padding(AppTheme.Spacing.md)
+        .background(AppTheme.Colors.surfaceElevated(colorScheme).opacity(0.6))
+        .cornerRadius(AppTheme.Spacing.radiusLg)
+        .padding(.horizontal, AppTheme.Spacing.md)
+    }
+
+    private func reflectionCard(question: String) -> some View {
+        VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
+            sectionLabel(icon: "questionmark.bubble", title: locManager.t("journal.reflection"))
+            Text(question)
+                .font(AppTheme.Typography.body)
+                .foregroundColor(AppTheme.Colors.textSecondary(colorScheme))
+                .lineSpacing(3).italic()
+        }
+        .padding(AppTheme.Spacing.md)
+        .background(AppTheme.Colors.surfaceElevated(colorScheme))
+        .cornerRadius(AppTheme.Spacing.radiusLg)
+        .overlay(RoundedRectangle(cornerRadius: AppTheme.Spacing.radiusLg)
+            .strokeBorder(AppTheme.Colors.borderSubtle(colorScheme), lineWidth: 1))
+        .padding(.horizontal, AppTheme.Spacing.md)
+    }
+
+    private func transcriptSection(_ transcript: String) -> some View {
+        VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
+            Button(action: { withAnimation(.easeInOut(duration: 0.2)) { showTranscript.toggle() } }) {
+                HStack(spacing: AppTheme.Spacing.sm) {
+                    Image(systemName: "doc.text").font(.system(size: 14)).foregroundColor(AppTheme.Colors.accent)
+                    Text(locManager.t("journal.transcript"))
+                        .font(AppTheme.Typography.caption).fontWeight(.bold)
+                        .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
+                    Spacer()
+                    Image(systemName: showTranscript ? "chevron.up" : "chevron.down")
+                        .font(.system(size: 12)).foregroundColor(AppTheme.Colors.textMuted(colorScheme))
+                }
+            }
+            if showTranscript {
+                Text(transcript)
+                    .font(AppTheme.Typography.caption)
+                    .foregroundColor(AppTheme.Colors.textSecondary(colorScheme))
+                    .lineSpacing(4)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+        .padding(AppTheme.Spacing.md)
+        .background(AppTheme.Colors.surfaceElevated(colorScheme).opacity(0.6))
+        .cornerRadius(AppTheme.Spacing.radiusLg)
+        .padding(.horizontal, AppTheme.Spacing.md)
+    }
+
+    private var coachButton: some View {
+        Button(action: {
+            CoachJournalContext.shared.pendingJournalEntryId = entry.id
+            selectedTab = "coach"
+            dismiss()
+        }) {
+            HStack(spacing: 10) {
+                Image(systemName: "bubble.left.and.bubble.right.fill").font(.system(size: 16))
+                Text(locManager.t("journal.talk_ai_coach")).font(AppTheme.Typography.bodyEm)
+            }
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity).padding(.vertical, AppTheme.Spacing.md)
+            .background(AppTheme.Gradients.accent)
+            .cornerRadius(AppTheme.Spacing.radiusLg)
+        }
+        .padding(.horizontal, AppTheme.Spacing.md)
+    }
+
+    private func sectionLabel(icon: String, title: String) -> some View {
+        HStack(spacing: AppTheme.Spacing.sm) {
+            Image(systemName: icon).font(.system(size: 14)).foregroundColor(AppTheme.Colors.accent)
+            Text(title).font(AppTheme.Typography.caption).fontWeight(.bold)
+                .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
+        }
+    }
 
     private var formattedDate: String {
-        guard let date = DateFormatting.parseISO8601(entry.recordedAt) else { return entry.entryDate }
-        return DateFormatting.fullJournalDate(from: date)
-    }
-
-    private func sectionCard<Content: View>(title: String, icon: String, @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 8) {
-                Image(systemName: icon)
-                    .font(.system(size: 14))
-                    .foregroundColor(Color(red: 0.498, green: 0.075, blue: 0.929))
-                Text(title)
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
-            }
-            content()
-        }
-        .padding(16)
-        .background(Color(red: 0.165, green: 0.114, blue: 0.212).opacity(0.5))
-        .cornerRadius(16)
-        .padding(.horizontal, 16)
+        guard let date = ISO8601DateFormatter().date(from: entry.recordedAt) else { return entry.entryDate }
+        let f = DateFormatter(); f.dateFormat = "MMMM d, yyyy"
+        return f.string(from: date)
     }
 
     private func emotionColor(_ emotion: String) -> Color {
-        let lower = emotion.lowercased()
-        if lower.contains("stres") || lower.contains("kayg") || lower.contains("anger") || lower.contains("fear") {
-            return Color(red: 0.937, green: 0.267, blue: 0.267)
-        } else if lower.contains("mutlu") || lower.contains("huzur") || lower.contains("calm") || lower.contains("joy") {
-            return Color(red: 0.235, green: 0.808, blue: 0.996)
-        } else if lower.contains("motiv") || lower.contains("enerj") || lower.contains("heyecan") {
-            return Color(red: 0.133, green: 0.769, blue: 0.368)
-        } else {
-            return Color(red: 0.659, green: 0.333, blue: 0.929)
-        }
+        let l = emotion.lowercased()
+        if l.contains("stress") || l.contains("anger") || l.contains("fear") { return AppTheme.Colors.destructive }
+        if l.contains("calm") || l.contains("joy") || l.contains("happy") { return AppTheme.Colors.moodVeryPositive }
+        if l.contains("motiv") || l.contains("energy") { return AppTheme.Colors.success }
+        return AppTheme.Colors.accent
+    }
+
+    private var isAnalysisProcessing: Bool {
+        guard entry.analysis == nil else { return false }
+        let normalized = entry.status.lowercased()
+        let terminal = ["complete", "completed", "done", "success", "failed", "error"]
+        return !terminal.contains(normalized)
     }
 
     @ViewBuilder
-    private func energyIndicator(level: String) -> some View {
+    private func energyBar(level: String) -> some View {
         let count = level.lowercased() == "high" ? 3 : level.lowercased() == "medium" ? 2 : 1
-        let color = level.lowercased() == "high" ? Color(red: 0.133, green: 0.769, blue: 0.368) :
-                    level.lowercased() == "medium" ? Color(red: 0.996, green: 0.757, blue: 0.027) :
-                    Color(red: 0.937, green: 0.267, blue: 0.267)
+        let color: Color = level.lowercased() == "high" ? AppTheme.Colors.success :
+                           level.lowercased() == "medium" ? AppTheme.Colors.warning : AppTheme.Colors.destructive
         HStack(spacing: 4) {
             ForEach(0..<3, id: \.self) { i in
                 RoundedRectangle(cornerRadius: 2)
@@ -269,14 +336,11 @@ struct JournalDetailView: View {
     }
 }
 
-// MARK: — FlowLayout (yatay chip dizilimi)
-
 struct FlowLayout: Layout {
     var spacing: CGFloat = 8
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let result = arrange(proposal: proposal, subviews: subviews)
-        return result.size
+        arrange(proposal: proposal, subviews: subviews).size
     }
 
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
@@ -289,29 +353,16 @@ struct FlowLayout: Layout {
     private func arrange(proposal: ProposedViewSize, subviews: Subviews) -> (positions: [CGPoint], size: CGSize) {
         let maxWidth = proposal.width ?? .infinity
         var positions: [CGPoint] = []
-        var x: CGFloat = 0
-        var y: CGFloat = 0
-        var rowHeight: CGFloat = 0
-        var maxX: CGFloat = 0
-
+        var x: CGFloat = 0; var y: CGFloat = 0; var rowHeight: CGFloat = 0; var maxX: CGFloat = 0
         for subview in subviews {
             let size = subview.sizeThatFits(.unspecified)
-            if x + size.width > maxWidth && x > 0 {
-                x = 0
-                y += rowHeight + spacing
-                rowHeight = 0
-            }
+            if x + size.width > maxWidth && x > 0 { x = 0; y += rowHeight + spacing; rowHeight = 0 }
             positions.append(CGPoint(x: x, y: y))
-            rowHeight = max(rowHeight, size.height)
-            x += size.width + spacing
-            maxX = max(maxX, x)
+            rowHeight = max(rowHeight, size.height); x += size.width + spacing; maxX = max(maxX, x)
         }
-
         return (positions, CGSize(width: maxX, height: y + rowHeight))
     }
 }
-
-// MARK: — Coach Journal Context (singleton — journal'dan coach'a veri aktarimi)
 
 final class CoachJournalContext: ObservableObject {
     static let shared = CoachJournalContext()

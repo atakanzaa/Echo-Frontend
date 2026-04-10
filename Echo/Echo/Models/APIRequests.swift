@@ -14,6 +14,12 @@ struct LoginBody: Encodable {
     let password: String
 }
 
+struct GoogleLoginBody: Encodable {
+    let idToken: String
+    let timezone: String
+    let language: String
+}
+
 struct RefreshBody: Encodable {
     let refreshToken: String
 }

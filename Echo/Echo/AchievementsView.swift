@@ -1,175 +1,265 @@
 import SwiftUI
 
 struct AchievementsView: View {
-    @Binding var selectedTab: AppTab
+    @Binding var selectedTab: String
+    @EnvironmentObject var locManager: LocalizationManager
+    @EnvironmentObject private var tabNavigation: TabNavigationManager
     @StateObject private var viewModel = AchievementsViewModel()
+    @StateObject private var communityViewModel = CommunityViewModel()
     @State private var isMenuOpen = false
+    @State private var selectedBadge: APIBadge?
+    @State private var showCreatePost = false
+    @State private var prefillContent: String?
+    @State private var prefillEmoji: String?
+    @State private var lockedBadgeProgress: [String: Double] = [:]
+    @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
         ZStack {
-            Color(red: 0.098, green: 0.063, blue: 0.133).ignoresSafeArea()
+            AppTheme.Colors.background(colorScheme).ignoresSafeArea()
 
             VStack(spacing: 0) {
                 // Header
                 HStack {
-                    Button(action: { selectedTab = .profile }) {
+                    Button(action: {
+                        selectedTab = tabNavigation.goBack(from: selectedTab, fallback: "profile")
+                    }) {
                         Image(systemName: "chevron.left")
-                            .font(.system(size: 16, weight: .semibold)).foregroundColor(.white)
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
                     }
                     Spacer()
-                    Text("Achievements")
-                        .font(.system(size: 18, weight: .bold)).foregroundColor(.white)
+                    Text(locManager.t("nav.achievements"))
+                        .font(AppTheme.Typography.heading3)
+                        .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
                     Spacer()
                     Button(action: { isMenuOpen.toggle() }) {
                         Image(systemName: "line.3.horizontal")
-                            .font(.system(size: 18, weight: .semibold)).foregroundColor(.white)
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
                     }
                     .frame(width: 40, height: 40)
-                    .background(Color(red: 0.149, green: 0.098, blue: 0.196)).cornerRadius(20)
+                    .background(AppTheme.Colors.surface(colorScheme))
+                    .cornerRadius(AppTheme.Spacing.radiusFull)
                 }
-                .padding(.horizontal, 16).padding(.vertical, 16)
+                .padding(.horizontal, AppTheme.Spacing.md)
+                .padding(.vertical, AppTheme.Spacing.md)
 
                 if viewModel.isLoading {
                     Spacer()
-                    ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .white))
+                    ProgressView().progressViewStyle(CircularProgressViewStyle(tint: AppTheme.Colors.accent))
                     Spacer()
+                } else if let error = viewModel.errorMessage, viewModel.badges.isEmpty {
+                    ErrorStateView(message: error) {
+                        viewModel.load()
+                    }
                 } else {
                     ScrollView {
-                        VStack(spacing: 24) {
+                        VStack(spacing: AppTheme.Spacing.lg) {
                             // Streak Circle
-                            VStack(spacing: 16) {
+                            VStack(spacing: AppTheme.Spacing.md) {
                                 ZStack {
                                     Circle()
-                                        .strokeBorder(
-                                            LinearGradient(
-                                                gradient: Gradient(colors: [
-                                                    Color(red: 0.498, green: 0.075, blue: 0.929),
-                                                    Color(red: 0.596, green: 0.283, blue: 0.941)
-                                                ]),
-                                                startPoint: .topLeading, endPoint: .bottomTrailing
-                                            ),
-                                            lineWidth: 8
-                                        )
+                                        .strokeBorder(AppTheme.Gradients.accent, lineWidth: 8)
                                         .frame(height: 180)
 
-                                    VStack(spacing: 8) {
+                                    VStack(spacing: AppTheme.Spacing.sm) {
                                         Image(systemName: "flame.fill")
                                             .font(.system(size: 24))
-                                            .foregroundColor(Color(red: 0.596, green: 0.283, blue: 0.941))
-                                        Text("\(viewModel.currentStreak) Days")
-                                            .font(.system(size: 28, weight: .bold)).foregroundColor(.white)
-                                        Text("Current Streak")
-                                            .font(.system(size: 13)).foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
-                                        if !viewModel.level.isEmpty {
-                                            Text(viewModel.level)
-                                                .font(.system(size: 12, weight: .medium))
-                                                .foregroundColor(Color(red: 0.157, green: 0.631, blue: 0.569))
-                                                .padding(.horizontal, 8).padding(.vertical, 4)
-                                                .background(Color(red: 0.157, green: 0.631, blue: 0.569).opacity(0.2))
-                                                .cornerRadius(4)
-                                        }
+                                            .foregroundColor(AppTheme.Colors.accentSecondary)
+                                        Text("\(viewModel.currentStreak) \(locManager.t("profile.days"))")
+                                            .font(AppTheme.Typography.heading1)
+                                            .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
+                                        Text(locManager.t("achievements.current_streak"))
+                                            .font(AppTheme.Typography.caption)
+                                            .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
                                     }
                                 }
 
-                                VStack(spacing: 12) {
+                                VStack(spacing: AppTheme.Spacing.sm) {
+                                    if !viewModel.level.isEmpty {
+                                        Text(viewModel.level)
+                                            .font(AppTheme.Typography.label)
+                                            .foregroundColor(AppTheme.Colors.success)
+                                            .padding(.horizontal, AppTheme.Spacing.sm)
+                                            .padding(.vertical, 4)
+                                            .background(AppTheme.Colors.success.opacity(0.2))
+                                            .cornerRadius(4)
+                                    }
                                     Text(viewModel.streakMessage)
-                                        .font(.system(size: 18, weight: .bold)).foregroundColor(.white)
+                                        .font(AppTheme.Typography.heading3)
+                                        .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
                                     if !viewModel.levelMessage.isEmpty {
                                         Text(viewModel.levelMessage)
-                                            .font(.system(size: 14)).foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
+                                            .font(AppTheme.Typography.caption)
+                                            .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
                                             .multilineTextAlignment(.center).lineLimit(3)
                                     }
                                 }
                             }
-                            .padding(24)
+                            .padding(AppTheme.Spacing.lg)
 
                             // Stats Row
-                            HStack(spacing: 12) {
-                                AchievementStatCardView(icon: "mic.fill",      value: "\(viewModel.totalEntries)", label: "Entries")
-                                AchievementStatCardView(icon: "text.bubble.fill", value: viewModel.totalWordsText,    label: "Words")
-                                AchievementStatCardView(icon: "sparkles",      value: viewModel.insightScoreText,   label: "Insight")
+                            HStack(spacing: AppTheme.Spacing.sm) {
+                                AchievementStatCardView(icon: "mic.fill",         value: "\(viewModel.totalEntries)", label: locManager.t("achievements.entries"))
+                                AchievementStatCardView(icon: "text.bubble.fill", value: viewModel.totalWordsText,    label: locManager.t("achievements.words"))
+                                AchievementStatCardView(icon: "sparkles",         value: viewModel.insightScoreText,  label: locManager.t("achievements.insight"))
                             }
-                            .padding(.horizontal, 16)
+                            .padding(.horizontal, AppTheme.Spacing.md)
 
                             // Badge Collection
                             if !viewModel.badges.isEmpty {
-                                VStack(alignment: .leading, spacing: 16) {
+                                VStack(alignment: .leading, spacing: AppTheme.Spacing.md) {
                                     HStack {
-                                        Text("Your Collection")
-                                            .font(.system(size: 18, weight: .bold)).foregroundColor(.white)
+                                        Text(locManager.t("achievements.collection"))
+                                            .font(AppTheme.Typography.heading3)
+                                            .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
                                         Spacer()
-                                        Text("\(viewModel.badges.filter(\.isEarned).count) Earned")
-                                            .font(.system(size: 13, weight: .semibold))
-                                            .foregroundColor(Color(red: 0.596, green: 0.283, blue: 0.941))
+                                        Text(String(format: NSLocalizedString("%d earned", comment: ""), viewModel.badges.filter(\.isEarned).count))
+                                            .font(AppTheme.Typography.caption).fontWeight(.semibold)
+                                            .foregroundColor(AppTheme.Colors.accentSecondary)
                                     }
-                                    .padding(.horizontal, 16)
+                                    .padding(.horizontal, AppTheme.Spacing.md)
 
-                                    let rows = stride(from: 0, to: viewModel.badges.count, by: 2).map {
-                                        Array(viewModel.badges[$0..<min($0+2, viewModel.badges.count)])
-                                    }
-                                    ForEach(Array(rows.enumerated()), id: \.offset) { _, pair in
-                                        HStack(spacing: 12) {
-                                            ForEach(pair) { badge in
-                                                BadgeCard(name: badge.title, emoji: badge.emoji, earned: badge.isEarned)
-                                            }
-                                            if pair.count == 1 { Spacer().frame(maxWidth: .infinity) }
+                                    LazyVGrid(
+                                        columns: [
+                                            GridItem(.flexible(), spacing: AppTheme.Spacing.sm),
+                                            GridItem(.flexible(), spacing: AppTheme.Spacing.sm)
+                                        ],
+                                        spacing: AppTheme.Spacing.sm
+                                    ) {
+                                        ForEach(viewModel.badges) { badge in
+                                            BadgeCard(
+                                                name: badge.title,
+                                                emoji: badge.emoji,
+                                                earned: badge.isEarned,
+                                                progress: badge.isEarned ? nil : lockedBadgeProgress[badge.key]
+                                            )
+                                            .onTapGesture { selectedBadge = badge }
                                         }
-                                        .padding(.horizontal, 16)
                                     }
+                                    .padding(.horizontal, AppTheme.Spacing.md)
                                 }
-                                .padding(.top, 8).padding(.bottom, 40)
+                                .padding(.top, AppTheme.Spacing.sm)
+                                .padding(.bottom, AppTheme.Spacing.xxl)
                             }
                         }
-                        .padding(.top, 16)
+                        .padding(.top, AppTheme.Spacing.md)
+                    }
+                    .refreshable {
+                        await viewModel.refresh()
                     }
                 }
             }
 
             if isMenuOpen {
-                HStack(spacing: 0) {
-                    HamburgerMenuView(isMenuOpen: $isMenuOpen, selectedTab: $selectedTab)
-                        .frame(maxWidth: 250)
-                    Spacer()
-                }
-                .transition(.move(edge: .leading))
-                .zIndex(1)
+                HamburgerMenuView(isMenuOpen: $isMenuOpen, selectedTab: $selectedTab)
+                    .transition(.move(edge: .leading))
+                    .zIndex(10)
+                    .ignoresSafeArea()
             }
         }
         .onAppear { viewModel.load() }
+        .onDisappear { viewModel.cancelAll() }
+        .onChange(of: viewModel.badges) { _, badges in
+            preloadLockedBadgeProgress(for: badges)
+        }
+        .sheet(item: $selectedBadge) { badge in
+            AchievementDetailView(badge: badge) { shareText, emoji in
+                prefillContent = shareText
+                prefillEmoji = emoji
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                    showCreatePost = true
+                }
+            }
+        }
+        .sheet(isPresented: $showCreatePost, onDismiss: {
+            prefillContent = nil
+            prefillEmoji = nil
+        }) {
+            CreatePostView(
+                viewModel: communityViewModel,
+                prefillContent: prefillContent,
+                prefillEmoji: prefillEmoji
+            )
+        }
+    }
+
+    private func preloadLockedBadgeProgress(for badges: [APIBadge]) {
+        Task {
+            for badge in badges where !badge.isEarned && lockedBadgeProgress[badge.key] == nil {
+                do {
+                    let detail: APIAchievementDetail = try await APIClient.shared.requestWithAutoRefresh(
+                        .getAchievementDetail(badgeKey: badge.key)
+                    )
+                    await MainActor.run {
+                        lockedBadgeProgress[badge.key] = detail.progress
+                    }
+                } catch {
+                    continue
+                }
+            }
+        }
     }
 }
 
 struct AchievementStatCardView: View {
     let icon: String; let value: String; let label: String
+    @Environment(\.colorScheme) var colorScheme
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: AppTheme.Spacing.sm) {
             Image(systemName: icon).font(.system(size: 20))
-                .foregroundColor(Color(red: 0.596, green: 0.283, blue: 0.941))
-            Text(value).font(.system(size: 18, weight: .bold)).foregroundColor(.white)
-            Text(label).font(.system(size: 12)).foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
+                .foregroundColor(AppTheme.Colors.accentSecondary)
+            Text(value).font(AppTheme.Typography.heading3).foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
+            Text(label).font(AppTheme.Typography.label).foregroundColor(AppTheme.Colors.textMuted(colorScheme))
         }
-        .frame(maxWidth: .infinity).padding(.vertical, 16)
-        .background(Color(red: 0.141, green: 0.098, blue: 0.188)).cornerRadius(12)
+        .frame(maxWidth: .infinity).padding(.vertical, AppTheme.Spacing.md)
+        .background(AppTheme.Colors.surfaceElevated(colorScheme))
+        .cornerRadius(AppTheme.Spacing.radiusMd)
     }
 }
 
 struct BadgeCard: View {
-    let name: String; let emoji: String; let earned: Bool
+    let name: String
+    let emoji: String
+    let earned: Bool
+    let progress: Double?
+    @EnvironmentObject var locManager: LocalizationManager
+    @Environment(\.colorScheme) var colorScheme
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: AppTheme.Spacing.sm) {
             Text(emoji).font(.system(size: 32))
                 .frame(width: 60, height: 60)
-                .background(Color(red: 0.141, green: 0.098, blue: 0.188))
-                .cornerRadius(12).opacity(earned ? 1.0 : 0.4)
-            Text(name).font(.system(size: 13, weight: .semibold)).foregroundColor(.white)
+                .background(AppTheme.Colors.surfaceElevated(colorScheme))
+                .cornerRadius(AppTheme.Spacing.radiusMd)
+                .opacity(earned ? 1.0 : 0.4)
+            Text(name).font(AppTheme.Typography.caption).fontWeight(.semibold)
+                .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
                 .lineLimit(2).multilineTextAlignment(.center).opacity(earned ? 1.0 : 0.6)
-            if !earned {
-                Text("Locked").font(.system(size: 11, weight: .medium))
-                    .foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
+            if earned {
+                HStack(spacing: 4) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 12))
+                        .foregroundColor(AppTheme.Colors.success)
+                    Text(locManager.t("achievements.earned"))
+                        .font(AppTheme.Typography.micro)
+                        .foregroundColor(AppTheme.Colors.success)
+                }
+            } else {
+                Text(locManager.t("achievements.locked")).font(AppTheme.Typography.micro)
+                    .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
+                ProgressView(value: min(max(progress ?? 0, 0), 1))
+                    .tint(AppTheme.Colors.accent)
+                    .scaleEffect(x: 1, y: 0.7, anchor: .center)
+                    .padding(.horizontal, AppTheme.Spacing.md)
             }
+            Spacer(minLength: 0)
         }
-        .frame(maxWidth: .infinity).padding(.vertical, 12)
-        .background(Color(red: 0.098, green: 0.063, blue: 0.133)).cornerRadius(12)
-        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Color(red: 0.141, green: 0.098, blue: 0.188), lineWidth: 1))
+        .frame(maxWidth: .infinity, minHeight: 126, maxHeight: 126)
+        .padding(.vertical, AppTheme.Spacing.sm)
+        .background(AppTheme.Colors.background(colorScheme))
+        .cornerRadius(AppTheme.Spacing.radiusMd)
+        .overlay(RoundedRectangle(cornerRadius: AppTheme.Spacing.radiusMd)
+            .strokeBorder(AppTheme.Colors.borderSubtle(colorScheme), lineWidth: 1))
     }
 }

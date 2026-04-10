@@ -15,7 +15,13 @@ final class PostDetailViewModel: ObservableObject {
 
     private var currentPage = 0
     private var hasMore     = true
-    private let pageSize    = AppConstants.Pagination.defaultPageSize
+    private let pageSize    = 20
+    private let commentsTask = TaskGuard()
+    private let loadMoreCommentsTask = TaskGuard()
+    private let postLikeMutations = MutationGuard()
+    private let commentLikeMutations = MutationGuard()
+
+    var canLoadMoreComments: Bool { hasMore }
 
     init(post: APICommunityPost) {
         self.post = post
@@ -24,50 +30,17 @@ final class PostDetailViewModel: ObservableObject {
     // MARK: — Load Comments
 
     func loadComments(reset: Bool = true) {
-        if reset {
-            currentPage = 0
-            hasMore     = true
-            comments    = []
-        }
-        guard hasMore, !isLoading else { return }
-        isLoading    = true
-        errorMessage = nil
-        Task {
-            do {
-                let paged: APIPagedResponse<APIPostComment> = try await APIClient.shared.requestWithAutoRefresh(
-                    .getPostComments(postId: post.id, page: currentPage, size: pageSize)
-                )
-                if reset {
-                    comments = paged.content
-                } else {
-                    appendComments(paged.content)
-                }
-                hasMore     = !paged.last
-                currentPage = paged.page + 1
-                isLoading   = false
-            } catch {
-                errorMessage = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
-                isLoading    = false
-            }
+        commentsTask.run { [weak self] in
+            await self?.performLoadComments(reset: reset)
         }
     }
 
     func loadMoreComments() {
         guard !isLoading, !isLoadingMore, hasMore else { return }
         isLoadingMore = true
-        Task {
-            do {
-                let paged: APIPagedResponse<APIPostComment> = try await APIClient.shared.requestWithAutoRefresh(
-                    .getPostComments(postId: post.id, page: currentPage, size: pageSize)
-                )
-                appendComments(paged.content)
-                hasMore       = !paged.last
-                currentPage   = paged.page + 1
-                isLoadingMore = false
-            } catch {
-                errorMessage = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
-                isLoadingMore = false
-            }
+        let page = currentPage
+        loadMoreCommentsTask.run { [weak self] in
+            await self?.performLoadMoreComments(page: page)
         }
     }
 
@@ -90,7 +63,13 @@ final class PostDetailViewModel: ObservableObject {
                     let parent = comments[parentIdx]
                     var replies = parent.replies ?? []
                     replies.append(newComment)
-                    comments[parentIdx] = parent.copy(replies: replies)
+                    comments[parentIdx] = APIPostComment(
+                        id: parent.id, userId: parent.userId,
+                        displayName: parent.displayName, content: parent.content,
+                        parentId: parent.parentId, likesCount: parent.likesCount,
+                        isLikedByMe: parent.isLikedByMe, replies: replies,
+                        createdAt: parent.createdAt
+                    )
                 } else {
                     comments.append(newComment)
                 }
@@ -119,7 +98,14 @@ final class PostDetailViewModel: ObservableObject {
                         if var replies = comments[i].replies,
                            replies.contains(where: { $0.id == comment.id }) {
                             replies.removeAll { $0.id == comment.id }
-                            comments[i] = comments[i].copy(replies: replies)
+                            let parent = comments[i]
+                            comments[i] = APIPostComment(
+                                id: parent.id, userId: parent.userId,
+                                displayName: parent.displayName, content: parent.content,
+                                parentId: parent.parentId, likesCount: parent.likesCount,
+                                isLikedByMe: parent.isLikedByMe, replies: replies,
+                                createdAt: parent.createdAt
+                            )
                             break
                         }
                     }
@@ -136,11 +122,21 @@ final class PostDetailViewModel: ObservableObject {
     // MARK: — Post Like Toggle
 
     func togglePostLike() {
+        guard postLikeMutations.start(id: post.id) else { return }
         let liked    = post.isLikedByMe
-        let newCount = liked ? post.likesCount - 1 : post.likesCount + 1
+        let newCount = max(0, liked ? post.likesCount - 1 : post.likesCount + 1)
         let original = post
-        post = post.copy(likesCount: newCount, isLikedByMe: !liked)
+        post = APICommunityPost(
+            id: post.id, userId: post.userId, displayName: post.displayName,
+            content: post.content, contentType: post.contentType,
+            audioUrl: post.audioUrl, audioDuration: post.audioDuration,
+            imageUrl: post.imageUrl, emoji: post.emoji,
+            isAnonymous: post.isAnonymous, likesCount: newCount,
+            commentsCount: post.commentsCount, isLikedByMe: !liked,
+            createdAt: post.createdAt
+        )
         Task {
+            defer { postLikeMutations.finish(id: original.id) }
             do {
                 if liked {
                     let _: APIVoidResponse = try await APIClient.shared.requestWithAutoRefresh(
@@ -160,14 +156,21 @@ final class PostDetailViewModel: ObservableObject {
     // MARK: — Comment Like Toggle
 
     func toggleCommentLike(_ comment: APIPostComment) {
+        guard commentLikeMutations.start(id: comment.id) else { return }
         let liked    = comment.isLikedByMe
-        let newCount = liked ? comment.likesCount - 1 : comment.likesCount + 1
+        let newCount = max(0, liked ? comment.likesCount - 1 : comment.likesCount + 1)
 
         updateComment(comment.id) { c in
-            c.copy(likesCount: newCount, isLikedByMe: !liked)
+            APIPostComment(
+                id: c.id, userId: c.userId, displayName: c.displayName,
+                content: c.content, parentId: c.parentId,
+                likesCount: newCount, isLikedByMe: !liked,
+                replies: c.replies, createdAt: c.createdAt
+            )
         }
 
         Task {
+            defer { commentLikeMutations.finish(id: comment.id) }
             do {
                 if liked {
                     let _: APIVoidResponse = try await APIClient.shared.requestWithAutoRefresh(
@@ -182,6 +185,14 @@ final class PostDetailViewModel: ObservableObject {
                 updateComment(comment.id) { _ in comment }
             }
         }
+    }
+
+    func isPostLikeInFlight() -> Bool {
+        postLikeMutations.isInFlight(id: post.id)
+    }
+
+    func isCommentLikeInFlight(commentId: String) -> Bool {
+        commentLikeMutations.isInFlight(id: commentId)
     }
 
     // MARK: — Reply
@@ -208,36 +219,121 @@ final class PostDetailViewModel: ObservableObject {
                let rIdx = replies.firstIndex(where: { $0.id == id }) {
                 var updatedReplies = replies
                 updatedReplies[rIdx] = transform(replies[rIdx])
-                comments[i] = comments[i].copy(replies: updatedReplies)
+                let parent = comments[i]
+                comments[i] = APIPostComment(
+                    id: parent.id, userId: parent.userId,
+                    displayName: parent.displayName, content: parent.content,
+                    parentId: parent.parentId, likesCount: parent.likesCount,
+                    isLikedByMe: parent.isLikedByMe, replies: updatedReplies,
+                    createdAt: parent.createdAt
+                )
                 return
             }
         }
     }
 
     private func incrementCommentsCount() {
-        post = post.copy(commentsCount: post.commentsCount + 1)
+        post = APICommunityPost(
+            id: post.id, userId: post.userId, displayName: post.displayName,
+            content: post.content, contentType: post.contentType,
+            audioUrl: post.audioUrl, audioDuration: post.audioDuration,
+            imageUrl: post.imageUrl, emoji: post.emoji,
+            isAnonymous: post.isAnonymous, likesCount: post.likesCount,
+            commentsCount: post.commentsCount + 1, isLikedByMe: post.isLikedByMe,
+            createdAt: post.createdAt
+        )
     }
 
     private func decrementCommentsCount() {
-        post = post.copy(commentsCount: max(0, post.commentsCount - 1))
+        post = APICommunityPost(
+            id: post.id, userId: post.userId, displayName: post.displayName,
+            content: post.content, contentType: post.contentType,
+            audioUrl: post.audioUrl, audioDuration: post.audioDuration,
+            imageUrl: post.imageUrl, emoji: post.emoji,
+            isAnonymous: post.isAnonymous, likesCount: post.likesCount,
+            commentsCount: max(0, post.commentsCount - 1), isLikedByMe: post.isLikedByMe,
+            createdAt: post.createdAt
+        )
     }
 
-    private func appendComments(_ newComments: [APIPostComment]) {
-        let existingIDs = Set(comments.map(\.id))
-        comments.append(contentsOf: newComments.filter { !existingIDs.contains($0.id) })
+    func refresh() async {
+        await commentsTask.runAsync { [weak self] in
+            await self?.performLoadComments(reset: true)
+        }
+    }
+
+    func cancelAll() {
+        commentsTask.cancel()
+        loadMoreCommentsTask.cancel()
+        postLikeMutations.reset()
+        commentLikeMutations.reset()
+    }
+
+    private func performLoadComments(reset: Bool) async {
+        if reset {
+            currentPage = 0
+            hasMore = true
+            comments = []
+        }
+
+        guard hasMore else {
+            isLoading = false
+            return
+        }
+
+        isLoading = true
+        errorMessage = nil
+        do {
+            let page = currentPage
+            let paged: APIPagedResponse<APIPostComment> = try await APIClient.shared.requestWithAutoRefresh(
+                .getPostComments(postId: post.id, page: page, size: pageSize)
+            )
+            guard !Task.isCancelled else { return }
+            if reset {
+                comments = paged.content
+            } else {
+                comments.appendDeduplicating(contentsOf: paged.content)
+            }
+            hasMore = !paged.last
+            currentPage = paged.page + 1
+            isLoading = false
+        } catch is CancellationError {
+            isLoading = false
+        } catch {
+            errorMessage = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
+            isLoading = false
+        }
+    }
+
+    private func performLoadMoreComments(page: Int) async {
+        do {
+            let paged: APIPagedResponse<APIPostComment> = try await APIClient.shared.requestWithAutoRefresh(
+                .getPostComments(postId: post.id, page: page, size: pageSize)
+            )
+            guard !Task.isCancelled else { return }
+            comments.appendDeduplicating(contentsOf: paged.content)
+            hasMore = !paged.last
+            currentPage = paged.page + 1
+            isLoadingMore = false
+        } catch is CancellationError {
+            isLoadingMore = false
+        } catch {
+            isLoadingMore = false
+        }
     }
 }
 
 extension APIPostComment {
     var relativeTime: String {
-        guard let date = DateFormatting.parseISO8601(createdAt) else { return "" }
+        guard let date = ISO8601DateFormatter().date(from: createdAt) else { return "" }
         let diff = Int(Date().timeIntervalSince(date))
         switch diff {
         case 0..<60:       return "\(diff)s ago"
         case 60..<3600:    return "\(diff/60)m ago"
         case 3600..<86400: return "\(diff/3600)h ago"
         default:
-            return DateFormatting.shortDate(from: date)
+            let f = DateFormatter(); f.dateStyle = .short
+            return f.string(from: date)
         }
     }
 }

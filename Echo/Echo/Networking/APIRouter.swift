@@ -4,6 +4,7 @@ enum APIRouter {
     // Auth
     case register(RegisterBody)
     case login(LoginBody)
+    case googleLogin(GoogleLoginBody)
     case refreshToken(RefreshBody)
     case logout(LogoutBody)
     case me
@@ -11,6 +12,8 @@ enum APIRouter {
     // Users
     case userStats
     case updateProfile(UpdateProfileBody)
+    case profileSummary
+    case detailedStats
 
     // Journal
     case uploadJournalEntry(audioData: Data, filename: String, recordedAt: String, durationSeconds: Int)
@@ -18,6 +21,7 @@ enum APIRouter {
     case getJournalEntryStatus(id: String)
     case getJournalEntriesByDate(date: String)
     case getRecentJournalEntries(limit: Int)
+    case getOnThisDay
 
     // Summary
     case getSummary(period: Int, endDate: String?)
@@ -27,6 +31,7 @@ enum APIRouter {
 
     // AI Insights
     case getAIInsights(period: Int)
+    case getInsightsEligibility
 
     // Community
     case getCommunityFeed(tab: CommunityTab, page: Int, size: Int)
@@ -46,6 +51,7 @@ enum APIRouter {
 
     // Achievements
     case getAchievements
+    case getAchievementDetail(badgeKey: String)
 
     // Time Capsule
     case getCapsules
@@ -62,11 +68,22 @@ enum APIRouter {
     case sendCoachMessage(sessionId: String, body: SendCoachMessageBody)
     case deleteCoachSession(id: String)
 
+    // Notifications
+    case getNotifications(page: Int, size: Int)
+    case getUnreadNotificationsCount
+    case markNotificationRead(id: String)
+    case markAllNotificationsRead
+
     // Goals
     case getActiveGoals
     case getAllGoals
+    case getGoalSuggestions(sourceType: String?, journalEntryId: String?, sessionId: String?)
+    case acceptGoalSuggestion(id: String)
+    case rejectGoalSuggestion(id: String)
     case completeGoal(id: String)
+    case notCompletedGoal(id: String)
     case dismissGoal(id: String)
+    case deleteGoal(id: String)
 
     // Admin
     case getAIConfig
@@ -127,13 +144,16 @@ extension APIRouter {
         // Auth
         case .register(let b):       return ("/auth/register", "POST", try? encoder.encode(b), false)
         case .login(let b):          return ("/auth/login",    "POST", try? encoder.encode(b), false)
+        case .googleLogin(let b):    return ("/auth/google",   "POST", try? encoder.encode(b), false)
         case .refreshToken(let b):   return ("/auth/refresh",  "POST", try? encoder.encode(b), false)
         case .logout(let b):         return ("/auth/logout",   "POST", try? encoder.encode(b), false)
         case .me:                    return ("/auth/me",        "GET",  nil, false)
 
         // Users
-        case .userStats:             return ("/users/me/stats",  "GET", nil, false)
-        case .updateProfile(let b):  return ("/users/me",        "PATCH", try? encoder.encode(b), false)
+        case .userStats:             return ("/users/me/stats",           "GET",   nil, false)
+        case .updateProfile(let b):  return ("/users/me",                 "PATCH", try? encoder.encode(b), false)
+        case .profileSummary:        return ("/users/me/profile-summary", "GET",   nil, false)
+        case .detailedStats:         return ("/users/me/stats/detailed",  "GET",   nil, false)
 
         // Journal
         case .uploadJournalEntry:    return ("/journal/entries", "POST", nil, true)
@@ -141,6 +161,7 @@ extension APIRouter {
         case .getJournalEntryStatus(let id): return ("/journal/entries/\(id)/status", "GET", nil, false)
         case .getJournalEntriesByDate(let d): return ("/journal/entries?date=\(d)", "GET", nil, false)
         case .getRecentJournalEntries(let l): return ("/journal/entries/recent?limit=\(l)", "GET", nil, false)
+        case .getOnThisDay:                   return ("/journal/entries/on-this-day",    "GET", nil, false)
 
         // Summary
         case .getSummary(let p, let end):
@@ -153,6 +174,7 @@ extension APIRouter {
 
         // AI Insights
         case .getAIInsights(let p): return ("/ai-insights?period=\(p)", "GET", nil, false)
+        case .getInsightsEligibility: return ("/ai-insights/eligibility", "GET", nil, false)
 
         // Community
         case .getCommunityFeed(let tab, let page, let size):
@@ -181,6 +203,7 @@ extension APIRouter {
 
         // Achievements
         case .getAchievements: return ("/achievements", "GET", nil, false)
+        case .getAchievementDetail(let badgeKey): return ("/achievements/\(badgeKey)", "GET", nil, false)
 
         // Time Capsule
         case .getCapsules:           return ("/capsules",       "GET",    nil, false)
@@ -203,11 +226,32 @@ extension APIRouter {
         case .deleteCoachSession(let id):
             return ("/coach/sessions/\(id)", "DELETE", nil, false)
 
+        // Notifications
+        case .getNotifications(let page, let size):
+            return ("/notifications?page=\(max(page, 0))&size=\(max(size, 1))", "GET", nil, false)
+        case .getUnreadNotificationsCount:
+            return ("/notifications/unread-count", "GET", nil, false)
+        case .markNotificationRead(let id):
+            return ("/notifications/\(id)/read", "PUT", nil, false)
+        case .markAllNotificationsRead:
+            return ("/notifications/read-all", "PUT", nil, false)
+
         // Goals
-        case .getActiveGoals:          return ("/goals",               "GET", nil, false)
-        case .getAllGoals:              return ("/goals/all",           "GET", nil, false)
-        case .completeGoal(let id):    return ("/goals/\(id)/complete", "PUT", nil, false)
-        case .dismissGoal(let id):     return ("/goals/\(id)/dismiss",  "PUT", nil, false)
+        case .getActiveGoals:          return ("/goals", "GET", nil, false)
+        case .getAllGoals:             return ("/goals/all", "GET", nil, false)
+        case .getGoalSuggestions(let sourceType, let journalEntryId, let sessionId):
+            var items: [String] = []
+            if let sourceType, !sourceType.isEmpty { items.append("sourceType=\(sourceType)") }
+            if let journalEntryId, !journalEntryId.isEmpty { items.append("journalEntryId=\(journalEntryId)") }
+            if let sessionId, !sessionId.isEmpty { items.append("sessionId=\(sessionId)") }
+            let query = items.isEmpty ? "" : "?" + items.joined(separator: "&")
+            return ("/goals/suggestions\(query)", "GET", nil, false)
+        case .acceptGoalSuggestion(let id): return ("/goals/suggestions/\(id)/accept", "POST", nil, false)
+        case .rejectGoalSuggestion(let id): return ("/goals/suggestions/\(id)/reject", "POST", nil, false)
+        case .completeGoal(let id):         return ("/goals/\(id)/complete", "PUT", nil, false)
+        case .notCompletedGoal(let id):     return ("/goals/\(id)/not-completed", "PUT", nil, false)
+        case .dismissGoal(let id):          return ("/goals/\(id)/dismiss", "PUT", nil, false)
+        case .deleteGoal(let id):           return ("/goals/\(id)", "DELETE", nil, false)
 
         // Admin
         case .getAIConfig:          return ("/admin/ai-config", "GET",  nil, false)
