@@ -20,6 +20,7 @@ struct ContentView: View {
                 else if selectedTab == "journal"   { JournalView(selectedTab: $selectedTab) }
                 else if selectedTab == "community" { CommunityView(selectedTab: $selectedTab) }
                 else if selectedTab == "coach"     { NavigationStack { CoachSessionsListView(selectedTab: $selectedTab) } }
+                else if selectedTab == "goals"     { GoalsView(selectedTab: $selectedTab) }
                 else if selectedTab == "calendar"  { CalendarView(selectedTab: $selectedTab) }
                 else if selectedTab == "insights"  { InsightsView(selectedTab: $selectedTab) }
                 else if selectedTab == "aiinsights"    { AIInsightsView(selectedTab: $selectedTab) }
@@ -33,6 +34,7 @@ struct ContentView: View {
                 else if selectedTab == "help"           { HelpSupportView(selectedTab: $selectedTab) }
                 else if selectedTab == "ai-profile"    { EchoKnowsYouView(selectedTab: $selectedTab) }
                 else if selectedTab == "edit-profile"   { EditProfileView(selectedTab: $selectedTab) }
+                else if selectedTab == "change-password" { ChangePasswordView(selectedTab: $selectedTab) }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 

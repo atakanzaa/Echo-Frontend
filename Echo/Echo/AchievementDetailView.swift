@@ -89,9 +89,13 @@ struct AchievementDetailView: View {
                 detail = APIAchievementDetail(
                     key: badge.key,
                     title: badge.title,
+                    emoji: badge.emoji,
                     description: nil,
+                    criteriaDescription: nil,
+                    isEarned: badge.isEarned,
+                    earnedAt: badge.earnedAt,
                     progress: badge.isEarned ? 1 : 0,
-                    earnedAt: badge.earnedAt
+                    shareText: nil
                 )
             }
         }

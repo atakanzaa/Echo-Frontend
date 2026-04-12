@@ -5,7 +5,7 @@ import SwiftUI
 @MainActor
 final class AuthViewModel: ObservableObject {
 
-    @Published var isLoading   = false
+    @Published var isLoading = false
     @Published var errorMessage: String?
 
     private let client = APIClient.shared
@@ -53,6 +53,59 @@ final class AuthViewModel: ObservableObject {
         }
 
         isLoading = false
+    }
+
+    // MARK: - Password reset
+
+    func forgotPassword(email: String) async -> Bool {
+        guard !isLoading else { return false }
+        isLoading = true
+        errorMessage = nil
+
+        defer { isLoading = false }
+
+        do {
+            let _: APIVoidResponse = try await client.request(.forgotPassword(ForgotPasswordBody(email: email)))
+            return true
+        } catch {
+            errorMessage = error.localizedDescription
+            return false
+        }
+    }
+
+    func resetPassword(email: String, code: String, newPassword: String) async -> Bool {
+        guard !isLoading else { return false }
+        isLoading = true
+        errorMessage = nil
+
+        defer { isLoading = false }
+
+        do {
+            let body = ResetPasswordBody(email: email, code: code, newPassword: newPassword)
+            let _: APIVoidResponse = try await client.request(.resetPassword(body))
+            return true
+        } catch {
+            errorMessage = error.localizedDescription
+            return false
+        }
+    }
+
+    func changePassword(currentPassword: String, newPassword: String) async -> Bool {
+        guard !isLoading else { return false }
+        isLoading = true
+        errorMessage = nil
+
+        defer { isLoading = false }
+
+        do {
+            let body = ChangePasswordBody(currentPassword: currentPassword, newPassword: newPassword)
+            let response: APIAuthResponse = try await client.requestWithAutoRefresh(.changePassword(body))
+            appState.signIn(with: response)
+            return true
+        } catch {
+            errorMessage = error.localizedDescription
+            return false
+        }
     }
 
     // MARK: - Google Login

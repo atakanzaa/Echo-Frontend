@@ -43,16 +43,8 @@ struct InsightsView: View {
                 } else {
                     ScrollView {
                         VStack(spacing: AppTheme.Spacing.lg) {
-                            if let message = goalViewModel.successMessage {
-                                InlineBannerView(message: message, type: .info) {
-                                    goalViewModel.successMessage = nil
-                                }
-                                .padding(.horizontal, AppTheme.Spacing.md)
-                            }
-
-                            if let error = goalViewModel.errorMessage ?? viewModel.errorMessage {
+                            if let error = viewModel.errorMessage {
                                 InlineBannerView(message: error, type: .error) {
-                                    goalViewModel.errorMessage = nil
                                     viewModel.errorMessage = nil
                                 }
                                 .padding(.horizontal, AppTheme.Spacing.md)
@@ -157,66 +149,7 @@ struct InsightsView: View {
                                 }
                             }
 
-                            if !goalViewModel.activeGoals.isEmpty {
-                                VStack(alignment: .leading, spacing: AppTheme.Spacing.md) {
-                                    HStack {
-                                        Text(locManager.t("insights.active_goals"))
-                                            .font(AppTheme.Typography.label).fontWeight(.bold)
-                                            .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
-                                        Spacer()
-                                        Text("\(goalViewModel.activeGoals.count)")
-                                            .font(AppTheme.Typography.label).fontWeight(.semibold)
-                                            .foregroundColor(AppTheme.Colors.accent)
-                                            .padding(.horizontal, AppTheme.Spacing.sm)
-                                            .padding(.vertical, 3)
-                                            .background(AppTheme.Colors.accentSoft(colorScheme))
-                                            .cornerRadius(AppTheme.Spacing.radiusSm)
-                                    }
-                                    .padding(.horizontal, AppTheme.Spacing.md)
-
-                                    VStack(spacing: AppTheme.Spacing.sm) {
-                                        ForEach(goalViewModel.activeGoals) { goal in
-                                            GoalRowView(
-                                                goal: goal,
-                                                isMutating: goalViewModel.isInFlight(goalId: goal.id),
-                                                primaryActionLabel: locManager.t("goal.complete"),
-                                                secondaryActionLabel: locManager.t("goal.not_completed"),
-                                                tertiaryActionLabel: locManager.t("goal.delete"),
-                                                onPrimary: { goalViewModel.completeGoal(goal) },
-                                                onSecondary: { goalViewModel.markNotCompleted(goal) },
-                                                onTertiary: { goalViewModel.deleteGoal(goal) }
-                                            )
-                                        }
-                                    }
-                                    .padding(AppTheme.Spacing.md)
-                                    .background(AppTheme.Colors.surfaceElevated(colorScheme).opacity(0.5))
-                                    .cornerRadius(AppTheme.Spacing.radiusLg)
-                                    .padding(.horizontal, AppTheme.Spacing.md)
-                                }
-                            }
-
-                            if !goalViewModel.historyGoals.isEmpty {
-                                VStack(alignment: .leading, spacing: AppTheme.Spacing.md) {
-                                    Text(locManager.t("goal.history"))
-                                        .font(AppTheme.Typography.label).fontWeight(.bold)
-                                        .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
-                                        .padding(.horizontal, AppTheme.Spacing.md)
-
-                                    VStack(spacing: AppTheme.Spacing.sm) {
-                                        ForEach(goalViewModel.historyGoals) { goal in
-                                            GoalHistoryRowView(
-                                                goal: goal,
-                                                isMutating: goalViewModel.isInFlight(goalId: goal.id),
-                                                onDelete: { goalViewModel.deleteGoal(goal) }
-                                            )
-                                        }
-                                    }
-                                    .padding(AppTheme.Spacing.md)
-                                    .background(AppTheme.Colors.surfaceElevated(colorScheme).opacity(0.5))
-                                    .cornerRadius(AppTheme.Spacing.radiusLg)
-                                    .padding(.horizontal, AppTheme.Spacing.md)
-                                }
-                            }
+                            goalsSummaryCard
                         }
                         .padding(.vertical, AppTheme.Spacing.lg)
                     }
@@ -243,6 +176,75 @@ struct InsightsView: View {
             viewModel.cancelAll()
             goalViewModel.cancelAll()
         }
+    }
+
+    private var goalsSummaryCard: some View {
+        VStack(alignment: .leading, spacing: AppTheme.Spacing.md) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(locManager.t("goals.summary_title"))
+                        .font(AppTheme.Typography.label)
+                        .fontWeight(.bold)
+                        .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
+                    Text(locManager.t("goals.summary_subtitle"))
+                        .font(AppTheme.Typography.caption)
+                        .foregroundColor(AppTheme.Colors.textSecondary(colorScheme))
+                }
+                Spacer()
+                Button(action: { selectedTab = "goals" }) {
+                    Text(locManager.t("goals.view_action"))
+                        .font(AppTheme.Typography.caption)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, AppTheme.Spacing.md)
+                        .padding(.vertical, 10)
+                        .background(AppTheme.Gradients.accent)
+                        .cornerRadius(AppTheme.Spacing.radiusMd)
+                }
+            }
+
+            HStack(spacing: AppTheme.Spacing.sm) {
+                compactGoalStatCard(
+                    title: locManager.t("goals.active_section"),
+                    value: "\(goalViewModel.activeGoals.count)",
+                    tone: AppTheme.Colors.accent
+                )
+                compactGoalStatCard(
+                    title: locManager.t("goals.completed_section"),
+                    value: "\(goalViewModel.completedGoals.count)",
+                    tone: AppTheme.Colors.success
+                )
+            }
+
+            if let preview = goalViewModel.activeGoals.first?.title {
+                Text(preview)
+                    .font(AppTheme.Typography.caption)
+                    .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
+                    .padding(.horizontal, AppTheme.Spacing.md)
+                    .padding(.vertical, AppTheme.Spacing.sm)
+                    .background(AppTheme.Colors.surface(colorScheme))
+                    .cornerRadius(AppTheme.Spacing.radiusMd)
+            }
+        }
+        .padding(AppTheme.Spacing.md)
+        .background(AppTheme.Colors.surfaceElevated(colorScheme).opacity(0.5))
+        .cornerRadius(AppTheme.Spacing.radiusLg)
+        .padding(.horizontal, AppTheme.Spacing.md)
+    }
+
+    private func compactGoalStatCard(title: String, value: String, tone: Color) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(value)
+                .font(AppTheme.Typography.heading2)
+                .foregroundColor(tone)
+            Text(title)
+                .font(AppTheme.Typography.label)
+                .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(AppTheme.Spacing.md)
+        .background(AppTheme.Colors.surface(colorScheme))
+        .cornerRadius(AppTheme.Spacing.radiusMd)
     }
 
     private func localizedMoodTrend(_ trend: String) -> String {
@@ -380,89 +382,5 @@ struct InsightItemView: View {
             }
             Spacer()
         }
-    }
-}
-
-// MARK: - Goal Row
-
-struct GoalRowView: View {
-    let goal: APIGoal
-    let isMutating: Bool
-    let primaryActionLabel: String
-    let secondaryActionLabel: String
-    let tertiaryActionLabel: String
-    let onPrimary: () -> Void
-    let onSecondary: () -> Void
-    let onTertiary: () -> Void
-    @Environment(\.colorScheme) var colorScheme
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(goal.title)
-                    .font(AppTheme.Typography.caption).fontWeight(.semibold)
-                    .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
-                if let tf = goal.timeframe, !tf.isEmpty {
-                    Text(tf)
-                        .font(AppTheme.Typography.micro)
-                        .foregroundColor(AppTheme.Colors.accent)
-                }
-            }
-            HStack(spacing: AppTheme.Spacing.sm) {
-                smallActionButton(title: primaryActionLabel, foreground: .white, background: AppTheme.Colors.success, action: onPrimary)
-                smallActionButton(title: secondaryActionLabel, foreground: AppTheme.Colors.textPrimary(colorScheme), background: AppTheme.Colors.surface(colorScheme), action: onSecondary)
-                smallActionButton(title: tertiaryActionLabel, foreground: AppTheme.Colors.destructive, background: AppTheme.Colors.surface(colorScheme), action: onTertiary)
-            }
-        }
-        .padding(.vertical, 4)
-        .opacity(isMutating ? 0.65 : 1)
-    }
-
-    private func smallActionButton(title: String, foreground: Color, background: Color, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(title)
-                .font(AppTheme.Typography.micro)
-                .fontWeight(.semibold)
-                .foregroundColor(foreground)
-                .padding(.horizontal, AppTheme.Spacing.sm)
-                .padding(.vertical, 8)
-                .frame(maxWidth: .infinity)
-                .background(background)
-                .cornerRadius(AppTheme.Spacing.radiusMd)
-        }
-        .disabled(isMutating)
-    }
-}
-
-struct GoalHistoryRowView: View {
-    let goal: APIGoal
-    let isMutating: Bool
-    let onDelete: () -> Void
-    @Environment(\.colorScheme) var colorScheme
-    @EnvironmentObject var locManager: LocalizationManager
-
-    var body: some View {
-        HStack(spacing: AppTheme.Spacing.sm) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(goal.title)
-                    .font(AppTheme.Typography.caption).fontWeight(.semibold)
-                    .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
-                Text(goal.status.uppercased() == "COMPLETED" ? locManager.t("goal.completed") : locManager.t("goal.not_completed"))
-                    .font(AppTheme.Typography.micro)
-                    .foregroundColor(goal.status.uppercased() == "COMPLETED" ? AppTheme.Colors.success : AppTheme.Colors.textMuted(colorScheme))
-            }
-            Spacer()
-            Button(action: onDelete) {
-                Image(systemName: "trash")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(AppTheme.Colors.destructive)
-                    .frame(width: 34, height: 34)
-                    .background(AppTheme.Colors.surface(colorScheme))
-                    .cornerRadius(AppTheme.Spacing.radiusMd)
-            }
-            .disabled(isMutating)
-        }
-        .padding(.vertical, 4)
-        .opacity(isMutating ? 0.65 : 1)
     }
 }

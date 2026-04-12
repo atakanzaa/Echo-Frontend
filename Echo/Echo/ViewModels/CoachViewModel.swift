@@ -278,12 +278,12 @@ final class CoachViewModel: ObservableObject {
 
     private func performOpenSession(id: String) async {
         do {
-            let result: [APICoachMessage] = try await APIClient.shared.requestWithAutoRefresh(
+            let result: APIPagedResponse<APICoachMessage> = try await APIClient.shared.requestWithAutoRefresh(
                 .getCoachMessages(sessionId: id)
             )
             guard !Task.isCancelled else { return }
             guard activeSessionId == id else { return }
-            messages = result
+            messages = result.content
             isLoadingChat = false
         } catch is CancellationError {
             isLoadingChat = false

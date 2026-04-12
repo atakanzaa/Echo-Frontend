@@ -10,14 +10,17 @@ struct APIAuthResponse: Decodable {
 }
 
 struct APIUser: Decodable {
-    let id:             String
-    let email:          String
-    let displayName:    String?
-    let timezone:       String
-    let currentStreak:  Int
-    let longestStreak:  Int
-    let totalEntries:   Int
-    let moodScoreAvg:   Double
+    let id:                 String
+    let email:              String
+    let displayName:        String?
+    let timezone:           String
+    let currentStreak:      Int
+    let longestStreak:      Int
+    let totalEntries:       Int
+    let moodScoreAvg:       Double
+    let language:           String?
+    let emailVerified:      Bool?
+    let passwordLoginEnabled: Bool?
 }
 
 // MARK: — Journal
@@ -61,10 +64,6 @@ struct APIGoalPreview: Decodable {
     let title:     String
     let timeframe: String?
     let goalType:  String?
-    enum CodingKeys: String, CodingKey {
-        case title, timeframe
-        case goalType = "goal_type"
-    }
 }
 
 struct APIEntryStatus: Decodable {
@@ -293,9 +292,25 @@ extension APIBadge: Hashable {
 struct APIAchievementDetail: Decodable {
     let key: String
     let title: String
+    let emoji: String?
     let description: String?
-    let progress: Double
+    let criteriaDescription: String?
+    let isEarned: Bool?
     let earnedAt: String?
+    let progress: Double
+    let shareText: String?
+
+    enum CodingKeys: String, CodingKey {
+        case key = "badgeKey"
+        case title
+        case emoji
+        case description
+        case criteriaDescription
+        case isEarned
+        case earnedAt
+        case progress
+        case shareText
+    }
 }
 
 // MARK: — Time Capsule
@@ -318,21 +333,44 @@ struct APITimeCapsule: Decodable, Identifiable {
 
 // MARK: — Goals
 
+enum GoalStatus: String, Decodable {
+    case pending = "PENDING"
+    case active = "ACTIVE"
+    case completed = "COMPLETED"
+    case dismissed = "DISMISSED"
+    case deleted = "DELETED"
+
+    var isOpen: Bool {
+        self == .pending || self == .active
+    }
+
+    var isHistory: Bool {
+        self == .completed || self == .dismissed
+    }
+}
+
+enum GoalCreationType: String, Decodable {
+    case manual = "MANUAL"
+    case ai = "AI"
+}
+
+enum GoalCompletionType: String, Decodable {
+    case manual = "MANUAL"
+    case ai = "AI"
+}
+
 /// /api/v1/goals endpoint'inden dönen tam hedef nesnesi
 struct APIGoal: Decodable, Identifiable {
     let id:                   String
     let title:                String
     let timeframe:            String?
     let goalType:             String
-    let status:               String
+    let creationType:         GoalCreationType
+    let status:               GoalStatus
     let sourceJournalEntryId: String?
     let detectedAt:           String
     let completedAt:          String?
-    enum CodingKeys: String, CodingKey {
-        case id, title, timeframe, status, detectedAt, completedAt
-        case goalType             = "goal_type"
-        case sourceJournalEntryId = "source_journal_entry_id"
-    }
+    let completionType:       GoalCompletionType?
 }
 
 struct APIGoalSuggestion: Decodable, Identifiable {

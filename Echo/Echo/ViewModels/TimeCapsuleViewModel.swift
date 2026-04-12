@@ -83,23 +83,19 @@ final class TimeCapsuleViewModel: NSObject, ObservableObject, AVAudioRecorderDel
 
         Task {
             do {
-                var audioData: Data? = nil
-                var filename:  String? = nil
-                if let url = audioFileURL {
-                    audioData = try? Data(contentsOf: url)
-                    filename  = url.lastPathComponent
-                }
-                let capsule: APITimeCapsule = try await APIClient.shared.upload(
-                    .createCapsule(audioData: audioData, filename: filename, body: body)
+                let capsule: APITimeCapsule = try await APIClient.shared.requestWithAutoRefresh(
+                    .createCapsule(audioData: nil, filename: nil, body: body)
                 )
                 capsules.insert(capsule, at: 0)
                 isCreating       = false
                 showCreateSheet  = false
                 capsuleTitle     = ""
                 unlockInDays     = 90
+                if let url = audioFileURL {
+                    try? FileManager.default.removeItem(at: url)
+                }
                 audioFileURL     = nil
                 recordingTime    = "0:00"
-                if let url = audioFileURL { try? FileManager.default.removeItem(at: url) }
             } catch {
                 errorMessage = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
                 isCreating   = false
@@ -145,11 +141,11 @@ final class TimeCapsuleViewModel: NSObject, ObservableObject, AVAudioRecorderDel
         isLoading = true
         errorMessage = nil
         do {
-            let result: [APITimeCapsule] = try await APIClient.shared.requestWithAutoRefresh(
+            let result: APIPagedResponse<APITimeCapsule> = try await APIClient.shared.requestWithAutoRefresh(
                 .getCapsules
             )
             guard !Task.isCancelled else { return }
-            capsules = result
+            capsules = result.content
             isLoading = false
         } catch is CancellationError {
             isLoading = false

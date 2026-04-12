@@ -15,11 +15,15 @@ final class GoalViewModel: ObservableObject {
     private let mutationGuard = MutationGuard()
 
     var activeGoals: [APIGoal] {
-        allGoals.filter { ["PENDING", "ACTIVE"].contains($0.status.uppercased()) }
+        allGoals.filter { $0.status.isOpen }
     }
 
     var historyGoals: [APIGoal] {
-        allGoals.filter { ["COMPLETED", "DISMISSED"].contains($0.status.uppercased()) }
+        allGoals.filter { $0.status.isHistory }
+    }
+
+    var completedGoals: [APIGoal] {
+        allGoals.filter { $0.status == .completed }
     }
 
     func loadGoals() {
@@ -31,6 +35,33 @@ final class GoalViewModel: ObservableObject {
     func loadJournalSuggestions(entryId: String) {
         suggestionTask.run { [weak self] in
             await self?.performLoadJournalSuggestions(entryId: entryId)
+        }
+    }
+
+    func createGoal(title: String, timeframe: String?) {
+        let normalizedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalizedTimeframe = timeframe?.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !normalizedTitle.isEmpty else {
+            errorMessage = LocalizationManager.shared.t("goals.manual_validation")
+            return
+        }
+
+        let mutationId = "create-goal"
+        guard mutationGuard.start(id: mutationId) else { return }
+        Task {
+            defer { mutationGuard.finish(id: mutationId) }
+            do {
+                let created: APIGoal = try await APIClient.shared.requestWithAutoRefresh(
+                    .createGoal(CreateGoalBody(
+                        title: normalizedTitle,
+                        timeframe: normalizedTimeframe?.isEmpty == true ? nil : normalizedTimeframe
+                    ))
+                )
+                successMessage = localizedGoalMessage("goal.success.added", title: created.title)
+                await refresh()
+            } catch {
+                errorMessage = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
+            }
         }
     }
 
@@ -94,6 +125,10 @@ final class GoalViewModel: ObservableObject {
         mutationGuard.isInFlight(id: goalId)
     }
 
+    func isCreateInFlight() -> Bool {
+        mutationGuard.isInFlight(id: "create-goal")
+    }
+
     func refresh() async {
         await loadTask.runAsync { [weak self] in
             await self?.performLoadGoals()
@@ -110,8 +145,8 @@ final class GoalViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
         do {
-            let result: [APIGoal] = try await APIClient.shared.requestWithAutoRefresh(.getAllGoals)
-            allGoals = result
+            let result: APIPagedResponse<APIGoal> = try await APIClient.shared.requestWithAutoRefresh(.getAllGoals)
+            allGoals = result.content
             isLoading = false
         } catch is CancellationError {
             isLoading = false

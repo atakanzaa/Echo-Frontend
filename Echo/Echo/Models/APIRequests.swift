@@ -28,6 +28,26 @@ struct LogoutBody: Encodable {
     let refreshToken: String
 }
 
+struct ForgotPasswordBody: Encodable {
+    let email: String
+}
+
+struct ResetPasswordBody: Encodable {
+    let email: String
+    let code: String
+    let newPassword: String
+}
+
+struct ChangePasswordBody: Encodable {
+    let currentPassword: String
+    let newPassword: String
+}
+
+struct CreateGoalBody: Encodable {
+    let title: String
+    let timeframe: String?
+}
+
 // MARK: — Profile
 
 struct UpdateProfileBody: Encodable {

@@ -7,6 +7,9 @@ enum APIRouter {
     case googleLogin(GoogleLoginBody)
     case refreshToken(RefreshBody)
     case logout(LogoutBody)
+    case forgotPassword(ForgotPasswordBody)
+    case resetPassword(ResetPasswordBody)
+    case changePassword(ChangePasswordBody)
     case me
 
     // Users
@@ -77,6 +80,7 @@ enum APIRouter {
     // Goals
     case getActiveGoals
     case getAllGoals
+    case createGoal(CreateGoalBody)
     case getGoalSuggestions(sourceType: String?, journalEntryId: String?, sessionId: String?)
     case acceptGoalSuggestion(id: String)
     case rejectGoalSuggestion(id: String)
@@ -147,6 +151,9 @@ extension APIRouter {
         case .googleLogin(let b):    return ("/auth/google",   "POST", try? encoder.encode(b), false)
         case .refreshToken(let b):   return ("/auth/refresh",  "POST", try? encoder.encode(b), false)
         case .logout(let b):         return ("/auth/logout",   "POST", try? encoder.encode(b), false)
+        case .forgotPassword(let b): return ("/auth/forgot-password", "POST", try? encoder.encode(b), false)
+        case .resetPassword(let b):  return ("/auth/reset-password",  "POST", try? encoder.encode(b), false)
+        case .changePassword(let b): return ("/auth/change-password", "POST", try? encoder.encode(b), false)
         case .me:                    return ("/auth/me",        "GET",  nil, false)
 
         // Users
@@ -207,7 +214,8 @@ extension APIRouter {
 
         // Time Capsule
         case .getCapsules:           return ("/capsules",       "GET",    nil, false)
-        case .createCapsule:         return ("/capsules",       "POST",   nil, true)
+        case .createCapsule(_, _, let body):
+            return ("/capsules", "POST", try? encoder.encode(body), false)
         case .getCapsule(let id):    return ("/capsules/\(id)", "GET",    nil, false)
         case .deleteCapsule(let id): return ("/capsules/\(id)", "DELETE", nil, false)
 
@@ -239,6 +247,7 @@ extension APIRouter {
         // Goals
         case .getActiveGoals:          return ("/goals", "GET", nil, false)
         case .getAllGoals:             return ("/goals/all", "GET", nil, false)
+        case .createGoal(let body):    return ("/goals", "POST", try? encoder.encode(body), false)
         case .getGoalSuggestions(let sourceType, let journalEntryId, let sessionId):
             var items: [String] = []
             if let sourceType, !sourceType.isEmpty { items.append("sourceType=\(sourceType)") }

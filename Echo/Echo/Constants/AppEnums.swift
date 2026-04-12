@@ -6,6 +6,7 @@ enum AppTab: String, CaseIterable {
     case coach
     case profile
     case journal
+    case goals
     case calendar
     case insights
     case aiInsights = "aiinsights"

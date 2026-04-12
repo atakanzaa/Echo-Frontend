@@ -45,7 +45,18 @@ struct SettingsView: View {
                                 icon: "person.crop.circle",
                                 title: locManager.t("settings.profile"),
                                 subtitle: locManager.t("settings.profile_sub"),
-                                showArrow: true
+                                showArrow: true,
+                                onTap: { selectedTab = "edit-profile" }
+                            )
+
+                            Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
+
+                            SettingsItemView(
+                                icon: "key",
+                                title: locManager.t("settings.change_password"),
+                                subtitle: locManager.t("settings.change_password_sub"),
+                                showArrow: true,
+                                onTap: { selectedTab = "change-password" }
                             )
 
                             Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
@@ -258,10 +269,19 @@ struct SettingsItemView: View {
     let title: String
     let subtitle: String
     let showArrow: Bool
+    let onTap: (() -> Void)?
     @Environment(\.colorScheme) var colorScheme
 
+    init(icon: String, title: String, subtitle: String, showArrow: Bool, onTap: (() -> Void)? = nil) {
+        self.icon = icon
+        self.title = title
+        self.subtitle = subtitle
+        self.showArrow = showArrow
+        self.onTap = onTap
+    }
+
     var body: some View {
-        Button(action: {}) {
+        Button(action: { onTap?() }) {
             SettingsRowLayout(icon: icon, title: title, subtitle: subtitle) {
                 if showArrow {
                     Image(systemName: "chevron.right")

@@ -97,6 +97,7 @@ struct HamburgerMenuView: View {
                             .padding(.vertical, AppTheme.Spacing.sm)
 
                         drawerItem(icon: "calendar",          label: locManager.t("nav.calendar"),     tab: "calendar")
+                        drawerItem(icon: "target",            label: locManager.t("nav.goals"),        tab: "goals")
                         drawerItem(icon: "chart.bar.fill",    label: locManager.t("nav.insights"),     tab: "insights")
                         drawerItem(icon: "brain.head.profile",label: locManager.t("nav.ai_insights"),  tab: "aiinsights")
                         drawerItem(icon: "trophy.fill",       label: locManager.t("nav.achievements"), tab: "achievements")

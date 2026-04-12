@@ -165,6 +165,12 @@ extension APIClient {
             Log.network.info("Refreshing token after unauthorized response")
             try await refreshTokens()
             return try await request(endpoint)
+        } catch NetworkError.forbidden {
+            // Some auth failures are surfaced as 403 by backend/security chain.
+            // Try a single token refresh before failing the request.
+            Log.network.info("Refreshing token after forbidden response")
+            try await refreshTokens()
+            return try await request(endpoint)
         }
     }
 
@@ -173,6 +179,10 @@ extension APIClient {
             return try await upload(endpoint)
         } catch NetworkError.unauthorized {
             Log.network.info("Refreshing token before retrying upload")
+            try await refreshTokens()
+            return try await upload(endpoint)
+        } catch NetworkError.forbidden {
+            Log.network.info("Refreshing token before retrying upload after forbidden")
             try await refreshTokens()
             return try await upload(endpoint)
         }
