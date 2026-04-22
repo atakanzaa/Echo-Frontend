@@ -56,30 +56,15 @@ struct GoalsView: View {
     }
 
     private var header: some View {
-        HStack {
-            Button(action: {
+        AppScreenHeader(
+            title: locManager.t("goals.title"),
+            showBack: true,
+            onBack: {
                 selectedTab = tabNavigation.goBack(from: selectedTab, fallback: "profile")
-            }) {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
-            }
-            Spacer()
-            Text(locManager.t("goals.title"))
-                .font(AppTheme.Typography.heading3)
-                .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
-            Spacer()
-            Button(action: { isMenuOpen.toggle() }) {
-                Image(systemName: "line.3.horizontal")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
-                    .frame(width: 40, height: 40)
-                    .background(AppTheme.Colors.surface(colorScheme))
-                    .cornerRadius(AppTheme.Spacing.radiusFull)
-            }
-        }
-        .padding(.horizontal, AppTheme.Spacing.md)
-        .padding(.top, AppTheme.Spacing.md)
+            },
+            showMenu: true,
+            onMenu: { isMenuOpen.toggle() }
+        )
     }
 
     private var topSummaryCards: some View {

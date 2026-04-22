@@ -24,25 +24,12 @@ struct CoachSessionsListView: View {
                 .allowsHitTesting(false)
 
             VStack(spacing: 0) {
-                // Header
-                HStack {
-                    Button(action: { withAnimation(.easeInOut(duration: 0.25)) { isMenuOpen.toggle() } }) {
-                        Image(systemName: "line.3.horizontal")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
-                    }
-                    .frame(width: 40, height: 40)
-                    .background(AppTheme.Colors.surface(colorScheme))
-                    .cornerRadius(AppTheme.Spacing.radiusFull)
-
-                    Spacer()
-
-                    Text(locManager.t("hamburger.ai_coach"))
-                        .font(AppTheme.Typography.heading3)
-                        .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
-
-                    Spacer()
-
+                AppScreenHeader(
+                    title: locManager.t("hamburger.ai_coach"),
+                    showMenu: true,
+                    onMenu: { withAnimation(.easeInOut(duration: 0.25)) { isMenuOpen.toggle() } },
+                    menuPlacement: .leading
+                ) {
                     Button(action: startNewSession) {
                         ZStack {
                             if isCreating {
@@ -57,9 +44,6 @@ struct CoachSessionsListView: View {
                     .cornerRadius(AppTheme.Spacing.radiusFull)
                     .disabled(isCreating)
                 }
-                .padding(.horizontal, AppTheme.Layout.screenHorizontal)
-                .padding(.top, AppTheme.Layout.headerTop)
-                .padding(.bottom, AppTheme.Layout.headerBottom)
 
                 if viewModel.isLoadingSessions {
                     Spacer()

@@ -3,6 +3,9 @@ import SwiftUI
 struct PremiumView: View {
     @Binding var selectedTab: String
     @State private var selectedPlan: String = "yearly"
+    @State private var activeWebDestination: WebDestination?
+    @State private var activeLegalSheet: NativeLegalDestination?
+    @State private var showMailFallback = false
     @Environment(\.colorScheme) var colorScheme
     @EnvironmentObject var locManager: LocalizationManager
     @EnvironmentObject private var tabNavigation: TabNavigationManager
@@ -68,7 +71,10 @@ struct PremiumView: View {
                         }
                         .padding(.horizontal, AppTheme.Spacing.md)
 
-                        HStack(spacing: AppTheme.Spacing.sm) {
+                        LazyVGrid(
+                            columns: [GridItem(.adaptive(minimum: 150), spacing: AppTheme.Spacing.sm)],
+                            spacing: AppTheme.Spacing.sm
+                        ) {
                             planCard("monthly", title: locManager.t("premium.monthly"), desc: locManager.t("premium.flexible_plan"), price: "₹99", period: locManager.t("premium.period_month"), badge: nil)
                             planCard("yearly",  title: locManager.t("premium.yearly"),  desc: locManager.t("premium.save_20"),      price: "₹999", period: locManager.t("premium.period_year"), badge: locManager.t("premium.best_value"))
                         }
@@ -87,17 +93,91 @@ struct PremiumView: View {
                             .font(AppTheme.Typography.label).foregroundColor(.white.opacity(0.4))
                             .multilineTextAlignment(.center).padding(.horizontal, AppTheme.Spacing.md)
 
-                        HStack(spacing: AppTheme.Spacing.sm) {
-                            Button(action: {}) { Text(locManager.t("premium.restore_purchase")).font(AppTheme.Typography.label).foregroundColor(.white.opacity(0.3)) }
-                            Text("•").foregroundColor(.white.opacity(0.2))
-                            Button(action: {}) { Text(locManager.t("auth.terms")).font(AppTheme.Typography.label).foregroundColor(.white.opacity(0.3)) }
-                            Text("•").foregroundColor(.white.opacity(0.2))
-                            Button(action: {}) { Text(locManager.t("auth.privacy")).font(AppTheme.Typography.label).foregroundColor(.white.opacity(0.3)) }
+                        ViewThatFits(in: .horizontal) {
+                            legalActions
+                            legalActionsStack
                         }
                         .padding(.horizontal, AppTheme.Spacing.md)
                         .padding(.bottom, AppTheme.Spacing.xxl)
                     }
                     .padding(.top, AppTheme.Spacing.sm)
+                }
+            }
+        }
+        .sheet(item: $activeWebDestination) { destination in
+            LegalWebViewSheet(destination: destination)
+        }
+        .sheet(item: $activeLegalSheet) { destination in
+            NativeLegalSheet(destination: destination)
+                .environmentObject(locManager)
+        }
+        .confirmationDialog(
+            locManager.t("support.mail_unavailable_title"),
+            isPresented: $showMailFallback,
+            titleVisibility: .visible
+        ) {
+            Button(locManager.t("support.copy_email")) {
+                ExternalNavigator.copySupportEmail()
+            }
+            Button(locManager.t("about.website")) {
+                activeWebDestination = .website
+            }
+            Button(locManager.t("common.cancel"), role: .cancel) {}
+        } message: {
+            Text(locManager.t("support.mail_unavailable_message", AppConstants.Links.supportEmail))
+        }
+    }
+
+    @ViewBuilder
+    private var legalActions: some View {
+        HStack(spacing: AppTheme.Spacing.sm) {
+            Button(action: {
+                if !ExternalNavigator.openSupportAction(.contactSupport, localization: locManager) {
+                    showMailFallback = true
+                }
+            }) {
+                Text(locManager.t("premium.restore_purchase"))
+                    .font(AppTheme.Typography.label)
+                    .foregroundColor(.white.opacity(0.3))
+            }
+            Text("•").foregroundColor(.white.opacity(0.2))
+            Button(action: { activeLegalSheet = .terms }) {
+                Text(locManager.t("auth.terms"))
+                    .font(AppTheme.Typography.label)
+                    .foregroundColor(.white.opacity(0.3))
+            }
+            Text("•").foregroundColor(.white.opacity(0.2))
+            Button(action: { activeLegalSheet = .privacy }) {
+                Text(locManager.t("auth.privacy"))
+                    .font(AppTheme.Typography.label)
+                    .foregroundColor(.white.opacity(0.3))
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var legalActionsStack: some View {
+        VStack(spacing: AppTheme.Spacing.sm) {
+            Button(action: {
+                if !ExternalNavigator.openSupportAction(.contactSupport, localization: locManager) {
+                    showMailFallback = true
+                }
+            }) {
+                Text(locManager.t("premium.restore_purchase"))
+                    .font(AppTheme.Typography.label)
+                    .foregroundColor(.white.opacity(0.3))
+            }
+            HStack(spacing: AppTheme.Spacing.sm) {
+                Button(action: { activeLegalSheet = .terms }) {
+                    Text(locManager.t("auth.terms"))
+                        .font(AppTheme.Typography.label)
+                        .foregroundColor(.white.opacity(0.3))
+                }
+                Text("•").foregroundColor(.white.opacity(0.2))
+                Button(action: { activeLegalSheet = .privacy }) {
+                    Text(locManager.t("auth.privacy"))
+                        .font(AppTheme.Typography.label)
+                        .foregroundColor(.white.opacity(0.3))
                 }
             }
         }

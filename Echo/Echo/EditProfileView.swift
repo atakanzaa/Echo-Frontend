@@ -13,21 +13,13 @@ struct EditProfileView: View {
             AppTheme.Colors.background(colorScheme).ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Header
-                HStack {
-                    Button(action: {
+                AppScreenHeader(
+                    title: locManager.t("profile.edit_profile"),
+                    showBack: true,
+                    onBack: {
                         selectedTab = tabNavigation.goBack(from: selectedTab, fallback: "profile")
-                    }) {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
                     }
-                    Spacer()
-                    Text(locManager.t("profile.edit_profile"))
-                        .font(AppTheme.Typography.heading3)
-                        .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
-                    Spacer()
-                    // Save button
+                ) {
                     Button(action: {
                         viewModel.save {
                             selectedTab = tabNavigation.goBack(from: selectedTab, fallback: "profile")
@@ -44,8 +36,6 @@ struct EditProfileView: View {
                     }
                     .disabled(!viewModel.hasChanges || viewModel.isSaving)
                 }
-                .padding(.horizontal, AppTheme.Spacing.md)
-                .padding(.vertical, AppTheme.Spacing.md)
 
                 if viewModel.isLoading {
                     Spacer()
@@ -68,11 +58,7 @@ struct EditProfileView: View {
                                     .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
 
                                 TextField(locManager.t("profile.display_name_placeholder"), text: $viewModel.displayName)
-                                    .font(AppTheme.Typography.body)
-                                    .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
-                                    .padding(AppTheme.Spacing.md)
-                                    .background(AppTheme.Colors.surfaceElevated(colorScheme))
-                                    .cornerRadius(AppTheme.Spacing.radiusMd)
+                                    .echoInputField(colorScheme)
                             }
                             .padding(.horizontal, AppTheme.Spacing.md)
 
@@ -93,8 +79,7 @@ struct EditProfileView: View {
                                         .foregroundColor(AppTheme.Colors.textDisabled(colorScheme))
                                 }
                                 .padding(AppTheme.Spacing.md)
-                                .background(AppTheme.Colors.surface(colorScheme))
-                                .cornerRadius(AppTheme.Spacing.radiusMd)
+                                .echoCard(colorScheme, elevated: false, radius: AppTheme.Spacing.radiusMd)
                             }
                             .padding(.horizontal, AppTheme.Spacing.md)
 

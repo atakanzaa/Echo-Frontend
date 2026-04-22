@@ -20,16 +20,7 @@ struct JournalView: View {
                 AppTheme.Colors.background(colorScheme).ignoresSafeArea()
 
                 VStack(spacing: 0) {
-                    // Header
-                    HStack {
-                        Text(locManager.t("nav.journal"))
-                            .font(AppTheme.Typography.heading2)
-                            .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
-                        Spacer()
-                    }
-                    .padding(.horizontal, AppTheme.Layout.screenHorizontal)
-                    .padding(.top, AppTheme.Layout.headerTop)
-                    .padding(.bottom, AppTheme.Layout.headerBottom)
+                    AppScreenHeader(title: locManager.t("nav.journal"))
 
                     // Search bar
                     HStack(spacing: AppTheme.Spacing.sm) {

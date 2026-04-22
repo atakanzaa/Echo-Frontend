@@ -13,24 +13,11 @@ struct InsightsView: View {
             AppTheme.Colors.background(colorScheme).ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Header
-                HStack {
-                    Text(locManager.t("nav.insights"))
-                        .font(AppTheme.Typography.heading3)
-                        .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
-                    Spacer()
-                    Button(action: { isMenuOpen.toggle() }) {
-                        Image(systemName: "line.3.horizontal")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
-                    }
-                    .frame(width: 40, height: 40)
-                    .background(AppTheme.Colors.surface(colorScheme))
-                    .cornerRadius(AppTheme.Spacing.radiusFull)
-                }
-                .padding(.horizontal, AppTheme.Layout.screenHorizontal)
-                .padding(.top, AppTheme.Layout.headerTop)
-                .padding(.bottom, AppTheme.Layout.headerBottom)
+                AppScreenHeader(
+                    title: locManager.t("nav.insights"),
+                    showMenu: true,
+                    onMenu: { isMenuOpen.toggle() }
+                )
 
                 if viewModel.isLoading {
                     Spacer()

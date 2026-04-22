@@ -1,6 +1,6 @@
 import SwiftUI
 
-private enum GoalBadgeTone {
+fileprivate enum GoalBadgeTone {
     case accent
     case success
     case warning
@@ -35,7 +35,7 @@ private enum GoalBadgeTone {
 
 struct GoalMetaBadge: View {
     let title: String
-    let tone: GoalBadgeTone
+    fileprivate let tone: GoalBadgeTone
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
@@ -153,12 +153,13 @@ struct GoalCompletedCardView: View {
                     .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
                     .fixedSize(horizontal: false, vertical: true)
 
-                HStack(spacing: AppTheme.Spacing.sm) {
-                    GoalMetaBadge(
-                        title: goal.creationType == .ai ? locManager.t("goals.origin.ai") : locManager.t("goals.origin.manual"),
-                        tone: goal.creationType == .ai ? .accent : .warning
-                    )
-                    GoalMetaBadge(title: completionLabel, tone: .success)
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: AppTheme.Spacing.sm) {
+                        completionBadges
+                    }
+                    VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
+                        completionBadges
+                    }
                 }
 
                 if let completedAt = goal.completedAt, !completedAt.isEmpty {
@@ -188,6 +189,15 @@ struct GoalCompletedCardView: View {
                 .stroke(AppTheme.Colors.borderSubtle(colorScheme), lineWidth: 1)
         )
         .opacity(isMutating ? 0.7 : 1.0)
+    }
+
+    @ViewBuilder
+    private var completionBadges: some View {
+        GoalMetaBadge(
+            title: goal.creationType == .ai ? locManager.t("goals.origin.ai") : locManager.t("goals.origin.manual"),
+            tone: goal.creationType == .ai ? .accent : .warning
+        )
+        GoalMetaBadge(title: completionLabel, tone: .success)
     }
 }
 

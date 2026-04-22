@@ -174,7 +174,7 @@ struct ReflectionCoachView: View {
                 .padding(.vertical, AppTheme.Spacing.sm)
                 .background(AppTheme.Colors.background(colorScheme))
             }
-            .padding(.bottom, AppTheme.Spacing.xxl + AppTheme.Spacing.lg)
+            .padding(.bottom, AppTheme.Layout.navAwareBottomInset)
         }
         .navigationBarHidden(true)
         .onAppear {

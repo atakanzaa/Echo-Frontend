@@ -13,25 +13,13 @@ struct EchoKnowsYouView: View {
             AppTheme.Colors.background(colorScheme).ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Header
-                HStack {
-                    Button(action: {
+                AppScreenHeader(
+                    title: locManager.t("profile.ai_profile"),
+                    showBack: true,
+                    onBack: {
                         selectedTab = tabNavigation.goBack(from: selectedTab, fallback: "profile")
-                    }) {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
                     }
-                    Spacer()
-                    Text(locManager.t("profile.ai_profile"))
-                        .font(AppTheme.Typography.heading3)
-                        .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
-                    Spacer()
-                    // Invisible spacer for centering
-                    Color.clear.frame(width: 24, height: 24)
-                }
-                .padding(.horizontal, AppTheme.Spacing.md)
-                .padding(.vertical, AppTheme.Spacing.md)
+                )
 
                 if viewModel.isLoading {
                     Spacer()

@@ -14,31 +14,15 @@ struct ProfileView: View {
             AppTheme.Colors.background(colorScheme).ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Header
-                HStack {
-                    Button(action: {
+                AppScreenHeader(
+                    title: locManager.t("nav.profile"),
+                    showBack: true,
+                    onBack: {
                         selectedTab = tabNavigation.goBack(from: selectedTab, fallback: "home")
-                    }) {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
-                    }
-                    Spacer()
-                    Text(locManager.t("nav.profile"))
-                        .font(AppTheme.Typography.heading3)
-                        .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
-                    Spacer()
-                    Button(action: { withAnimation(.easeInOut(duration: 0.25)) { isMenuOpen.toggle() } }) {
-                        Image(systemName: "line.3.horizontal")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
-                    }
-                    .frame(width: 40, height: 40)
-                    .background(AppTheme.Colors.surface(colorScheme))
-                    .cornerRadius(AppTheme.Spacing.radiusFull)
-                }
-                .padding(.horizontal, AppTheme.Spacing.md)
-                .padding(.vertical, AppTheme.Spacing.md)
+                    },
+                    showMenu: true,
+                    onMenu: { withAnimation(.easeInOut(duration: 0.25)) { isMenuOpen.toggle() } }
+                )
 
                 if viewModel.isLoading {
                     Spacer()
@@ -74,7 +58,9 @@ struct ProfileView: View {
                                     selectedTab = "edit-profile"
                                 }
                                 Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
-                                profileRow(icon: "shield.fill", label: locManager.t("settings.privacy_security"), color: AppTheme.Colors.moodVeryPositive) { }
+                                profileRow(icon: "shield.fill", label: locManager.t("settings.privacy_security"), color: AppTheme.Colors.moodVeryPositive) {
+                                    selectedTab = "data-privacy"
+                                }
                                 Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
                                 profileRow(icon: "bell.fill", label: locManager.t("nav.notifications"), color: AppTheme.Colors.accent) { selectedTab = "notifications" }
                             }
@@ -137,10 +123,7 @@ struct ProfileView: View {
                             .padding(.horizontal, AppTheme.Spacing.md)
                             .disabled(viewModel.isLoggingOut)
 
-                            Text("Echo v2.4.0")
-                                .font(AppTheme.Typography.micro)
-                                .foregroundColor(AppTheme.Colors.textDisabled(colorScheme))
-                                .padding(.bottom, AppTheme.Spacing.xxl)
+                            AppVersionFooter()
                         }
                         .padding(.top, AppTheme.Spacing.sm)
                     }
@@ -226,8 +209,7 @@ struct ProfileView: View {
                 content()
             }
             .padding(AppTheme.Spacing.md)
-            .background(AppTheme.Colors.surfaceElevated(colorScheme))
-            .cornerRadius(AppTheme.Spacing.radiusLg)
+            .echoCard(colorScheme)
             .padding(.horizontal, AppTheme.Spacing.md)
         }
     }
@@ -252,6 +234,7 @@ struct ProfileView: View {
             }
             .padding(.vertical, 4)
         }
+        .frame(maxWidth: .infinity, minHeight: AppTheme.Layout.rowMinHeight)
     }
 }
 

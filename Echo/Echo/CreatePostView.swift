@@ -26,11 +26,11 @@ struct CreatePostView: View {
     private let emojiOptions = ["😊", "😢", "😤", "😴", "🥰", "😎", "🤔", "💪"]
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 AppTheme.Colors.background(colorScheme).ignoresSafeArea()
 
-                ScrollView {
+                KeyboardAwareFormScroll {
                     VStack(spacing: AppTheme.Spacing.lg) {
                         imagePicker
                         captionField
@@ -150,11 +150,14 @@ struct CreatePostView: View {
             Text(locManager.t("create_post.how_feeling"))
                 .font(AppTheme.Typography.caption).fontWeight(.medium)
                 .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
-            HStack(spacing: AppTheme.Spacing.sm) {
+            LazyVGrid(
+                columns: [GridItem(.adaptive(minimum: AppTheme.Layout.compactControlHeight), spacing: AppTheme.Spacing.sm)],
+                spacing: AppTheme.Spacing.sm
+            ) {
                 ForEach(emojiOptions, id: \.self) { e in
                     Button(action: { emoji = emoji == e ? nil : e }) {
                         Text(e).font(.system(size: 24))
-                            .padding(6)
+                            .frame(width: AppTheme.Layout.compactControlHeight, height: AppTheme.Layout.compactControlHeight)
                             .background(emoji == e ? AppTheme.Colors.accentSoft(colorScheme) : Color.clear)
                             .cornerRadius(AppTheme.Spacing.radiusSm)
                     }

@@ -26,31 +26,15 @@ struct TimeCapsuleView: View {
                 .foregroundColor(AppTheme.Colors.textPrimary(colorScheme)).opacity(0.05).offset(x: -100, y: -100)
 
             VStack(spacing: 0) {
-                // Header
-                HStack {
-                    Button(action: {
+                AppScreenHeader(
+                    title: locManager.t("nav.time_capsule"),
+                    showBack: true,
+                    onBack: {
                         selectedTab = tabNavigation.goBack(from: selectedTab, fallback: "home")
-                    }) {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
-                    }
-                    Spacer()
-                    Text(locManager.t("nav.time_capsule"))
-                        .font(AppTheme.Typography.heading3)
-                        .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
-                    Spacer()
-                    Button(action: { isMenuOpen.toggle() }) {
-                        Image(systemName: "line.3.horizontal")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
-                    }
-                    .frame(width: 40, height: 40)
-                    .background(AppTheme.Colors.surface(colorScheme))
-                    .cornerRadius(AppTheme.Spacing.radiusFull)
-                }
-                .padding(.horizontal, AppTheme.Spacing.lg)
-                .padding(.vertical, AppTheme.Spacing.lg)
+                    },
+                    showMenu: true,
+                    onMenu: { isMenuOpen.toggle() }
+                )
 
                 if viewModel.isLoading {
                     Spacer()
@@ -212,10 +196,11 @@ struct CreateCapsuleSheet: View {
     @EnvironmentObject var locManager: LocalizationManager
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 AppTheme.Colors.background(colorScheme).ignoresSafeArea()
 
+                KeyboardAwareFormScroll {
                 VStack(spacing: AppTheme.Spacing.lg) {
                     // Title
                     VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
@@ -235,7 +220,10 @@ struct CreateCapsuleSheet: View {
                         Text(String(format: locManager.t("capsule.unlock_days_fmt"), viewModel.unlockInDays))
                             .font(AppTheme.Typography.label).fontWeight(.bold)
                             .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
-                        HStack(spacing: AppTheme.Spacing.sm) {
+                        LazyVGrid(
+                            columns: [GridItem(.adaptive(minimum: 72), spacing: AppTheme.Spacing.sm)],
+                            spacing: AppTheme.Spacing.sm
+                        ) {
                             ForEach([30, 90, 180, 365], id: \.self) { days in
                                 Button(action: { viewModel.unlockInDays = days }) {
                                     Text(String(format: locManager.t("capsule.days_short_fmt"), days))
@@ -278,8 +266,6 @@ struct CreateCapsuleSheet: View {
                         }
                     }
 
-                    Spacer()
-
                     // Create Button
                     Button(action: { viewModel.createCapsule() }) {
                         if viewModel.isCreating {
@@ -295,6 +281,7 @@ struct CreateCapsuleSheet: View {
                     .disabled(viewModel.isCreating)
                 }
                 .padding(AppTheme.Spacing.lg)
+                }
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

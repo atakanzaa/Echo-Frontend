@@ -13,33 +13,15 @@ struct AIInsightsView: View {
             AppTheme.Colors.background(colorScheme).ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Header
-                HStack {
-                    Button(action: {
+                AppScreenHeader(
+                    title: locManager.t("nav.ai_insights"),
+                    showBack: true,
+                    onBack: {
                         selectedTab = tabNavigation.goBack(from: selectedTab, fallback: "home")
-                    }) {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
-                    }
-                    HStack(spacing: 8) {
-                        Text(locManager.t("nav.ai_insights"))
-                            .font(AppTheme.Typography.heading3)
-                            .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
-                    }
-                    Spacer()
-                    Button(action: { isMenuOpen.toggle() }) {
-                        Image(systemName: "line.3.horizontal")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
-                    }
-                    .frame(width: 40, height: 40)
-                    .background(AppTheme.Colors.surface(colorScheme))
-                    .cornerRadius(AppTheme.Spacing.radiusFull)
-                }
-                .padding(.horizontal, AppTheme.Layout.screenHorizontal)
-                .padding(.top, AppTheme.Layout.headerTop)
-                .padding(.bottom, AppTheme.Layout.headerBottom)
+                    },
+                    showMenu: true,
+                    onMenu: { isMenuOpen.toggle() }
+                )
 
                 // Period Selector
                 Menu {

@@ -5,6 +5,7 @@ enum APIRouter {
     case register(RegisterBody)
     case login(LoginBody)
     case googleLogin(GoogleLoginBody)
+    case appleLogin(AppleLoginBody)
     case refreshToken(RefreshBody)
     case logout(LogoutBody)
     case forgotPassword(ForgotPasswordBody)
@@ -89,10 +90,6 @@ enum APIRouter {
     case dismissGoal(id: String)
     case deleteGoal(id: String)
 
-    // Admin
-    case getAIConfig
-    case updateAIConfig(AIConfigBody)
-
     // Health
     case health
 }
@@ -100,6 +97,12 @@ enum APIRouter {
 // MARK: — URLRequest Builder
 
 extension APIRouter {
+    private static let encoder: JSONEncoder = {
+        let encoder = JSONEncoder()
+        encoder.keyEncodingStrategy = .convertToSnakeCase
+        return encoder
+    }()
+
     func asURLRequest() throws -> URLRequest {
         let (path, method, body, isMultipart) = components()
 
@@ -141,24 +144,22 @@ extension APIRouter {
 
     // swiftlint:disable function_body_length cyclomatic_complexity
     private func components() -> (path: String, method: String, body: Data?, isMultipart: Bool) {
-        let encoder = JSONEncoder()
-        encoder.keyEncodingStrategy = .convertToSnakeCase
-
         switch self {
         // Auth
-        case .register(let b):       return ("/auth/register", "POST", try? encoder.encode(b), false)
-        case .login(let b):          return ("/auth/login",    "POST", try? encoder.encode(b), false)
-        case .googleLogin(let b):    return ("/auth/google",   "POST", try? encoder.encode(b), false)
-        case .refreshToken(let b):   return ("/auth/refresh",  "POST", try? encoder.encode(b), false)
-        case .logout(let b):         return ("/auth/logout",   "POST", try? encoder.encode(b), false)
-        case .forgotPassword(let b): return ("/auth/forgot-password", "POST", try? encoder.encode(b), false)
-        case .resetPassword(let b):  return ("/auth/reset-password",  "POST", try? encoder.encode(b), false)
-        case .changePassword(let b): return ("/auth/change-password", "POST", try? encoder.encode(b), false)
+        case .register(let b):       return ("/auth/register", "POST", try? Self.encoder.encode(b), false)
+        case .login(let b):          return ("/auth/login",    "POST", try? Self.encoder.encode(b), false)
+        case .googleLogin(let b):    return ("/auth/google",   "POST", try? Self.encoder.encode(b), false)
+        case .appleLogin(let b):     return ("/auth/apple",    "POST", try? Self.encoder.encode(b), false)
+        case .refreshToken(let b):   return ("/auth/refresh",  "POST", try? Self.encoder.encode(b), false)
+        case .logout(let b):         return ("/auth/logout",   "POST", try? Self.encoder.encode(b), false)
+        case .forgotPassword(let b): return ("/auth/forgot-password", "POST", try? Self.encoder.encode(b), false)
+        case .resetPassword(let b):  return ("/auth/reset-password",  "POST", try? Self.encoder.encode(b), false)
+        case .changePassword(let b): return ("/auth/change-password", "POST", try? Self.encoder.encode(b), false)
         case .me:                    return ("/auth/me",        "GET",  nil, false)
 
         // Users
         case .userStats:             return ("/users/me/stats",           "GET",   nil, false)
-        case .updateProfile(let b):  return ("/users/me",                 "PATCH", try? encoder.encode(b), false)
+        case .updateProfile(let b):  return ("/users/me",                 "PATCH", try? Self.encoder.encode(b), false)
         case .profileSummary:        return ("/users/me/profile-summary", "GET",   nil, false)
         case .detailedStats:         return ("/users/me/stats/detailed",  "GET",   nil, false)
 
@@ -188,7 +189,7 @@ extension APIRouter {
             return ("/community/feed?tab=\(tab.rawValue)&page=\(page)&size=\(size)", "GET", nil, false)
         case .getCommunityPost(let id):
             return ("/community/posts/\(id)", "GET", nil, false)
-        case .createCommunityPost(let b): return ("/community/posts", "POST", try? encoder.encode(b), false)
+        case .createCommunityPost(let b): return ("/community/posts", "POST", try? Self.encoder.encode(b), false)
         case .createCommunityPostWithImage: return ("/community/posts", "POST", nil, true)
         case .deleteCommunityPost(let id): return ("/community/posts/\(id)", "DELETE", nil, false)
         case .likeCommunityPost(let id):   return ("/community/posts/\(id)/like", "POST", nil, false)
@@ -196,7 +197,7 @@ extension APIRouter {
         case .getPostComments(let pid, let page, let size):
             return ("/community/posts/\(pid)/comments?page=\(page)&size=\(size)", "GET", nil, false)
         case .createComment(let pid, let b):
-            return ("/community/posts/\(pid)/comments", "POST", try? encoder.encode(b), false)
+            return ("/community/posts/\(pid)/comments", "POST", try? Self.encoder.encode(b), false)
         case .deleteComment(let pid, let cid):
             return ("/community/posts/\(pid)/comments/\(cid)", "DELETE", nil, false)
         case .followUser(let uid):
@@ -214,8 +215,9 @@ extension APIRouter {
 
         // Time Capsule
         case .getCapsules:           return ("/capsules",       "GET",    nil, false)
-        case .createCapsule(_, _, let body):
-            return ("/capsules", "POST", try? encoder.encode(body), false)
+        case .createCapsule(let audioData, let filename, let body):
+            let hasAudio = audioData != nil && filename != nil
+            return ("/capsules", "POST", hasAudio ? nil : try? Self.encoder.encode(body), hasAudio)
         case .getCapsule(let id):    return ("/capsules/\(id)", "GET",    nil, false)
         case .deleteCapsule(let id): return ("/capsules/\(id)", "DELETE", nil, false)
 
@@ -226,11 +228,11 @@ extension APIRouter {
             return ("/coach/sessions/\(sid)/end", "POST", nil, false)
         case .createCoachSession: return ("/coach/sessions", "POST", nil, false)
         case .createCoachSessionWithJournal(let journalId):
-            return ("/coach/sessions", "POST", try? encoder.encode(CreateCoachSessionBody(journalEntryId: journalId)), false)
+            return ("/coach/sessions", "POST", try? Self.encoder.encode(CreateCoachSessionBody(journalEntryId: journalId)), false)
         case .getCoachMessages(let sid):
             return ("/coach/sessions/\(sid)/messages", "GET", nil, false)
         case .sendCoachMessage(let sid, let b):
-            return ("/coach/sessions/\(sid)/messages", "POST", try? encoder.encode(b), false)
+            return ("/coach/sessions/\(sid)/messages", "POST", try? Self.encoder.encode(b), false)
         case .deleteCoachSession(let id):
             return ("/coach/sessions/\(id)", "DELETE", nil, false)
 
@@ -247,7 +249,7 @@ extension APIRouter {
         // Goals
         case .getActiveGoals:          return ("/goals", "GET", nil, false)
         case .getAllGoals:             return ("/goals/all", "GET", nil, false)
-        case .createGoal(let body):    return ("/goals", "POST", try? encoder.encode(body), false)
+        case .createGoal(let body):    return ("/goals", "POST", try? Self.encoder.encode(body), false)
         case .getGoalSuggestions(let sourceType, let journalEntryId, let sessionId):
             var items: [String] = []
             if let sourceType, !sourceType.isEmpty { items.append("sourceType=\(sourceType)") }
@@ -261,10 +263,6 @@ extension APIRouter {
         case .notCompletedGoal(let id):     return ("/goals/\(id)/not-completed", "PUT", nil, false)
         case .dismissGoal(let id):          return ("/goals/\(id)/dismiss", "PUT", nil, false)
         case .deleteGoal(let id):           return ("/goals/\(id)", "DELETE", nil, false)
-
-        // Admin
-        case .getAIConfig:          return ("/admin/ai-config", "GET",  nil, false)
-        case .updateAIConfig(let b): return ("/admin/ai-config", "POST", try? encoder.encode(b), false)
 
         // Health
         case .health: return ("/health", "GET", nil, false)
@@ -321,7 +319,7 @@ extension APIRouter {
         // Audio field
         data.append("--\(boundary)\(crlf)".utf8Data)
         data.append("Content-Disposition: form-data; name=\"audio\"; filename=\"\(filename)\"\(crlf)".utf8Data)
-        data.append("Content-Type: audio/m4a\(crlf)\(crlf)".utf8Data)
+        data.append("Content-Type: audio/mp4\(crlf)\(crlf)".utf8Data)
         data.append(audioData)
         data.append(crlf.utf8Data)
 
@@ -388,12 +386,12 @@ extension APIRouter {
         if let audioData = audioData, let filename = filename {
             data.append("--\(boundary)\(crlf)".utf8Data)
             data.append("Content-Disposition: form-data; name=\"audio\"; filename=\"\(filename)\"\(crlf)".utf8Data)
-            data.append("Content-Type: audio/m4a\(crlf)\(crlf)".utf8Data)
+            data.append("Content-Type: audio/mp4\(crlf)\(crlf)".utf8Data)
             data.append(audioData)
             data.append(crlf.utf8Data)
         }
 
-        if let json = try? JSONEncoder().encode(body) {
+        if let json = try? Self.encoder.encode(body) {
             data.append("--\(boundary)\(crlf)".utf8Data)
             data.append("Content-Disposition: form-data; name=\"metadata\"\(crlf)".utf8Data)
             data.append("Content-Type: application/json\(crlf)\(crlf)".utf8Data)

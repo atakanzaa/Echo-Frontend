@@ -5,9 +5,11 @@ struct HelpSupportView: View {
     @State private var expandedQuestion: String? = nil
     @Environment(\.colorScheme) var colorScheme
     @EnvironmentObject var locManager: LocalizationManager
-    @EnvironmentObject private var tabNavigation: TabNavigationManager
 
     @State private var searchText = ""
+    @State private var activeWebDestination: WebDestination?
+    @State private var showMailFallback = false
+
     private var faqs: [(id: String, q: String, a: String)] {
         [
             (id: "1", q: locManager.t("help.faq1_q"), a: locManager.t("help.faq1_a")),
@@ -19,9 +21,12 @@ struct HelpSupportView: View {
         ]
     }
 
-    var filteredFaqs: [(id: String, q: String, a: String)] {
+    private var filteredFaqs: [(id: String, q: String, a: String)] {
         searchText.isEmpty ? faqs :
-            faqs.filter { $0.q.localizedCaseInsensitiveContains(searchText) || $0.a.localizedCaseInsensitiveContains(searchText) }
+            faqs.filter {
+                $0.q.localizedCaseInsensitiveContains(searchText) ||
+                $0.a.localizedCaseInsensitiveContains(searchText)
+            }
     }
 
     var body: some View {
@@ -29,28 +34,14 @@ struct HelpSupportView: View {
             AppTheme.Colors.background(colorScheme).ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Header
-                HStack {
-                    Button(action: {
-                        selectedTab = tabNavigation.goBack(from: selectedTab, fallback: "profile")
-                    }) {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
-                    }
-                    Spacer()
-                    Text(locManager.t("nav.help_support"))
-                        .font(AppTheme.Typography.heading3)
-                        .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
-                    Spacer()
-                    Color.clear.frame(width: 24, height: 24)
-                }
-                .padding(.horizontal, AppTheme.Spacing.md)
-                .padding(.vertical, AppTheme.Spacing.md)
+                DetailScreenHeader(
+                    title: locManager.t("nav.help_support"),
+                    selectedTab: $selectedTab,
+                    fallback: "settings"
+                )
 
                 ScrollView {
                     VStack(spacing: AppTheme.Spacing.lg) {
-                        // Hero
                         VStack(spacing: AppTheme.Spacing.sm) {
                             ZStack {
                                 Circle()
@@ -60,9 +51,11 @@ struct HelpSupportView: View {
                                     .font(.system(size: 40))
                                     .foregroundColor(AppTheme.Colors.accent)
                             }
+
                             Text(locManager.t("help.how_can_we_help"))
                                 .font(AppTheme.Typography.heading2)
                                 .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
+
                             Text(locManager.t("help.find_answers"))
                                 .font(AppTheme.Typography.caption)
                                 .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
@@ -70,11 +63,11 @@ struct HelpSupportView: View {
                         }
                         .padding(.vertical, AppTheme.Spacing.sm)
 
-                        // Search bar
                         HStack(spacing: AppTheme.Spacing.sm) {
                             Image(systemName: "magnifyingglass")
                                 .font(.system(size: 14))
                                 .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
+
                             TextField(locManager.t("help.search_placeholder"), text: $searchText)
                                 .font(AppTheme.Typography.body)
                                 .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
@@ -85,7 +78,6 @@ struct HelpSupportView: View {
                         .cornerRadius(AppTheme.Spacing.radiusMd)
                         .padding(.horizontal, AppTheme.Spacing.md)
 
-                        // FAQ
                         VStack(alignment: .leading, spacing: 10) {
                             Text(locManager.t("help.frequently_asked"))
                                 .font(AppTheme.Typography.label).fontWeight(.bold)
@@ -94,20 +86,28 @@ struct HelpSupportView: View {
                                 .padding(.horizontal, AppTheme.Spacing.md)
 
                             VStack(spacing: 0) {
-                                ForEach(Array(filteredFaqs.enumerated()), id: \.element.id) { index, faq in
-                                    if index > 0 {
-                                        Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
-                                    }
-                                    FAQRow(
-                                        question: faq.q,
-                                        answer: faq.a,
-                                        isExpanded: expandedQuestion == faq.id,
-                                        onTap: {
-                                            withAnimation(.easeInOut(duration: 0.2)) {
-                                                expandedQuestion = expandedQuestion == faq.id ? nil : faq.id
-                                            }
-                                        }
+                                if filteredFaqs.isEmpty {
+                                    EmptySupportSearchView(
+                                        title: locManager.t("help.no_results_title"),
+                                        subtitle: locManager.t("help.no_results_subtitle")
                                     )
+                                } else {
+                                    ForEach(Array(filteredFaqs.enumerated()), id: \.element.id) { index, faq in
+                                        if index > 0 {
+                                            Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
+                                        }
+
+                                        FAQRow(
+                                            question: faq.q,
+                                            answer: faq.a,
+                                            isExpanded: expandedQuestion == faq.id,
+                                            onTap: {
+                                                withAnimation(.easeInOut(duration: 0.2)) {
+                                                    expandedQuestion = expandedQuestion == faq.id ? nil : faq.id
+                                                }
+                                            }
+                                        )
+                                    }
                                 }
                             }
                             .padding(AppTheme.Spacing.md)
@@ -116,9 +116,8 @@ struct HelpSupportView: View {
                             .padding(.horizontal, AppTheme.Spacing.md)
                         }
 
-                        // Contact options
                         VStack(alignment: .leading, spacing: 10) {
-                            Text(locManager.t("help.contact_us"))
+                            Text(locManager.t("help.quick_actions"))
                                 .font(AppTheme.Typography.label).fontWeight(.bold)
                                 .tracking(0.6)
                                 .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
@@ -128,21 +127,51 @@ struct HelpSupportView: View {
                                 ContactRow(
                                     icon: "envelope.fill",
                                     iconColor: AppTheme.Colors.accent,
-                                    title: locManager.t("help.email_support"),
-                                    subtitle: "support@echo-app.com",
+                                    title: locManager.t("settings.contact_support"),
+                                    subtitle: locManager.t("settings.contact_support_sub"),
                                     action: {
-                                        if let url = URL(string: "mailto:support@echo-app.com") {
-                                            UIApplication.shared.open(url)
+                                        if !ExternalNavigator.openSupportAction(.contactSupport, localization: locManager) {
+                                            showMailFallback = true
                                         }
                                     }
                                 )
+
                                 Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
+
+                                ContactRow(
+                                    icon: "exclamationmark.bubble.fill",
+                                    iconColor: AppTheme.Colors.destructive,
+                                    title: locManager.t("settings.report_problem"),
+                                    subtitle: locManager.t("settings.report_problem_sub"),
+                                    action: {
+                                        if !ExternalNavigator.openSupportAction(.reportProblem, localization: locManager) {
+                                            showMailFallback = true
+                                        }
+                                    }
+                                )
+
+                                Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
+
+                                ContactRow(
+                                    icon: "bubble.left.and.text.bubble.right.fill",
+                                    iconColor: AppTheme.Colors.moodVeryPositive,
+                                    title: locManager.t("settings.send_feedback"),
+                                    subtitle: locManager.t("settings.send_feedback_sub"),
+                                    action: {
+                                        if !ExternalNavigator.openSupportAction(.sendFeedback, localization: locManager) {
+                                            showMailFallback = true
+                                        }
+                                    }
+                                )
+
+                                Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
+
                                 ContactRow(
                                     icon: "star.fill",
                                     iconColor: AppTheme.Colors.gold,
                                     title: locManager.t("help.rate_echo"),
                                     subtitle: locManager.t("help.rate_echo_sub"),
-                                    action: {}
+                                    action: { ExternalNavigator.requestAppReview() }
                                 )
                             }
                             .padding(AppTheme.Spacing.md)
@@ -151,14 +180,29 @@ struct HelpSupportView: View {
                             .padding(.horizontal, AppTheme.Spacing.md)
                         }
 
-                        Text("Echo v2.4.0")
-                            .font(AppTheme.Typography.micro)
-                            .foregroundColor(AppTheme.Colors.textDisabled(colorScheme))
-                            .padding(.bottom, AppTheme.Spacing.xxl)
+                        AppVersionFooter()
                     }
                     .padding(.vertical, AppTheme.Spacing.sm)
                 }
             }
+        }
+        .sheet(item: $activeWebDestination) { destination in
+            LegalWebViewSheet(destination: destination)
+        }
+        .confirmationDialog(
+            locManager.t("support.mail_unavailable_title"),
+            isPresented: $showMailFallback,
+            titleVisibility: .visible
+        ) {
+            Button(locManager.t("support.copy_email")) {
+                ExternalNavigator.copySupportEmail()
+            }
+            Button(locManager.t("about.website")) {
+                activeWebDestination = .website
+            }
+            Button(locManager.t("common.cancel"), role: .cancel) {}
+        } message: {
+            Text(locManager.t("support.mail_unavailable_message", AppConstants.Links.supportEmail))
         }
     }
 }
@@ -213,6 +257,7 @@ private struct ContactRow: View {
                     .frame(width: 32, height: 32)
                     .background(iconColor.opacity(0.15))
                     .cornerRadius(AppTheme.Spacing.radiusSm)
+
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
                         .font(AppTheme.Typography.body).fontWeight(.semibold)
@@ -221,12 +266,38 @@ private struct ContactRow: View {
                         .font(AppTheme.Typography.caption)
                         .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
                 }
+
                 Spacer()
+
                 Image(systemName: "chevron.right")
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
             }
+            .frame(maxWidth: .infinity, minHeight: AppTheme.Layout.rowMinHeight)
             .padding(.vertical, 4)
         }
+    }
+}
+
+private struct EmptySupportSearchView: View {
+    let title: String
+    let subtitle: String
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        VStack(spacing: AppTheme.Spacing.xs) {
+            Text(title)
+                .font(AppTheme.Typography.caption)
+                .fontWeight(.semibold)
+                .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
+
+            Text(subtitle)
+                .font(AppTheme.Typography.label)
+                .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, AppTheme.Spacing.lg)
     }
 }

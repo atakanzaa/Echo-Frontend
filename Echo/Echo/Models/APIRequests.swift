@@ -20,6 +20,14 @@ struct GoogleLoginBody: Encodable {
     let language: String
 }
 
+struct AppleLoginBody: Encodable {
+    let identityToken: String
+    let authorizationCode: String
+    let displayName: String?
+    let timezone: String
+    let language: String
+}
+
 struct RefreshBody: Encodable {
     let refreshToken: String
 }
@@ -88,10 +96,4 @@ struct CreateCapsuleBody: Encodable {
     let contentText: String?
     let contentType: CapsuleContentType
     let unlockAt:    String   // ISO 8601
-}
-
-// MARK: — Admin
-
-struct AIConfigBody: Encodable {
-    let provider: String   // "openai" | "gemini" | "claude"
 }

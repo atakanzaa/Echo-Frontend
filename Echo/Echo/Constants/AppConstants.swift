@@ -1,10 +1,17 @@
 import Foundation
 
 enum AppConstants {
+    enum Brand {
+        static let companyDisplayName = "Echo"
+        static let websiteURL = URL(string: "https://echojournal.net")!
+    }
+
     enum API {
         #if DEBUG
-        static let baseURL = "http://localhost:8080/api/v1"
-        static let mediaBaseURL = "http://localhost:8080"
+        // LAN IP of the Mac running the backend — update when switching networks.
+        // Get with: `ipconfig getifaddr en0` on the Mac.
+        static let baseURL = "http://192.168.0.24:8080/api/v1"
+        static let mediaBaseURL = "http://192.168.0.24:8080"
         #else
         static let baseURL = "https://echojournal.net/api/v1"
         static let mediaBaseURL = "https://echojournal.net"
@@ -22,9 +29,14 @@ enum AppConstants {
     }
 
     enum Links {
-        static let terms = URL(string: "https://echojournal.net/terms")!
-        static let privacy = URL(string: "https://echojournal.net/privacy")!
+        static let website = Brand.websiteURL
         static let supportEmail = "support@echojournal.net"
+        static let appStoreID: String? = nil
+
+        static var appStoreReviewURL: URL? {
+            guard let appStoreID else { return nil }
+            return URL(string: "https://apps.apple.com/app/id\(appStoreID)?action=write-review")
+        }
     }
 
     enum Timeout {
@@ -51,9 +63,12 @@ enum AppConstants {
     }
 
     enum AppInfo {
+        static let appDisplayName = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String ?? Brand.companyDisplayName
         static let shortVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"
         static let buildNumber = Bundle.main.object(forInfoDictionaryKey: kCFBundleVersionKey as String) as? String ?? "1"
+        static let bundleIdentifier = Bundle.main.bundleIdentifier ?? "Yel.Echo"
         static let shortVersionLabel = "v\(shortVersion)"
         static let fullVersionLabel = "\(shortVersion) (\(buildNumber))"
+        static let footerVersionLabel = "\(appDisplayName) \(fullVersionLabel)"
     }
 }

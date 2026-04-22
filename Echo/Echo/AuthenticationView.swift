@@ -10,6 +10,7 @@ struct AuthenticationView: View {
     @State private var showPassword = false
     @State private var agreeToTerms = false
     @State private var showForgotPassword = false
+    @State private var activeLegalSheet: NativeLegalDestination?
 
     @StateObject private var viewModel = AuthViewModel()
     @EnvironmentObject private var appState: AppState
@@ -27,7 +28,7 @@ struct AuthenticationView: View {
             )
             .ignoresSafeArea()
 
-            ScrollView(showsIndicators: false) {
+            KeyboardAwareFormScroll {
                 VStack(spacing: AppTheme.Spacing.lg) {
                     VStack(spacing: AppTheme.Spacing.md) {
                         ZStack {
@@ -95,6 +96,7 @@ struct AuthenticationView: View {
                                 .cornerRadius(AppTheme.Spacing.radiusFull)
                             }
                             .disabled(viewModel.isLoading || !agreeToTerms)
+                            .opacity(viewModel.isLoading || !agreeToTerms ? 0.65 : 1)
                         } else {
                             Button {
                                 Task { await viewModel.login(email: email, password: password) }
@@ -109,6 +111,7 @@ struct AuthenticationView: View {
                                 .cornerRadius(AppTheme.Spacing.radiusFull)
                             }
                             .disabled(viewModel.isLoading)
+                            .opacity(viewModel.isLoading ? 0.65 : 1)
 
                             Button(action: { showForgotPassword = true }) {
                                 Text(locManager.t("auth.forgot_password"))
@@ -118,7 +121,9 @@ struct AuthenticationView: View {
                             .frame(maxWidth: .infinity, alignment: .trailing)
                         }
 
-                        Button(action: {}) {
+                        Button {
+                            Task { await viewModel.loginWithApple() }
+                        } label: {
                             HStack(spacing: 10) {
                                 Image(systemName: "applelogo").font(AppTheme.Typography.bodyEm)
                                 Text(locManager.t("auth.continue_apple")).font(AppTheme.Typography.bodyEm)
@@ -128,6 +133,7 @@ struct AuthenticationView: View {
                             .foregroundColor(.black)
                             .cornerRadius(AppTheme.Spacing.radiusFull)
                         }
+                        .disabled(viewModel.isLoading)
 
                         Button {
                             Task { await viewModel.loginWithGoogle() }
@@ -161,9 +167,17 @@ struct AuthenticationView: View {
                     }
 
                     HStack(spacing: AppTheme.Spacing.sm) {
-                        Button(action: {}) { Text(locManager.t("auth.terms")).font(AppTheme.Typography.micro).foregroundColor(.white.opacity(0.3)) }
+                        Button(action: { activeLegalSheet = .terms }) {
+                            Text(locManager.t("auth.terms"))
+                                .font(AppTheme.Typography.micro)
+                                .foregroundColor(.white.opacity(0.3))
+                        }
                         Text("•").foregroundColor(.white.opacity(0.2))
-                        Button(action: {}) { Text(locManager.t("auth.privacy")).font(AppTheme.Typography.micro).foregroundColor(.white.opacity(0.3)) }
+                        Button(action: { activeLegalSheet = .privacy }) {
+                            Text(locManager.t("auth.privacy"))
+                                .font(AppTheme.Typography.micro)
+                                .foregroundColor(.white.opacity(0.3))
+                        }
                     }
                     .padding(.bottom, AppTheme.Spacing.xxl)
                 }
@@ -171,6 +185,10 @@ struct AuthenticationView: View {
         }
         .sheet(isPresented: $showForgotPassword) {
             ForgotPasswordView()
+                .environmentObject(locManager)
+        }
+        .sheet(item: $activeLegalSheet) { destination in
+            NativeLegalSheet(destination: destination)
                 .environmentObject(locManager)
         }
     }
@@ -237,21 +255,61 @@ struct AuthenticationView: View {
     }
 
     private var termsRow: some View {
-        HStack(spacing: AppTheme.Spacing.sm) {
+        HStack(alignment: .top, spacing: AppTheme.Spacing.sm) {
             Button(action: { agreeToTerms.toggle() }) {
                 Image(systemName: agreeToTerms ? "checkmark.square.fill" : "square")
-                    .font(.system(size: 16))
+                    .font(.system(size: 18))
                     .foregroundColor(AppTheme.Colors.accent)
             }
+            .frame(width: AppTheme.Layout.compactIconButtonSize, height: AppTheme.Layout.compactIconButtonSize, alignment: .top)
 
-            (Text(locManager.t("auth.i_agree_to_the"))
-             + Text(locManager.t("auth.terms")).foregroundColor(AppTheme.Colors.accent)
-             + Text(locManager.t("auth.and"))
-             + Text(locManager.t("auth.privacy_policy")).foregroundColor(AppTheme.Colors.accent))
+            VStack(alignment: .leading, spacing: 4) {
+                Text(locManager.t("auth.i_agree_to_the"))
+                    .font(AppTheme.Typography.caption)
+                    .foregroundColor(.white.opacity(0.5))
+                    .fixedSize(horizontal: false, vertical: true)
+
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 4) {
+                        termsLink
+                        termsAndText
+                        privacyLink
+                    }
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(spacing: 4) {
+                            termsLink
+                            termsAndText
+                        }
+                        privacyLink
+                    }
+                }
+            }
+        }
+    }
+
+    private var termsLink: some View {
+        Button(action: { activeLegalSheet = .terms }) {
+            Text(locManager.t("auth.terms"))
+                .font(AppTheme.Typography.caption)
+                .fontWeight(.semibold)
+                .foregroundColor(AppTheme.Colors.accent)
+        }
+    }
+
+    private var termsAndText: some View {
+        Text(locManager.t("auth.and"))
             .font(AppTheme.Typography.caption)
             .foregroundColor(.white.opacity(0.5))
+    }
 
-            Spacer()
+    private var privacyLink: some View {
+        Button(action: { activeLegalSheet = .privacy }) {
+            Text(locManager.t("auth.privacy_policy"))
+                .font(AppTheme.Typography.caption)
+                .fontWeight(.semibold)
+                .foregroundColor(AppTheme.Colors.accent)
+                .lineLimit(2)
         }
     }
 }

@@ -32,6 +32,11 @@ struct ContentView: View {
                 else if selectedTab == "notifications"  { NotificationsView(selectedTab: $selectedTab) }
                 else if selectedTab == "notification_list" { NotificationListView(selectedTab: $selectedTab) }
                 else if selectedTab == "help"           { HelpSupportView(selectedTab: $selectedTab) }
+                else if selectedTab == "about-app"      { AboutAppView(selectedTab: $selectedTab) }
+                else if selectedTab == "data-privacy"   { DataAndAIUsageView(selectedTab: $selectedTab) }
+                else if selectedTab == "terms-of-use"   { TermsOfUseView(selectedTab: $selectedTab) }
+                else if selectedTab == "privacy-policy" { PrivacyPolicyView(selectedTab: $selectedTab) }
+                else if selectedTab == "acknowledgements" { AcknowledgementsView(selectedTab: $selectedTab) }
                 else if selectedTab == "ai-profile"    { EchoKnowsYouView(selectedTab: $selectedTab) }
                 else if selectedTab == "edit-profile"   { EditProfileView(selectedTab: $selectedTab) }
                 else if selectedTab == "change-password" { ChangePasswordView(selectedTab: $selectedTab) }

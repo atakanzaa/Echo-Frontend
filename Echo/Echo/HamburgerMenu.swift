@@ -176,7 +176,7 @@ struct HamburgerMenuView: View {
                 Spacer(minLength: 0)
 
                 // Version
-                Text("Echo v2.4.0")
+                Text(AppConstants.AppInfo.footerVersionLabel)
                     .font(AppTheme.Typography.micro)
                     .foregroundColor(Color.white.opacity(0.2))
                     .padding(.bottom, AppTheme.Spacing.lg)

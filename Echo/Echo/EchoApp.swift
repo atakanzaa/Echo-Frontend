@@ -16,6 +16,8 @@ struct EchoApp: App {
     @StateObject private var appState = AppState.shared
     @StateObject private var locManager = LocalizationManager.shared
     @StateObject private var notificationVM = NotificationViewModel.shared
+    @Environment(\.scenePhase) private var scenePhase
+    @AppStorage("privateMode") private var privateMode = false
 
     var body: some Scene {
         WindowGroup {
@@ -44,16 +46,52 @@ struct EchoApp: App {
                     }
                     .transition(.opacity)
                 }
+
+                if shouldShowPrivacyCover {
+                    PrivacyCoverView()
+                        .transition(.opacity)
+                        .zIndex(100)
+                }
             }
             .environmentObject(appState)
             .environmentObject(locManager)
             .environmentObject(notificationVM)
+            .privacySensitive(appState.isAuthenticated || privateMode)
             .animation(.easeInOut(duration: 0.3), value: appState.isAuthenticated)
             .animation(.easeInOut(duration: 0.2), value: appState.isRestoringSession)
+            .animation(.easeInOut(duration: 0.12), value: shouldShowPrivacyCover)
             .onOpenURL { url in
 #if canImport(GoogleSignIn)
                 GIDSignIn.sharedInstance.handle(url)
 #endif
+            }
+        }
+    }
+
+    private var shouldShowPrivacyCover: Bool {
+        scenePhase != .active
+    }
+}
+
+private struct PrivacyCoverView: View {
+    var body: some View {
+        ZStack {
+            Color(red: 0.078, green: 0.039, blue: 0.114)
+                .ignoresSafeArea()
+
+            VStack(spacing: 12) {
+                Circle()
+                    .fill(AppTheme.Gradients.accent)
+                    .frame(width: 72, height: 72)
+                    .overlay(
+                        Image(systemName: "lock.fill")
+                            .font(.system(size: 24, weight: .semibold))
+                            .foregroundColor(.white)
+                    )
+
+                Text(AppConstants.Brand.companyDisplayName)
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundColor(.white)
             }
         }
     }

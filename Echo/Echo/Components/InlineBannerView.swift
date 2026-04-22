@@ -23,6 +23,7 @@ struct InlineBannerView: View {
     let message: String
     var type: BannerType = .info
     var onDismiss: (() -> Void)? = nil
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         HStack(spacing: AppTheme.Spacing.sm) {
@@ -32,7 +33,7 @@ struct InlineBannerView: View {
 
             Text(message)
                 .font(AppTheme.Typography.caption)
-                .foregroundColor(AppTheme.Colors.textSecondary(.dark))
+                .foregroundColor(AppTheme.Colors.textSecondary(colorScheme))
 
             Spacer(minLength: 0)
 
@@ -40,7 +41,7 @@ struct InlineBannerView: View {
                 Button(action: onDismiss) {
                     Image(systemName: "xmark")
                         .font(.system(size: 11, weight: .semibold))
-                        .foregroundColor(AppTheme.Colors.textMuted(.dark))
+                        .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
                 }
             }
         }

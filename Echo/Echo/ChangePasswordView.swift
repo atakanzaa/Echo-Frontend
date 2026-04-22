@@ -17,25 +17,15 @@ struct ChangePasswordView: View {
             AppTheme.Colors.background(colorScheme).ignoresSafeArea()
 
             VStack(spacing: 0) {
-                HStack {
-                    Button(action: {
+                AppScreenHeader(
+                    title: locManager.t("settings.change_password"),
+                    showBack: true,
+                    onBack: {
                         selectedTab = tabNavigation.goBack(from: selectedTab, fallback: "settings")
-                    }) {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
                     }
-                    Spacer()
-                    Text(locManager.t("settings.change_password"))
-                        .font(AppTheme.Typography.heading3)
-                        .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
-                    Spacer()
-                    Color.clear.frame(width: 16, height: 16)
-                }
-                .padding(.horizontal, AppTheme.Spacing.md)
-                .padding(.vertical, AppTheme.Spacing.md)
+                )
 
-                ScrollView(showsIndicators: false) {
+                KeyboardAwareFormScroll {
                     VStack(spacing: AppTheme.Spacing.lg) {
                         field(title: locManager.t("auth.current_password"), placeholder: locManager.t("auth.current_password_placeholder"), text: $currentPassword)
                         field(title: locManager.t("auth.new_password"), placeholder: locManager.t("auth.new_password_placeholder"), text: $newPassword)
@@ -64,11 +54,7 @@ struct ChangePasswordView: View {
                                         .font(AppTheme.Typography.bodyEm)
                                 }
                             }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .background(AppTheme.Gradients.accent)
-                            .foregroundColor(.white)
-                            .cornerRadius(AppTheme.Spacing.radiusFull)
+                            .echoPrimaryButton(colorScheme, enabled: !viewModel.isLoading)
                         }
                         .disabled(viewModel.isLoading)
                     }
@@ -85,10 +71,7 @@ struct ChangePasswordView: View {
                 .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
 
             SecureField(placeholder, text: text)
-                .padding(.horizontal, AppTheme.Spacing.md)
-                .padding(.vertical, AppTheme.Spacing.sm + 4)
-                .background(AppTheme.Colors.surfaceElevated(colorScheme))
-                .cornerRadius(AppTheme.Spacing.radiusMd)
+                .echoInputField(colorScheme)
         }
     }
 

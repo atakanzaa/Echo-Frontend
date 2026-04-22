@@ -42,8 +42,15 @@ final class TimeCapsuleViewModel: NSObject, ObservableObject, AVAudioRecorderDel
     private func startRecording() {
         let session = AVAudioSession.sharedInstance()
         do {
+            // Deactivate first to clear stale category from Google Sign-In's
+            // ASWebAuthenticationSession (leaves session in .soloAmbient with no mic).
+            try? session.setActive(false, options: [.notifyOthersOnDeactivation])
             try session.setCategory(.playAndRecord, mode: .default, options: .defaultToSpeaker)
             try session.setActive(true)
+            guard !session.currentRoute.inputs.isEmpty else {
+                throw NSError(domain: "EchoRecording", code: -1,
+                              userInfo: [NSLocalizedDescriptionKey: "No audio input available"])
+            }
             let url = FileManager.default.temporaryDirectory
                 .appendingPathComponent("capsule_\(Date().timeIntervalSince1970).m4a")
             audioFileURL = url
@@ -83,9 +90,24 @@ final class TimeCapsuleViewModel: NSObject, ObservableObject, AVAudioRecorderDel
 
         Task {
             do {
-                let capsule: APITimeCapsule = try await APIClient.shared.requestWithAutoRefresh(
-                    .createCapsule(audioData: nil, filename: nil, body: body)
-                )
+                let capsule: APITimeCapsule
+                if let audioFileURL {
+                    let audioData = try Data(contentsOf: audioFileURL)
+                    guard !audioData.isEmpty else {
+                        throw NetworkError.invalidResponse
+                    }
+                    capsule = try await APIClient.shared.uploadWithAutoRefresh(
+                        .createCapsule(
+                            audioData: audioData,
+                            filename: audioFileURL.lastPathComponent,
+                            body: body
+                        )
+                    )
+                } else {
+                    capsule = try await APIClient.shared.requestWithAutoRefresh(
+                        .createCapsule(audioData: nil, filename: nil, body: body)
+                    )
+                }
                 capsules.insert(capsule, at: 0)
                 isCreating       = false
                 showCreateSheet  = false

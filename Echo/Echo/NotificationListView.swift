@@ -12,30 +12,23 @@ struct NotificationListView: View {
             AppTheme.Colors.background(colorScheme).ignoresSafeArea()
 
             VStack(spacing: 0) {
-                HStack {
-                    Button(action: {
+                AppScreenHeader(
+                    title: locManager.t("notifications.title"),
+                    showBack: true,
+                    onBack: {
                         selectedTab = tabNavigation.goBack(from: selectedTab, fallback: "profile")
-                    }) {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
                     }
-                    Spacer()
-                    Text(locManager.t("notifications.title"))
-                        .font(AppTheme.Typography.heading3)
-                        .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
-                    Spacer()
-
+                ) {
                     Button(action: {
                         Task { await notificationVM.markAllRead() }
                     }) {
                         Text(locManager.t("notifications.mark_all_read"))
                             .font(AppTheme.Typography.micro)
                             .foregroundColor(AppTheme.Colors.accent)
+                            .lineLimit(2)
+                            .multilineTextAlignment(.trailing)
                     }
                 }
-                .padding(.horizontal, AppTheme.Spacing.md)
-                .padding(.vertical, AppTheme.Spacing.md)
 
                 if notificationVM.notifications.isEmpty {
                     VStack(spacing: AppTheme.Spacing.sm) {

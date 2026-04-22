@@ -13,6 +13,7 @@ final class APIClient {
     private init() {}
 
     private let session = URLSession.shared
+    private var refreshInFlight: Task<Void, Error>?
 
     static let decoder: JSONDecoder = {
         let d = JSONDecoder()
@@ -165,12 +166,6 @@ extension APIClient {
             Log.network.info("Refreshing token after unauthorized response")
             try await refreshTokens()
             return try await request(endpoint)
-        } catch NetworkError.forbidden {
-            // Some auth failures are surfaced as 403 by backend/security chain.
-            // Try a single token refresh before failing the request.
-            Log.network.info("Refreshing token after forbidden response")
-            try await refreshTokens()
-            return try await request(endpoint)
         }
     }
 
@@ -181,14 +176,25 @@ extension APIClient {
             Log.network.info("Refreshing token before retrying upload")
             try await refreshTokens()
             return try await upload(endpoint)
-        } catch NetworkError.forbidden {
-            Log.network.info("Refreshing token before retrying upload after forbidden")
-            try await refreshTokens()
-            return try await upload(endpoint)
         }
     }
 
     private func refreshTokens() async throws {
+        if let refreshInFlight {
+            return try await refreshInFlight.value
+        }
+
+        let task = Task { [weak self] in
+            guard let self else { throw NetworkError.unauthorized }
+            try await self.performTokenRefresh()
+        }
+        refreshInFlight = task
+        defer { refreshInFlight = nil }
+
+        try await task.value
+    }
+
+    private func performTokenRefresh() async throws {
         guard let rawRefresh = TokenManager.shared.refreshToken() else {
             await AppState.shared.signOut()
             throw NetworkError.unauthorized

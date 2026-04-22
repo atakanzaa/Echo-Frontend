@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 import AVFoundation
+import OSLog
 
 @MainActor
 final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
@@ -62,9 +63,20 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
         transcript   = ""
         let session  = AVAudioSession.sharedInstance()
         do {
+            // Deactivate first to clear any stale category (e.g. .soloAmbient left over
+            // from ASWebAuthenticationSession used by Google Sign-In). Without this,
+            // setCategory is silently ignored on an already-active session and the
+            // recorder captures near-silence.
+            try? session.setActive(false, options: [.notifyOthersOnDeactivation])
             try session.setCategory(.playAndRecord, mode: .default,
                                     options: [.defaultToSpeaker, .allowBluetoothHFP, .allowBluetoothA2DP])
             try session.setActive(true)
+            guard !session.currentRoute.inputs.isEmpty else {
+                throw NSError(domain: "EchoRecording", code: -1,
+                              userInfo: [NSLocalizedDescriptionKey: "No audio input available"])
+            }
+            let inputRoute = session.currentRoute.inputs.map { $0.portType.rawValue }.joined(separator: ",")
+            let outputRoute = session.currentRoute.outputs.map { $0.portType.rawValue }.joined(separator: ",")
 
             let url = FileManager.default.temporaryDirectory
                 .appendingPathComponent("echo_\(Date().timeIntervalSince1970).m4a")
@@ -74,11 +86,13 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
                 AVFormatIDKey:            Int(kAudioFormatMPEG4AAC),
                 AVSampleRateKey:          44100,
                 AVNumberOfChannelsKey:    1,
+                AVEncoderBitRateKey:      64_000,
                 AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
             ]
             recorder = try AVAudioRecorder(url: url, settings: settings)
             recorder?.delegate = self
             recorder?.record()
+            Log.record.info("Journal recording started routeIn=\(inputRoute) routeOut=\(outputRoute)")
 
             isRecording    = true
             elapsedSeconds = 0
@@ -119,6 +133,12 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
             setStatus("voice.status.ready")
             return
         }
+
+        let session = AVAudioSession.sharedInstance()
+        let inputRoute = session.currentRoute.inputs.map { $0.portType.rawValue }.joined(separator: ",")
+        let outputRoute = session.currentRoute.outputs.map { $0.portType.rawValue }.joined(separator: ",")
+        let bytesPerSecond = data.count / max(elapsedSeconds, 1)
+        Log.record.info("Journal upload prepared filename=\(url.lastPathComponent) bytes=\(data.count) durationSeconds=\(self.elapsedSeconds) bytesPerSecond=\(bytesPerSecond) routeIn=\(inputRoute) routeOut=\(outputRoute)")
 
         isUploading = true
         let isoNow  = ISO8601DateFormatter().string(from: Date())

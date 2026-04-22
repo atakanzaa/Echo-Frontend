@@ -14,16 +14,7 @@ struct CommunityView: View {
             AppTheme.Colors.background(colorScheme).ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Header
-                HStack {
-                    Text(locManager.t("nav.community"))
-                        .font(AppTheme.Typography.heading3)
-                        .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
-                    Spacer()
-                }
-                .padding(.horizontal, AppTheme.Layout.screenHorizontal)
-                .padding(.top, AppTheme.Layout.headerTop)
-                .padding(.bottom, AppTheme.Layout.headerBottom)
+                AppScreenHeader(title: locManager.t("nav.community"))
 
                 // Feed pill tabs — gradient active
                 HStack(spacing: AppTheme.Spacing.sm) {
@@ -96,7 +87,7 @@ struct CommunityView: View {
                             .shadow(color: AppTheme.Colors.accent.opacity(0.5), radius: 16, y: 6)
                     }
                     .padding(.trailing, AppTheme.Layout.screenHorizontal)
-                    .padding(.bottom, 90)
+                    .padding(.bottom, AppTheme.Layout.bottomFloatingOffset)
                 }
             }
 
@@ -157,7 +148,6 @@ struct CommunityPostCard: View {
     @EnvironmentObject var locManager: LocalizationManager
     @Environment(\.colorScheme) var colorScheme
 
-    private static let serverBase = "http://localhost:8080"
     private let previewCommentCount = 3
     private let expandedCommentsMaxHeight: CGFloat = 220
 
@@ -232,7 +222,7 @@ struct CommunityPostCard: View {
 
             // Image
             if let imageUrl = post.imageUrl,
-               let url = URL(string: imageUrl.hasPrefix("http") ? imageUrl : Self.serverBase + imageUrl) {
+               let url = AppConstants.API.mediaURL(for: imageUrl) {
                 AsyncImage(url: url) { phase in
                     switch phase {
                     case .success(let image):

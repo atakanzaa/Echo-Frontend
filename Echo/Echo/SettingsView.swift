@@ -1,15 +1,14 @@
 import SwiftUI
+import UIKit
 
 struct SettingsView: View {
     @Binding var selectedTab: String
     @EnvironmentObject var locManager: LocalizationManager
     @AppStorage("darkMode") private var darkMode = true
-    @State private var notificationsEnabled = true
-    @State private var dailyReminder = true
-    @State private var privateMode = false
-    @State private var soundEnabled = true
-    @State private var showDeleteAlert = false
+    @AppStorage("privateMode") private var privateMode = false
     @State private var isMenuOpen = false
+    @State private var activeWebDestination: WebDestination?
+    @State private var showMailFallback = false
     @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
@@ -17,25 +16,11 @@ struct SettingsView: View {
             AppTheme.Colors.background(colorScheme).ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Header
-                HStack {
-                    Text(locManager.t("settings.title"))
-                        .font(AppTheme.Typography.heading3)
-                        .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
-                    Spacer()
-
-                    Button(action: { isMenuOpen.toggle() }) {
-                        Image(systemName: "line.3.horizontal")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
-                    }
-                    .frame(width: 40, height: 40)
-                    .background(AppTheme.Colors.surface(colorScheme))
-                    .cornerRadius(AppTheme.Spacing.radiusFull)
-                }
-                .padding(.horizontal, AppTheme.Layout.screenHorizontal)
-                .padding(.top, AppTheme.Layout.headerTop)
-                .padding(.bottom, AppTheme.Layout.headerBottom)
+                AppScreenHeader(
+                    title: locManager.t("settings.title"),
+                    showMenu: true,
+                    onMenu: { isMenuOpen.toggle() }
+                )
 
                 ScrollView {
                     VStack(spacing: AppTheme.Spacing.lg) {
@@ -65,35 +50,8 @@ struct SettingsView: View {
                                 icon: "lock",
                                 title: locManager.t("settings.privacy"),
                                 subtitle: locManager.t("settings.privacy_sub"),
-                                showArrow: true
-                            )
-                        }
-
-                        // Notifications Section
-                        SettingsSectionView(title: locManager.t("settings.notifications")) {
-                            SettingsToggleView(
-                                icon: "bell.circle.fill",
-                                title: locManager.t("settings.push"),
-                                subtitle: locManager.t("settings.push_sub"),
-                                isOn: $notificationsEnabled
-                            )
-
-                            Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
-
-                            SettingsToggleView(
-                                icon: "clock.circle.fill",
-                                title: locManager.t("settings.daily"),
-                                subtitle: locManager.t("settings.daily_sub"),
-                                isOn: $dailyReminder
-                            )
-
-                            Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
-
-                            SettingsToggleView(
-                                icon: "speaker.wave.2.circle.fill",
-                                title: locManager.t("settings.sound"),
-                                subtitle: locManager.t("settings.sound_sub"),
-                                isOn: $soundEnabled
+                                showArrow: true,
+                                onTap: { selectedTab = "data-privacy" }
                             )
                         }
 
@@ -112,7 +70,12 @@ struct SettingsView: View {
                                 icon: "textformat.size",
                                 title: locManager.t("settings.text_size"),
                                 subtitle: locManager.t("settings.text_size_sub"),
-                                showArrow: true
+                                showArrow: true,
+                                onTap: {
+                                    if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
+                                        ExternalNavigator.openURL(settingsURL)
+                                    }
+                                }
                             )
                         }
 
@@ -139,7 +102,8 @@ struct SettingsView: View {
                                 icon: "hand.raised.circle.fill",
                                 title: locManager.t("settings.data_privacy"),
                                 subtitle: locManager.t("settings.data_privacy_sub"),
-                                showArrow: true
+                                showArrow: true,
+                                onTap: { selectedTab = "data-privacy" }
                             )
                         }
 
@@ -149,7 +113,8 @@ struct SettingsView: View {
                                 icon: "questionmark.circle.fill",
                                 title: locManager.t("settings.help_faq"),
                                 subtitle: locManager.t("settings.help_faq_sub"),
-                                showArrow: true
+                                showArrow: true,
+                                onTap: { selectedTab = "help" }
                             )
 
                             Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
@@ -158,7 +123,40 @@ struct SettingsView: View {
                                 icon: "envelope.circle.fill",
                                 title: locManager.t("settings.contact_support"),
                                 subtitle: locManager.t("settings.contact_support_sub"),
-                                showArrow: true
+                                showArrow: true,
+                                onTap: {
+                                    if !ExternalNavigator.openSupportAction(.contactSupport, localization: locManager) {
+                                        showMailFallback = true
+                                    }
+                                }
+                            )
+
+                            Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
+
+                            SettingsItemView(
+                                icon: "exclamationmark.bubble.circle.fill",
+                                title: locManager.t("settings.report_problem"),
+                                subtitle: locManager.t("settings.report_problem_sub"),
+                                showArrow: true,
+                                onTap: {
+                                    if !ExternalNavigator.openSupportAction(.reportProblem, localization: locManager) {
+                                        showMailFallback = true
+                                    }
+                                }
+                            )
+
+                            Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
+
+                            SettingsItemView(
+                                icon: "bubble.left.and.text.bubble.right.circle.fill",
+                                title: locManager.t("settings.send_feedback"),
+                                subtitle: locManager.t("settings.send_feedback_sub"),
+                                showArrow: true,
+                                onTap: {
+                                    if !ExternalNavigator.openSupportAction(.sendFeedback, localization: locManager) {
+                                        showMailFallback = true
+                                    }
+                                }
                             )
 
                             Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
@@ -167,66 +165,92 @@ struct SettingsView: View {
                                 icon: "star.circle.fill",
                                 title: locManager.t("settings.rate_app"),
                                 subtitle: locManager.t("settings.rate_app_sub"),
-                                showArrow: true
+                                showArrow: true,
+                                onTap: { ExternalNavigator.requestAppReview() }
                             )
                         }
 
                         // About Section
                         SettingsSectionView(title: locManager.t("settings.about")) {
+                            SettingsItemView(
+                                icon: "sparkles.rectangle.stack.fill",
+                                title: locManager.t("settings.about_echo"),
+                                subtitle: locManager.t("settings.about_echo_sub"),
+                                showArrow: true,
+                                onTap: { selectedTab = "about-app" }
+                            )
+
+                            Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
+
                             SettingsStaticItemView(
                                 icon: "info.circle.fill",
                                 title: locManager.t("settings.app_version"),
-                                subtitle: "1.0.0"
+                                subtitle: AppConstants.AppInfo.fullVersionLabel
+                            )
+
+                            Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
+
+                            SettingsItemView(
+                                icon: "hand.raised.circle.fill",
+                                title: locManager.t("settings.privacy_policy"),
+                                subtitle: locManager.t("settings.privacy_policy_sub"),
+                                showArrow: true,
+                                onTap: { selectedTab = "privacy-policy" }
                             )
 
                             Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
 
                             SettingsItemView(
                                 icon: "doc.circle.fill",
-                                title: locManager.t("settings.terms"),
-                                subtitle: locManager.t("settings.terms_sub"),
-                                showArrow: true
+                                title: locManager.t("settings.terms_of_use"),
+                                subtitle: locManager.t("settings.terms_of_use_sub"),
+                                showArrow: true,
+                                onTap: { selectedTab = "terms-of-use" }
+                            )
+
+                            Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
+
+                            SettingsItemView(
+                                icon: "brain.head.profile",
+                                title: locManager.t("settings.data_ai_usage"),
+                                subtitle: locManager.t("settings.data_ai_usage_sub"),
+                                showArrow: true,
+                                onTap: { selectedTab = "data-privacy" }
+                            )
+
+                            Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
+
+                            SettingsItemView(
+                                icon: "shippingbox.circle.fill",
+                                title: locManager.t("settings.acknowledgements"),
+                                subtitle: locManager.t("settings.acknowledgements_sub"),
+                                showArrow: true,
+                                onTap: { selectedTab = "acknowledgements" }
                             )
                         }
 
-                        // Danger Zone
-                        VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
-                            Button(action: { showDeleteAlert = true }) {
-                                HStack(spacing: AppTheme.Spacing.sm) {
-                                    Image(systemName: "trash.circle.fill")
-                                        .font(.system(size: 20))
-                                        .foregroundColor(AppTheme.Colors.destructive)
-
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text(locManager.t("settings.delete_all_data"))
-                                            .font(AppTheme.Typography.caption).fontWeight(.semibold)
-                                            .foregroundColor(AppTheme.Colors.destructive)
-                                        Text(locManager.t("settings.delete_all_data_sub"))
-                                            .font(AppTheme.Typography.label)
-                                            .foregroundColor(AppTheme.Colors.destructive.opacity(0.7))
-                                    }
-
-                                    Spacer()
-                                }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(AppTheme.Spacing.md)
-                                .background(AppTheme.Colors.destructive.opacity(0.1))
-                                .cornerRadius(AppTheme.Spacing.radiusMd)
-                                .overlay(RoundedRectangle(cornerRadius: AppTheme.Spacing.radiusMd)
-                                    .strokeBorder(AppTheme.Colors.destructive.opacity(0.3), lineWidth: 1))
-                            }
-                        }
-                        .padding(.horizontal, AppTheme.Spacing.md)
                     }
                     .padding(.vertical, AppTheme.Spacing.lg)
                 }
 
             }
-            .alert(locManager.t("settings.delete_alert_title"), isPresented: $showDeleteAlert) {
+            .sheet(item: $activeWebDestination) { destination in
+                LegalWebViewSheet(destination: destination)
+            }
+            .confirmationDialog(
+                locManager.t("support.mail_unavailable_title"),
+                isPresented: $showMailFallback,
+                titleVisibility: .visible
+            ) {
+                Button(locManager.t("support.copy_email")) {
+                    ExternalNavigator.copySupportEmail()
+                }
+                Button(locManager.t("about.website")) {
+                    activeWebDestination = .website
+                }
                 Button(locManager.t("common.cancel"), role: .cancel) { }
-                Button(locManager.t("common.delete"), role: .destructive) { }
             } message: {
-                Text(locManager.t("settings.delete_alert_body"))
+                Text(locManager.t("support.mail_unavailable_message", AppConstants.Links.supportEmail))
             }
 
             if isMenuOpen {
@@ -257,8 +281,7 @@ struct SettingsSectionView<Content: View>: View {
                 content
             }
             .padding(AppTheme.Spacing.md)
-            .background(AppTheme.Colors.surfaceElevated(colorScheme).opacity(0.5))
-            .cornerRadius(AppTheme.Spacing.radiusLg)
+            .echoCard(colorScheme)
             .padding(.horizontal, AppTheme.Spacing.md)
         }
     }
@@ -330,7 +353,7 @@ private struct SettingsRowLayout<Trailing: View>: View {
     @ViewBuilder let trailing: Trailing
     @Environment(\.colorScheme) var colorScheme
 
-    private let iconWidth: CGFloat = 24
+    private let iconWidth: CGFloat = AppTheme.Layout.compactControlHeight
     private let rowSpacing: CGFloat = AppTheme.Spacing.md
 
     var body: some View {
@@ -338,8 +361,7 @@ private struct SettingsRowLayout<Trailing: View>: View {
             HStack(alignment: .center, spacing: rowSpacing) {
                 Image(systemName: icon)
                     .font(.system(size: 18))
-                    .foregroundColor(AppTheme.Colors.accent)
-                    .frame(width: iconWidth, alignment: .center)
+                    .echoIconContainer(AppTheme.Colors.accent, size: iconWidth)
 
                 Text(title)
                     .font(AppTheme.Typography.caption)
@@ -355,7 +377,7 @@ private struct SettingsRowLayout<Trailing: View>: View {
                 .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
                 .padding(.leading, iconWidth + rowSpacing)
         }
-        .frame(maxWidth: .infinity, minHeight: 52, alignment: .leading)
+        .frame(maxWidth: .infinity, minHeight: AppTheme.Layout.rowMinHeight, alignment: .leading)
         .padding(.vertical, AppTheme.Spacing.xs)
     }
 }

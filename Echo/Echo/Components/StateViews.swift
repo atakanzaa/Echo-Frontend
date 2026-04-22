@@ -3,6 +3,7 @@ import SwiftUI
 struct ErrorStateView: View {
     let message: String
     var retryAction: (() -> Void)? = nil
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         VStack(spacing: AppTheme.Spacing.md) {
@@ -12,7 +13,7 @@ struct ErrorStateView: View {
 
             Text(message)
                 .font(AppTheme.Typography.caption)
-                .foregroundColor(AppTheme.Colors.textSecondary(.dark))
+                .foregroundColor(AppTheme.Colors.textSecondary(colorScheme))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, AppTheme.Spacing.lg)
 
@@ -37,20 +38,21 @@ struct EmptyStateView: View {
     let icon: String
     let title: String
     let subtitle: String
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         VStack(spacing: AppTheme.Spacing.md) {
             Image(systemName: icon)
                 .font(.system(size: 34))
-                .foregroundColor(AppTheme.Colors.textMuted(.dark))
+                .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
 
             Text(title)
                 .font(AppTheme.Typography.heading3)
-                .foregroundColor(AppTheme.Colors.textPrimary(.dark))
+                .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
 
             Text(subtitle)
                 .font(AppTheme.Typography.caption)
-                .foregroundColor(AppTheme.Colors.textMuted(.dark))
+                .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, AppTheme.Spacing.xl)
         }

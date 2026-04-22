@@ -23,7 +23,7 @@ struct ForgotPasswordView: View {
             ZStack {
                 AppTheme.Colors.background(colorScheme).ignoresSafeArea()
 
-                ScrollView(showsIndicators: false) {
+                KeyboardAwareFormScroll {
                     VStack(alignment: .leading, spacing: AppTheme.Spacing.lg) {
                         Text(step == .request ? locManager.t("auth.forgot_password_title") : locManager.t("auth.reset_password_title"))
                             .font(AppTheme.Typography.heading2)
@@ -128,10 +128,7 @@ struct ForgotPasswordView: View {
                 .keyboardType(keyboard)
                 .autocapitalization(.none)
                 .textInputAutocapitalization(.never)
-                .padding(.horizontal, AppTheme.Spacing.md)
-                .padding(.vertical, AppTheme.Spacing.sm + 4)
-                .background(AppTheme.Colors.surfaceElevated(colorScheme))
-                .cornerRadius(AppTheme.Spacing.radiusMd)
+                .echoInputField(colorScheme)
         }
     }
 
@@ -141,10 +138,7 @@ struct ForgotPasswordView: View {
                 .font(AppTheme.Typography.label)
                 .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
             SecureField(placeholder, text: text)
-                .padding(.horizontal, AppTheme.Spacing.md)
-                .padding(.vertical, AppTheme.Spacing.sm + 4)
-                .background(AppTheme.Colors.surfaceElevated(colorScheme))
-                .cornerRadius(AppTheme.Spacing.radiusMd)
+                .echoInputField(colorScheme)
         }
     }
 }

@@ -12,7 +12,6 @@ struct PostDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) var colorScheme
 
-    private static let serverBase = "http://localhost:8080"
     private var currentUserId: String { AppState.shared.currentUser?.id ?? "" }
     private let topAnchorId = "post-detail-top-anchor"
 
@@ -28,22 +27,11 @@ struct PostDetailView: View {
                 AppTheme.Colors.background(colorScheme).ignoresSafeArea()
 
                 VStack(spacing: 0) {
-                    // Header
-                    HStack {
-                        Button(action: { dismiss() }) {
-                            Image(systemName: "chevron.left")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
-                        }
-                        Spacer()
-                        Text(locManager.t("post.title"))
-                            .font(AppTheme.Typography.heading3)
-                            .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
-                        Spacer()
-                        Color.clear.frame(width: 24)
-                    }
-                    .padding(.horizontal, AppTheme.Spacing.md)
-                    .padding(.vertical, AppTheme.Spacing.sm)
+                    AppScreenHeader(
+                        title: locManager.t("post.title"),
+                        showBack: true,
+                        onBack: { dismiss() }
+                    )
 
                     Divider().background(AppTheme.Colors.border(colorScheme))
 
@@ -179,7 +167,7 @@ struct PostDetailView: View {
     private var postImageSection: some View {
         Group {
             if let imageUrl = viewModel.post.imageUrl,
-               let url = URL(string: imageUrl.hasPrefix("http") ? imageUrl : Self.serverBase + imageUrl) {
+               let url = AppConstants.API.mediaURL(for: imageUrl) {
                 AsyncImage(url: url) { phase in
                     switch phase {
                     case .success(let image):

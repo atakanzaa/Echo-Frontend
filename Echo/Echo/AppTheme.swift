@@ -166,6 +166,16 @@ extension AppTheme {
         static let cardPadding: CGFloat = Spacing.md
         static let cardRadius: CGFloat = Spacing.radiusLg
         static let navAwareBottomInset: CGFloat = Spacing.xxl + Spacing.lg
+        static let controlHeight: CGFloat = 52
+        static let compactControlHeight: CGFloat = 44
+        static let iconButtonSize: CGFloat = 40
+        static let compactIconButtonSize: CGFloat = 32
+        static let fieldMinHeight: CGFloat = 48
+        static let rowMinHeight: CGFloat = 56
+        static let chipHPadding: CGFloat = 10
+        static let chipVPadding: CGFloat = 6
+        static let bottomFloatingOffset: CGFloat = navAwareBottomInset + Spacing.sm
+        static let sheetBottomInset: CGFloat = Spacing.xl
     }
 }
 
@@ -255,5 +265,143 @@ extension View {
             .background(AppTheme.Colors.surface(s))
             .cornerRadius(AppTheme.Spacing.radiusMd)
             .themeShadow(AppTheme.Shadows.shadowSm(s))
+    }
+
+    func echoCard(
+        _ s: ColorScheme,
+        elevated: Bool = true,
+        radius: CGFloat = AppTheme.Layout.cardRadius,
+        bordered: Bool = true
+    ) -> some View {
+        modifier(EchoCardModifier(colorScheme: s, elevated: elevated, radius: radius, bordered: bordered))
+    }
+
+    func echoInputField(_ s: ColorScheme, elevated: Bool = true) -> some View {
+        modifier(EchoInputFieldModifier(colorScheme: s, elevated: elevated))
+    }
+
+    func echoPrimaryButton(_ s: ColorScheme, enabled: Bool = true, radius: CGFloat = AppTheme.Spacing.radiusFull) -> some View {
+        modifier(EchoPrimaryButtonModifier(colorScheme: s, enabled: enabled, radius: radius))
+    }
+
+    func echoSecondaryButton(_ s: ColorScheme, radius: CGFloat = AppTheme.Spacing.radiusMd) -> some View {
+        modifier(EchoSecondaryButtonModifier(colorScheme: s, radius: radius))
+    }
+
+    func echoDestructiveButton(_ s: ColorScheme, radius: CGFloat = AppTheme.Spacing.radiusMd) -> some View {
+        modifier(EchoDestructiveButtonModifier(colorScheme: s, radius: radius))
+    }
+
+    func echoIconContainer(_ color: Color, size: CGFloat = AppTheme.Layout.iconButtonSize, radius: CGFloat = AppTheme.Spacing.radiusSm) -> some View {
+        modifier(EchoIconContainerModifier(color: color, size: size, radius: radius))
+    }
+}
+
+private struct EchoCardModifier: ViewModifier {
+    let colorScheme: ColorScheme
+    let elevated: Bool
+    let radius: CGFloat
+    let bordered: Bool
+
+    func body(content: Content) -> some View {
+        content
+            .background(
+                RoundedRectangle(cornerRadius: radius, style: .continuous)
+                    .fill(elevated ? AppTheme.Colors.surfaceElevated(colorScheme) : AppTheme.Colors.surface(colorScheme))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: radius, style: .continuous)
+                    .strokeBorder(bordered ? AppTheme.Colors.borderSubtle(colorScheme) : Color.clear, lineWidth: 1)
+            )
+    }
+}
+
+private struct EchoInputFieldModifier: ViewModifier {
+    let colorScheme: ColorScheme
+    let elevated: Bool
+
+    func body(content: Content) -> some View {
+        content
+            .font(AppTheme.Typography.body)
+            .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
+            .padding(.horizontal, AppTheme.Spacing.md)
+            .padding(.vertical, AppTheme.Spacing.sm + 4)
+            .frame(minHeight: AppTheme.Layout.fieldMinHeight)
+            .background(
+                RoundedRectangle(cornerRadius: AppTheme.Spacing.radiusMd, style: .continuous)
+                    .fill(elevated ? AppTheme.Colors.surfaceElevated(colorScheme) : AppTheme.Colors.surface(colorScheme))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: AppTheme.Spacing.radiusMd, style: .continuous)
+                    .strokeBorder(AppTheme.Colors.borderSubtle(colorScheme), lineWidth: 1)
+            )
+    }
+}
+
+private struct EchoPrimaryButtonModifier: ViewModifier {
+    let colorScheme: ColorScheme
+    let enabled: Bool
+    let radius: CGFloat
+
+    func body(content: Content) -> some View {
+        content
+            .font(AppTheme.Typography.bodyEm)
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity, minHeight: AppTheme.Layout.controlHeight)
+            .background {
+                RoundedRectangle(cornerRadius: radius, style: .continuous)
+                    .fill(enabled ? AnyShapeStyle(AppTheme.Gradients.accent) : AnyShapeStyle(AppTheme.Colors.textDisabled(colorScheme).opacity(0.45)))
+            }
+            .opacity(enabled ? 1 : 0.65)
+    }
+}
+
+private struct EchoSecondaryButtonModifier: ViewModifier {
+    let colorScheme: ColorScheme
+    let radius: CGFloat
+
+    func body(content: Content) -> some View {
+        content
+            .font(AppTheme.Typography.bodyEm)
+            .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
+            .frame(maxWidth: .infinity, minHeight: AppTheme.Layout.controlHeight)
+            .background(AppTheme.Colors.surface(colorScheme))
+            .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: radius, style: .continuous)
+                    .strokeBorder(AppTheme.Colors.borderSubtle(colorScheme), lineWidth: 1)
+            )
+    }
+}
+
+private struct EchoDestructiveButtonModifier: ViewModifier {
+    let colorScheme: ColorScheme
+    let radius: CGFloat
+
+    func body(content: Content) -> some View {
+        content
+            .font(AppTheme.Typography.bodyEm)
+            .foregroundColor(AppTheme.Colors.destructive)
+            .frame(maxWidth: .infinity, minHeight: AppTheme.Layout.controlHeight)
+            .background(AppTheme.Colors.destructiveSoft(colorScheme))
+            .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: radius, style: .continuous)
+                    .strokeBorder(AppTheme.Colors.destructive.opacity(0.25), lineWidth: 1)
+            )
+    }
+}
+
+private struct EchoIconContainerModifier: ViewModifier {
+    let color: Color
+    let size: CGFloat
+    let radius: CGFloat
+
+    func body(content: Content) -> some View {
+        content
+            .foregroundColor(color)
+            .frame(width: size, height: size)
+            .background(color.opacity(0.14))
+            .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
     }
 }

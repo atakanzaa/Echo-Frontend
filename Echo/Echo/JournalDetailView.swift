@@ -61,7 +61,7 @@ struct JournalDetailView: View {
                     }
 
                     coachButton
-                        .padding(.bottom, AppTheme.Spacing.xxl)
+                        .padding(.bottom, AppTheme.Layout.navAwareBottomInset)
                 }
                 .padding(.top, AppTheme.Spacing.md)
             }

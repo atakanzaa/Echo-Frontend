@@ -130,4 +130,29 @@ final class AuthViewModel: ObservableObject {
 
         isLoading = false
     }
+
+    // MARK: - Apple Login
+
+    func loginWithApple() async {
+        guard !isLoading else { return }
+        isLoading = true
+        errorMessage = nil
+
+        defer { isLoading = false }
+
+        do {
+            let appleResult = try await AppleSignInManager.shared.signIn()
+            let body = AppleLoginBody(
+                identityToken: appleResult.identityToken,
+                authorizationCode: appleResult.authorizationCode,
+                displayName: appleResult.displayName,
+                timezone: TimeZone.current.identifier,
+                language: LocalizationManager.shared.currentLanguage
+            )
+            let response: APIAuthResponse = try await client.request(.appleLogin(body))
+            appState.signIn(with: response)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
 }

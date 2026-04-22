@@ -62,9 +62,6 @@ struct VoiceRecordingView: View {
         .animation(.easeInOut(duration: 0.3), value: viewModel.awaitingConfirmation)
         .safeAreaInset(edge: .top, spacing: 0) {
             fixedHeader
-                .padding(.horizontal, AppTheme.Layout.screenHorizontal)
-                .padding(.top, AppTheme.Layout.headerTop)
-                .padding(.bottom, AppTheme.Layout.headerBottom)
         }
         .toolbar(.hidden, for: .navigationBar)
         .onAppear {
@@ -92,36 +89,32 @@ struct VoiceRecordingView: View {
     }
 
     private var fixedHeader: some View {
-        HStack(spacing: AppTheme.Spacing.sm) {
-            Text("Echo")
-                .font(AppTheme.Typography.heading2)
-                .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
-
-            Spacer()
-
-            if viewModel.currentStreak > 0 {
-                HStack(spacing: 4) {
-                    Image(systemName: "flame.fill")
-                        .font(.system(size: 12))
-                        .foregroundColor(AppTheme.Colors.warning)
-                    Text("\(viewModel.currentStreak) \(locManager.t("profile.days"))")
-                        .font(AppTheme.Typography.label).fontWeight(.semibold)
-                        .foregroundColor(AppTheme.Colors.textSecondary(colorScheme))
+        AppScreenHeader(title: "Echo") {
+            HStack(spacing: AppTheme.Spacing.sm) {
+                if viewModel.currentStreak > 0 {
+                    HStack(spacing: 4) {
+                        Image(systemName: "flame.fill")
+                            .font(.system(size: 12))
+                            .foregroundColor(AppTheme.Colors.warning)
+                        Text("\(viewModel.currentStreak) \(locManager.t("profile.days"))")
+                            .font(AppTheme.Typography.label).fontWeight(.semibold)
+                            .foregroundColor(AppTheme.Colors.textSecondary(colorScheme))
+                    }
+                    .padding(.horizontal, AppTheme.Spacing.sm)
+                    .padding(.vertical, 6)
+                    .background(AppTheme.Colors.surface(colorScheme))
+                    .cornerRadius(AppTheme.Spacing.radiusFull)
+                    .overlay(Capsule().stroke(AppTheme.Colors.borderSubtle(colorScheme), lineWidth: 1))
                 }
-                .padding(.horizontal, AppTheme.Spacing.sm)
-                .padding(.vertical, 6)
-                .background(AppTheme.Colors.surface(colorScheme))
-                .cornerRadius(AppTheme.Spacing.radiusFull)
-                .overlay(Capsule().stroke(AppTheme.Colors.borderSubtle(colorScheme), lineWidth: 1))
-            }
 
-            Button(action: { selectedTab = "settings" }) {
-                Image(systemName: "gearshape")
-                    .font(.system(size: 18))
-                    .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
+                Button(action: { selectedTab = "settings" }) {
+                    Image(systemName: "gearshape")
+                        .font(.system(size: 18))
+                        .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
+                }
+                .frame(width: AppTheme.Layout.iconButtonSize, height: AppTheme.Layout.iconButtonSize)
             }
         }
-        .background(Color.clear)
     }
 
     // MARK: - Mic Section

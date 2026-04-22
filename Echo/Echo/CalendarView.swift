@@ -13,24 +13,11 @@ struct EmotionalHeatmapCalendarView: View {
             AppTheme.Colors.background(colorScheme).ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Header
-                HStack {
-                    Text(locManager.t("nav.calendar"))
-                        .font(AppTheme.Typography.heading3)
-                        .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
-                    Spacer()
-                    Button(action: { isMenuOpen.toggle() }) {
-                        Image(systemName: "line.3.horizontal")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
-                    }
-                    .frame(width: 40, height: 40)
-                    .background(AppTheme.Colors.surface(colorScheme))
-                    .cornerRadius(AppTheme.Spacing.radiusFull)
-                }
-                .padding(.horizontal, AppTheme.Layout.screenHorizontal)
-                .padding(.top, AppTheme.Layout.headerTop)
-                .padding(.bottom, AppTheme.Layout.headerBottom)
+                AppScreenHeader(
+                    title: locManager.t("nav.calendar"),
+                    showMenu: true,
+                    onMenu: { isMenuOpen.toggle() }
+                )
 
                 ScrollView {
                     VStack(spacing: AppTheme.Spacing.lg) {
@@ -431,18 +418,21 @@ struct LegendView: View {
     @EnvironmentObject var locManager: LocalizationManager
 
     var body: some View {
-        HStack(spacing: AppTheme.Spacing.md) {
-            ForEach(legends, id: \.1) { state, label in
-                HStack(spacing: 6) {
-                    Circle()
-                        .fill(state.color)
-                        .frame(width: 8, height: 8)
-                    Text(locManager.t(label))
-                        .font(AppTheme.Typography.micro)
-                        .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: AppTheme.Spacing.md) {
+                ForEach(legends, id: \.1) { state, label in
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(state.color)
+                            .frame(width: 8, height: 8)
+                        Text(locManager.t(label))
+                            .font(AppTheme.Typography.micro)
+                            .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
+                            .lineLimit(1)
+                    }
                 }
+                Spacer(minLength: 0)
             }
-            Spacer()
         }
         .padding(.horizontal, AppTheme.Spacing.lg)
     }

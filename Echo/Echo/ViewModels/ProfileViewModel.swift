@@ -57,11 +57,11 @@ final class ProfileViewModel: ObservableObject {
         loadTask?.cancel()
         isLoggingOut = true
         logoutTask = Task {
-            let refreshToken = TokenManager.shared.refreshToken() ?? ""
-            let body = LogoutBody(refreshToken: refreshToken)
-            let _: APIVoidResponse = (try? await APIClient.shared.request(.logout(body))) ?? APIVoidResponse()
-            TokenManager.shared.clearAll()
-            await AppState.shared.signOut()
+            if let refreshToken = TokenManager.shared.refreshToken() {
+                let body = LogoutBody(refreshToken: refreshToken)
+                let _: APIVoidResponse? = try? await APIClient.shared.requestWithAutoRefresh(.logout(body))
+            }
+            AppState.shared.signOut()
             isLoggingOut = false
         }
     }
