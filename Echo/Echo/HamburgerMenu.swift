@@ -3,7 +3,7 @@ import SwiftUI
 struct HamburgerMenuView: View {
     @Binding var isMenuOpen: Bool
     @Binding var selectedTab: String
-    var userName: String = "User"
+    var userName: String = ""
     var unreadNotificationCount: Int? = nil
     var onLogout: (() -> Void)? = nil
     @EnvironmentObject var locManager: LocalizationManager
@@ -17,11 +17,13 @@ struct HamburgerMenuView: View {
     }
     
     private var userInitials: String {
-        let components = userName.split(separator: " ").map(String.init)
+        let normalized = userName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let baseName = normalized.isEmpty ? locManager.t("common.user") : normalized
+        let components = baseName.split(separator: " ").map(String.init)
         if components.count >= 2 {
             return (String(components[0].prefix(1)) + String(components[1].prefix(1))).uppercased()
         }
-        return String(userName.prefix(2)).uppercased()
+        return String(baseName.prefix(2)).uppercased()
     }
 
     var body: some View {

@@ -54,7 +54,7 @@ final class CoachViewModel: ObservableObject {
     /// Normal (journal bağlantısız) yeni konuşma başlatır
     func createNewSession() async throws -> APICoachSession {
         guard createSessionGuard.start(id: "new-session") else {
-            throw NetworkError.serverError(429, "Session creation already in progress.")
+            throw NetworkError.serverError(429, LocalizationManager.shared.t("coach.error.session_creation_in_progress"))
         }
         defer { createSessionGuard.finish(id: "new-session") }
         let newSession: APICoachSession = try await APIClient.shared.requestWithAutoRefresh(.createCoachSession)
@@ -66,7 +66,7 @@ final class CoachViewModel: ObservableObject {
     func createSessionWithJournal(journalEntryId: String) async throws -> APICoachSession {
         let key = "journal-\(journalEntryId)"
         guard createSessionGuard.start(id: key) else {
-            throw NetworkError.serverError(429, "Session creation already in progress.")
+            throw NetworkError.serverError(429, LocalizationManager.shared.t("coach.error.session_creation_in_progress"))
         }
         defer { createSessionGuard.finish(id: key) }
         let newSession: APICoachSession = try await APIClient.shared.requestWithAutoRefresh(

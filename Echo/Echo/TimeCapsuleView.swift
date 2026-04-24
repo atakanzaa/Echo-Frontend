@@ -152,6 +152,8 @@ struct APISealedMemoryCard: View {
     @EnvironmentObject var locManager: LocalizationManager
 
     var body: some View {
+        let localizedContentType = CapsuleContentType(rawBackend: capsule.contentType).displayTitle
+
         HStack(spacing: AppTheme.Spacing.sm) {
             Image(systemName: capsule.isSealed ? "lock.fill" : "lock.open.fill")
                 .font(.system(size: 18))
@@ -161,10 +163,10 @@ struct APISealedMemoryCard: View {
                 .cornerRadius(AppTheme.Spacing.radiusSm)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(capsule.title ?? String(format: locManager.t("capsule.default_title_fmt"), capsule.contentType.capitalized))
+                Text(capsule.title ?? String(format: locManager.t("capsule.default_title_fmt"), localizedContentType))
                     .font(AppTheme.Typography.body).fontWeight(.semibold)
                     .foregroundColor(AppTheme.Colors.textPrimary(colorScheme)).lineLimit(1)
-                Text("\(capsule.contentType.capitalized) • \(locManager.t("capsule.unlock")) \(capsule.unlockDateFormatted)")
+                Text("\(localizedContentType) • \(locManager.t("capsule.unlock")) \(capsule.unlockDateFormatted)")
                     .font(AppTheme.Typography.label)
                     .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
             }

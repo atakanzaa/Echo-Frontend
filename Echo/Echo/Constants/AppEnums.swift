@@ -49,16 +49,20 @@ enum EntryStatus: String, Codable {
         }
     }
 
-    var displayTitle: String {
+    var displayTitleKey: String {
         switch self {
-        case .queued: return "Queued"
-        case .processing: return "Processing"
-        case .transcribing: return "Transcribing"
-        case .analyzing: return "Analyzing"
-        case .complete: return "Complete"
-        case .failed: return "Failed"
-        case .unknown: return "Processing"
+        case .queued: return "entry.status.queued"
+        case .processing: return "entry.status.processing"
+        case .transcribing: return "entry.status.transcribing"
+        case .analyzing: return "entry.status.analyzing"
+        case .complete: return "entry.status.complete"
+        case .failed: return "entry.status.failed"
+        case .unknown: return "entry.status.processing"
         }
+    }
+
+    var displayTitle: String {
+        LocalizationManager.shared.t(displayTitleKey)
     }
 }
 
@@ -66,11 +70,15 @@ enum CommunityTab: String, Codable, CaseIterable {
     case global
     case following
 
-    var title: String {
+    var titleKey: String {
         switch self {
-        case .global: return "Global"
-        case .following: return "Following"
+        case .global: return "community.global"
+        case .following: return "community.following"
         }
+    }
+
+    var title: String {
+        LocalizationManager.shared.t(titleKey)
     }
 }
 
@@ -84,13 +92,17 @@ enum CapsuleStatus: String, Codable {
         self = CapsuleStatus(rawValue: value.lowercased()) ?? .unknown
     }
 
-    var displayTitle: String {
+    var displayTitleKey: String {
         switch self {
-        case .sealed: return "Sealed"
-        case .unlocked: return "Unlocked"
-        case .opened: return "Opened"
-        case .unknown: return "Unknown"
+        case .sealed: return "capsule.status.sealed"
+        case .unlocked: return "capsule.status.unlocked"
+        case .opened: return "capsule.status.opened"
+        case .unknown: return "capsule.status.unknown"
         }
+    }
+
+    var displayTitle: String {
+        LocalizationManager.shared.t(displayTitleKey)
     }
 }
 
@@ -103,12 +115,16 @@ enum CapsuleContentType: String, Codable {
         self = CapsuleContentType(rawValue: value.lowercased()) ?? .unknown
     }
 
-    var displayTitle: String {
+    var displayTitleKey: String {
         switch self {
-        case .audio: return "Audio"
-        case .text: return "Text"
-        case .unknown: return "Memory"
+        case .audio: return "capsule.content.audio"
+        case .text: return "capsule.content.text"
+        case .unknown: return "capsule.content.memory"
         }
+    }
+
+    var displayTitle: String {
+        LocalizationManager.shared.t(displayTitleKey)
     }
 }
 

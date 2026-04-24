@@ -79,10 +79,11 @@ extension APIJournalEntry {
     var relativeDate: String {
         guard let date = ISO8601DateFormatter().date(from: recordedAt) else { return entryDate }
         let days = Calendar.current.dateComponents([.day], from: date, to: Date()).day ?? 0
+        let loc = LocalizationManager.shared
         switch days {
-        case 0:  return "Today"
-        case 1:  return "Yesterday"
-        case 2:  return "2 days ago"
+        case 0:  return loc.t("common.today")
+        case 1:  return loc.t("common.yesterday")
+        case 2:  return String(format: loc.t("common.relative.days_ago_fmt"), 2)
         default:
             let f = DateFormatter()
             f.dateStyle = .medium

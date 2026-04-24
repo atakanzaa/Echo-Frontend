@@ -19,7 +19,7 @@ enum WebDestination: Identifiable, Equatable {
     var title: String {
         switch self {
         case .website:
-            return "Website"
+            return LocalizationManager.shared.t("about.website")
         case .custom(let title, _):
             return title
         }

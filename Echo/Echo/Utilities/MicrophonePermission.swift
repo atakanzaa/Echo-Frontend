@@ -7,10 +7,7 @@ enum MicrophonePermission {
         case denied
 
         var errorMessage: String {
-            let turkish = Locale.autoupdatingCurrent.identifier.lowercased().hasPrefix("tr")
-            return turkish
-                ? "Kayit icin mikrofon izni gerekiyor. Ayarlar'dan etkinlestirebilirsiniz."
-                : "Microphone access is required to record. You can enable it in Settings."
+            LocalizationManager.shared.t("microphone.permission_required")
         }
     }
 

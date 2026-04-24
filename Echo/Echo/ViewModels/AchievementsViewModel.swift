@@ -28,13 +28,14 @@ final class AchievementsViewModel: ObservableObject {
 
     var streakMessage: String {
         let streak = currentStreak
+        let loc = LocalizationManager.shared
         switch streak {
-        case 0:       return "Start your streak today!"
-        case 1...3:   return "Great start! Keep going 🔥"
-        case 4...6:   return "You're building momentum!"
-        case 7...13:  return "You're on fire! 🔥"
-        case 14...29: return "Incredible dedication! 💪"
-        default:      return "Legendary journaler! 👑"
+        case 0:       return loc.t("achievements.streak_msg_0")
+        case 1...3:   return loc.t("achievements.streak_msg_1_3")
+        case 4...6:   return loc.t("achievements.streak_msg_4_6")
+        case 7...13:  return loc.t("achievements.streak_msg_7_13")
+        case 14...29: return loc.t("achievements.streak_msg_14_29")
+        default:      return loc.t("achievements.streak_msg_30_plus")
         }
     }
 

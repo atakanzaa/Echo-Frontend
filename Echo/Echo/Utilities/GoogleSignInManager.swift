@@ -65,15 +65,16 @@ enum GoogleSignInManagerError: LocalizedError {
     case missingIdToken
 
     var errorDescription: String? {
+        let loc = LocalizationManager.shared
         switch self {
         case .sdkNotInstalled:
-            return "Google Sign-In SDK is not installed in Xcode yet."
+            return loc.t("auth.google_sdk_not_installed")
         case .missingClientId:
-            return "Google client ID is missing."
+            return loc.t("auth.google_client_id_missing")
         case .missingPresenter:
-            return "Google sign-in could not be presented."
+            return loc.t("auth.google_presenter_missing")
         case .missingIdToken:
-            return "Google sign-in did not return an ID token."
+            return loc.t("auth.google_id_token_missing")
         }
     }
 }

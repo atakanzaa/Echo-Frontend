@@ -99,7 +99,7 @@ struct AchievementsView: View {
                                             .font(AppTheme.Typography.heading3)
                                             .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
                                         Spacer()
-                                        Text(String(format: NSLocalizedString("%d earned", comment: ""), viewModel.badges.filter(\.isEarned).count))
+                                        Text(String(format: locManager.t("achievements.earned_count_fmt"), viewModel.badges.filter(\.isEarned).count))
                                             .font(AppTheme.Typography.caption).fontWeight(.semibold)
                                             .foregroundColor(AppTheme.Colors.accentSecondary)
                                     }

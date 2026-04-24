@@ -16,7 +16,7 @@ final class ProfileViewModel: ObservableObject {
     private var loadTask:   Task<Void, Never>?
     private var logoutTask: Task<Void, Never>?
 
-    var displayName:    String { user?.displayName ?? user?.email ?? "User" }
+    var displayName:    String { user?.displayName ?? user?.email ?? LocalizationManager.shared.t("common.user") }
     var email:          String { user?.email       ?? "" }
     var totalEntries:   Int    { user?.totalEntries ?? 0 }
     var currentStreak:  Int    { user?.currentStreak ?? 0 }

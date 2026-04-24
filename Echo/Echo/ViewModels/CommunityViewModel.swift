@@ -236,15 +236,22 @@ extension APICommunityPost {
     var relativeTime: String {
         guard let date = ISO8601DateFormatter().date(from: createdAt) else { return "" }
         let diff = Int(Date().timeIntervalSince(date))
+        let loc = LocalizationManager.shared
         switch diff {
-        case 0..<60:     return "\(diff)s ago"
-        case 60..<3600:  return "\(diff/60)m ago"
-        case 3600..<86400: return "\(diff/3600)h ago"
+        case 0..<60:
+            return String(format: loc.t("common.relative.seconds_ago_fmt"), diff)
+        case 60..<3600:
+            return String(format: loc.t("common.relative.minutes_ago_fmt"), diff / 60)
+        case 3600..<86400:
+            return String(format: loc.t("common.relative.hours_ago_fmt"), diff / 3600)
         default:
             let f = DateFormatter(); f.dateStyle = .short
             return f.string(from: date)
         }
     }
 
-    var authorName: String { isAnonymous ? "Anonymous" : (displayName ?? "User") }
+    var authorName: String {
+        if isAnonymous { return LocalizationManager.shared.t("common.anonymous") }
+        return displayName ?? LocalizationManager.shared.t("common.user")
+    }
 }

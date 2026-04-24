@@ -13,8 +13,8 @@ enum AppConstants {
         static let baseURL = "http://192.168.0.24:8080/api/v1"
         static let mediaBaseURL = "http://192.168.0.24:8080"
         #else
-        static let baseURL = "https://echojournal.net/api/v1"
-        static let mediaBaseURL = "https://echojournal.net"
+        static let baseURL = "https://api.echojournal.net/api/v1"
+        static let mediaBaseURL = "https://api.echojournal.net"
         #endif
 
         static func mediaURL(for path: String?) -> URL? {

@@ -36,7 +36,7 @@ struct EchoApp: App {
                         VStack(spacing: 12) {
                             ProgressView()
                                 .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                            Text("Restoring your session…")
+                            Text(locManager.t("app.restoring_session"))
                                 .font(.system(size: 14, weight: .medium))
                                 .foregroundColor(.white)
                         }

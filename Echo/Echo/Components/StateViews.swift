@@ -3,6 +3,7 @@ import SwiftUI
 struct ErrorStateView: View {
     let message: String
     var retryAction: (() -> Void)? = nil
+    @EnvironmentObject private var locManager: LocalizationManager
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
@@ -19,7 +20,7 @@ struct ErrorStateView: View {
 
             if let retryAction {
                 Button(action: retryAction) {
-                    Text("Retry")
+                    Text(locManager.t("common.retry"))
                         .font(AppTheme.Typography.label).fontWeight(.semibold)
                         .foregroundColor(.white)
                         .padding(.horizontal, AppTheme.Spacing.lg)

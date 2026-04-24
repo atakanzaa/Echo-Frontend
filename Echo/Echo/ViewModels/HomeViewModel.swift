@@ -99,7 +99,7 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
             setStatus("voice.status.recording")
             startTimer()
         } catch {
-            errorMessage = "Microphone access error: \(error.localizedDescription)"
+            errorMessage = LocalizationManager.shared.t("home.error.microphone_access")
         }
     }
 
@@ -122,14 +122,14 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
 
     private func uploadRecording() async {
         guard elapsedSeconds >= 3 else {
-            errorMessage  = "Recording too short. Please record at least 3 seconds."
+            errorMessage = LocalizationManager.shared.t("home.error.recording_too_short")
             setStatus("voice.status.ready")
             return
         }
         guard let url = audioFileURL,
               let data = try? Data(contentsOf: url),
               !data.isEmpty else {
-            errorMessage  = "Could not read audio file."
+            errorMessage = LocalizationManager.shared.t("home.error.read_audio_file")
             setStatus("voice.status.ready")
             return
         }
@@ -190,12 +190,13 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
                         isProcessing  = false
                         return
                     case "failed":
-                        errorMessage  = status.errorMessage ?? "Processing failed."
+                        errorMessage = status.errorMessage ?? LocalizationManager.shared.t("home.error.processing_failed")
                         setStatus("voice.status.failed")
                         isProcessing  = false
                         return
                     default:
-                        setStatus("voice.status.processing", fallback: status.status.capitalized + "…")
+                        let localizedStatus = EntryStatus(rawBackend: status.status).displayTitle
+                        setStatus("voice.status.processing", fallback: localizedStatus + "…")
                     }
                 } catch {
                     // polling sırasında hata → devam et
@@ -204,7 +205,7 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
             }
             // Zaman aşımı
             if !Task.isCancelled {
-                errorMessage  = "Analysis timed out. Please try again later."
+                errorMessage = LocalizationManager.shared.t("home.error.analysis_timed_out")
                 setStatus("voice.status.timeout")
                 isProcessing  = false
             }
@@ -232,11 +233,12 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
     }
 
     private func greetingForHour(_ hour: Int) -> String {
+        let loc = LocalizationManager.shared
         switch hour {
-        case 5..<12:  return "Morning Reflection"
-        case 12..<17: return "Afternoon Thoughts"
-        case 17..<21: return "Evening Reflection"
-        default:      return "Night Journal"
+        case 5..<12:  return loc.t("home.greeting_morning")
+        case 12..<17: return loc.t("home.greeting_afternoon")
+        case 17..<21: return loc.t("home.greeting_evening")
+        default:      return loc.t("home.greeting_night")
         }
     }
 
@@ -273,7 +275,7 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
                 self.awaitingConfirmation = true
                 self.setStatus("voice.status.recording_ready")
             } else {
-                self.errorMessage  = "Recording failed. Please try again."
+                self.errorMessage = LocalizationManager.shared.t("home.error.recording_failed")
                 self.setStatus("voice.status.failed")
             }
         }

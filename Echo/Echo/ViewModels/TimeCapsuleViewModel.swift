@@ -67,7 +67,7 @@ final class TimeCapsuleViewModel: NSObject, ObservableObject, AVAudioRecorderDel
             elapsedSeconds = 0
             startTimer()
         } catch {
-            errorMessage = "Mikrofona erişilemiyor."
+            errorMessage = LocalizationManager.shared.t("capsule.error.microphone_unavailable")
         }
     }
 
@@ -130,9 +130,12 @@ final class TimeCapsuleViewModel: NSObject, ObservableObject, AVAudioRecorderDel
     var nextUnlockCountdown: String {
         guard let next = capsules.filter({ $0.status == "sealed" })
             .compactMap({ ISO8601DateFormatter().date(from: $0.unlockAt) })
-            .sorted().first else { return "No sealed capsules" }
+            .sorted().first else { return LocalizationManager.shared.t("capsule.next_unlock_none") }
         let days = Calendar.current.dateComponents([.day], from: Date(), to: next).day ?? 0
-        return days > 0 ? "\(days) Days" : "Unlocked!"
+        if days > 0 {
+            return String(format: LocalizationManager.shared.t("capsule.next_unlock_days_fmt"), days)
+        }
+        return LocalizationManager.shared.t("capsule.next_unlock_unlocked")
     }
 
     private func startTimer() {

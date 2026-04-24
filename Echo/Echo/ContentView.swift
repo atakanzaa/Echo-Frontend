@@ -3,7 +3,6 @@ import SwiftUI
 struct ContentView: View {
     @State private var selectedTab: String = "home"
     @State private var isMenuOpen = false
-    @State private var userName: String = "User"
     @StateObject private var userViewModel = ProfileViewModel()
     @StateObject private var tabNavigation = TabNavigationManager()
     @AppStorage("darkMode") private var darkMode = true
