@@ -51,9 +51,11 @@ struct AppScreenHeader<Trailing: View>: View {
 
             trailingControl
         }
+        .frame(height: AppTheme.Layout.iconButtonSize)
         .padding(.horizontal, AppTheme.Layout.screenHorizontal)
         .padding(.top, AppTheme.Layout.headerTop)
         .padding(.bottom, AppTheme.Layout.headerBottom)
+        .frame(maxWidth: .infinity)
         .background(AppTheme.Colors.background(colorScheme).opacity(0.001))
     }
 

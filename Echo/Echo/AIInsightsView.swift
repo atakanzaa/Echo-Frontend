@@ -68,6 +68,7 @@ struct AIInsightsView: View {
                     ErrorStateView(message: error) {
                         viewModel.loadEligibility()
                     }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if viewModel.insights != nil && !viewModel.hasSufficientData {
                     VStack(spacing: AppTheme.Spacing.md) {
                         Spacer()

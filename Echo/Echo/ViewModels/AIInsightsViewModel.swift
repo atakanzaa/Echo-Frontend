@@ -143,9 +143,19 @@ final class AIInsightsViewModel: ObservableObject {
             isLoading = false
         } catch is CancellationError {
             isLoading = false
+        } catch let error as NetworkError where isForbidden(error) && selectedPeriod != 7 {
+            // Tier-locked period — gracefully fall back to the always-available 7-day window
+            // instead of showing a permission error.
+            selectedPeriod = 7
+            await performLoadInsights()
         } catch {
             errorMessage = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
             isLoading = false
         }
+    }
+
+    private func isForbidden(_ error: NetworkError) -> Bool {
+        if case .forbidden = error { return true }
+        return false
     }
 }

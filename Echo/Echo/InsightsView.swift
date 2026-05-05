@@ -27,6 +27,7 @@ struct InsightsView: View {
                     ErrorStateView(message: error) {
                         viewModel.loadSummary()
                     }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     ScrollView {
                         VStack(spacing: AppTheme.Spacing.lg) {
