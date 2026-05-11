@@ -85,12 +85,12 @@ final class AIInsightsViewModel: ObservableObject {
             let mapped = eligibility.periods.map { p in
                 let label: String
                 switch p.days {
-                case 7: label = "ai.last_7_days"
-                case 30: label = "ai.last_30_days"
-                case 90: label = "ai.last_90_days"
+                case 7:   label = "ai.last_7_days"
+                case 30:  label = "ai.last_30_days"
+                case 90:  label = "ai.last_90_days"
                 case 180: label = "ai.last_180_days"
                 case 365: label = "ai.last_365_days"
-                default: label = "\(p.days) days"
+                default:  label = LocalizationManager.shared.t("ai.last_n_days", p.days)
                 }
                 let progress = p.unlocked ? nil : "\(p.currentEntries)/\(p.requiredEntries)"
                 return PeriodOption(

@@ -314,7 +314,7 @@ enum CoachDateParser {
 }
 
 extension APICoachMessage {
-    var isUser: Bool { role == "user" }
+    var isUser: Bool { messageRole == .user }
 
     var formattedTime: String {
         guard let date = CoachDateParser.parse(createdAt) else { return "" }

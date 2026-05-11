@@ -61,7 +61,7 @@ struct ContentView: View {
                     userName: userViewModel.displayName,
                     unreadNotificationCount: notificationVM.unreadCount,
                     onLogout: {
-                        appState.signOut()
+                        userViewModel.logout()
                     }
                 )
                     .transition(.move(edge: .leading))
