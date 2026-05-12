@@ -114,9 +114,9 @@ final class CoachViewModel: ObservableObject {
         let tempId = UUID().uuidString
         let tempMsg = APICoachMessage(
             id:        tempId,
-            role:      "user",
+            role:      CoachMessageRole.user.rawValue,
             content:   text,
-            createdAt: ISO8601DateFormatter().string(from: Date())
+            createdAt: DateFormatting.iso8601String(from: Date())
         )
         messages.append(tempMsg)
 
@@ -294,32 +294,11 @@ final class CoachViewModel: ObservableObject {
     }
 }
 
-enum CoachDateParser {
-    private static let iso8601WithFractional: ISO8601DateFormatter = {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return formatter
-    }()
-
-    private static let iso8601Standard: ISO8601DateFormatter = {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime]
-        return formatter
-    }()
-
-    static func parse(_ raw: String) -> Date? {
-        if let date = iso8601WithFractional.date(from: raw) { return date }
-        return iso8601Standard.date(from: raw)
-    }
-}
-
 extension APICoachMessage {
-    var isUser: Bool { role == "user" }
+    var isUser: Bool { messageRole == .user }
 
     var formattedTime: String {
-        guard let date = CoachDateParser.parse(createdAt) else { return "" }
-        let f = DateFormatter()
-        f.timeStyle = .short
-        return f.string(from: date)
+        guard let date = DateFormatting.parseISO8601(createdAt) else { return "" }
+        return DateFormatting.shortTime(from: date)
     }
 }

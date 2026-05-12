@@ -43,7 +43,7 @@ final class AppState: ObservableObject {
             currentUser       = authResponse.user
             isAuthenticated   = true
             isRestoringSession = false
-            Log.auth.info("User session restored successfully")
+            Log.auth.info("Auth tokens saved successfully")
         } catch {
             Log.auth.error("Token persistence failed: \(error.localizedDescription)")
         }

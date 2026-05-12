@@ -6,17 +6,19 @@
 import SwiftUI
 import Combine
 
-class LocalizationManager: ObservableObject {
+final class LocalizationManager: ObservableObject {
     static let shared = LocalizationManager()
+
+    private static let languageKey = "appLanguage"
 
     @Published var currentLanguage: String {
         didSet {
-            UserDefaults.standard.set(currentLanguage, forKey: "appLanguage")
+            UserDefaults.standard.set(currentLanguage, forKey: Self.languageKey)
         }
     }
 
     private init() {
-        currentLanguage = UserDefaults.standard.string(forKey: "appLanguage") ?? "tr"
+        currentLanguage = UserDefaults.standard.string(forKey: Self.languageKey) ?? "tr"
     }
 
     func t(_ key: String) -> String {

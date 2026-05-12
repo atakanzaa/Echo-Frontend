@@ -128,8 +128,9 @@ final class TimeCapsuleViewModel: NSObject, ObservableObject, AVAudioRecorderDel
     // MARK: — Helpers
 
     var nextUnlockCountdown: String {
-        guard let next = capsules.filter({ $0.status == "sealed" })
-            .compactMap({ ISO8601DateFormatter().date(from: $0.unlockAt) })
+        guard let next = capsules
+            .filter({ $0.capsuleStatus == .sealed })
+            .compactMap({ DateFormatting.parseISO8601($0.unlockAt) })
             .sorted().first else { return LocalizationManager.shared.t("capsule.next_unlock_none") }
         let days = Calendar.current.dateComponents([.day], from: Date(), to: next).day ?? 0
         if days > 0 {
@@ -160,6 +161,8 @@ final class TimeCapsuleViewModel: NSObject, ObservableObject, AVAudioRecorderDel
 
     func cancelAll() {
         capsulesTask.cancel()
+        timer?.invalidate()
+        timer = nil
     }
 
     private func performLoadCapsules() async {
@@ -182,17 +185,15 @@ final class TimeCapsuleViewModel: NSObject, ObservableObject, AVAudioRecorderDel
 }
 
 extension APITimeCapsule {
-    var isSealed: Bool { status == "sealed" }
+    var isSealed: Bool { capsuleStatus == .sealed }
 
     var unlockDateFormatted: String {
-        guard let d = ISO8601DateFormatter().date(from: unlockAt) else { return unlockAt }
-        let f = DateFormatter(); f.dateStyle = .medium
-        return f.string(from: d)
+        guard let d = DateFormatting.parseISO8601(unlockAt) else { return unlockAt }
+        return DateFormatting.mediumDate(from: d)
     }
 
     var sealedDateShort: String {
-        guard let d = ISO8601DateFormatter().date(from: sealedAt) else { return "" }
-        let f = DateFormatter(); f.dateFormat = "MMM yyyy"
-        return f.string(from: d)
+        guard let d = DateFormatting.parseISO8601(sealedAt) else { return "" }
+        return DateFormatting.shortMonthYear(from: d)
     }
 }
