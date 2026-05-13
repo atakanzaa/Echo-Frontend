@@ -107,15 +107,14 @@ extension APIJournalEntry {
         return m > 0 ? "\(m)m \(s)s" : "\(s)s"
     }
 
-    /// moodCategory (primary) or moodScore-range (fallback) → EmotionalState
     var emotionalState: EmotionalState {
-        if let category = analysis?.moodCategory {
-            switch category {
-            case "STRESS":    return .stress
-            case "NEUTRAL":   return .neutral
-            case "CALM":      return .calm
-            case "MOTIVATED": return .motivated
-            default: break
+        if let resolved = analysis?.resolvedMoodCategory {
+            switch resolved {
+            case .stress:    return .stress
+            case .neutral:   return .neutral
+            case .calm:      return .calm
+            case .motivated: return .motivated
+            case .unknown:   break
             }
         }
         guard let score = analysis?.moodScore else { return .neutral }

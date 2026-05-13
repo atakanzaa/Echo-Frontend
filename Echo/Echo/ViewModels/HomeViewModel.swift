@@ -168,46 +168,44 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
     // MARK: — Status Polling
 
     private func startPolling(entryId: String) {
-        isProcessing  = true
+        isProcessing = true
         setStatus("voice.status.analyzing")
         pollingTask?.cancel()
         pollingTask = Task {
             var attemptCount = 0
-            let maxAttempts  = 30  // 30 × 2s = 60s max wait
-            while !Task.isCancelled && attemptCount < maxAttempts {
+            while !Task.isCancelled && attemptCount < AppConstants.Polling.journalStatusMaxAttempts {
                 attemptCount += 1
                 do {
                     let status: APIEntryStatus = try await APIClient.shared.requestWithAutoRefresh(
                         .getJournalEntryStatus(id: entryId)
                     )
-                    switch status.status {
-                    case "complete":
+                    let resolved = status.entryStatus
+                    switch resolved {
+                    case .complete:
                         let entry: APIJournalEntry = try await APIClient.shared.requestWithAutoRefresh(
                             .getJournalEntry(id: entryId)
                         )
-                        transcript    = entry.transcript ?? ""
+                        transcript   = entry.transcript ?? ""
                         setStatus("voice.status.complete")
-                        isProcessing  = false
+                        isProcessing = false
                         return
-                    case "failed":
+                    case .failed:
                         errorMessage = status.errorMessage ?? LocalizationManager.shared.t("home.error.processing_failed")
                         setStatus("voice.status.failed")
-                        isProcessing  = false
+                        isProcessing = false
                         return
                     default:
-                        let localizedStatus = EntryStatus(rawBackend: status.status).displayTitle
-                        setStatus("voice.status.processing", fallback: localizedStatus + "…")
+                        setStatus("voice.status.processing", fallback: resolved.displayTitle + "…")
                     }
                 } catch {
-                    // polling sırasında hata → devam et
+                    // network hiccup during polling — continue
                 }
-                try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 sn
+                try? await Task.sleep(nanoseconds: AppConstants.Polling.journalStatusDelayNanoseconds)
             }
-            // Zaman aşımı
             if !Task.isCancelled {
                 errorMessage = LocalizationManager.shared.t("home.error.analysis_timed_out")
                 setStatus("voice.status.timeout")
-                isProcessing  = false
+                isProcessing = false
             }
         }
     }

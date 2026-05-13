@@ -316,9 +316,7 @@ struct JournalDetailView: View {
 
     private var isAnalysisProcessing: Bool {
         guard entry.analysis == nil else { return false }
-        let normalized = entry.status.lowercased()
-        let terminal = ["complete", "completed", "done", "success", "failed", "error"]
-        return !terminal.contains(normalized)
+        return !entry.entryStatus.isTerminal
     }
 
     @ViewBuilder
