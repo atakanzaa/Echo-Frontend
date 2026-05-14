@@ -17,17 +17,9 @@ final class InsightsViewModel: ObservableObject {
         return scores.suffix(7).map { $0.moodScore * 10 }
     }
 
-    /// Haftalık chart için gün etiketleri (gerçek tarihlerden)
     var weeklyDayLabels: [String] {
         guard let scores = summary?.dailyMoodScores, !scores.isEmpty else { return [] }
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        let dayFormatter = DateFormatter()
-        dayFormatter.dateFormat = "EEE"
-        dayFormatter.locale = Locale(identifier: "tr_TR")
-        return scores.suffix(7).compactMap { score in
-            formatter.date(from: score.date).map { dayFormatter.string(from: $0) }
-        }
+        return scores.suffix(7).compactMap { DateFormatting.weekdayAbbreviation(from: $0.date) }
     }
 
     var totalEntriesText: String { summary.map { "\($0.recordedDays)" } ?? "—" }

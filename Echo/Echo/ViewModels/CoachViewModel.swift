@@ -94,7 +94,7 @@ final class CoachViewModel: ObservableObject {
         // Aktif session'ı soft-close et (arka planda)
         if let sid = activeSessionId {
             Task {
-                try? await APIClient.shared.requestWithAutoRefresh(.endCoachSession(sessionId: sid)) as APIVoidResponse
+                let _: APIVoidResponse? = try? await APIClient.shared.requestWithAutoRefresh(.endCoachSession(sessionId: sid))
             }
         }
         activeSessionId = nil
