@@ -1,10 +1,3 @@
-//
-//  EchoApp.swift
-//  Echo
-//
-//  Created by yeniMac on 18.02.2026.
-//
-
 import SwiftUI
 #if canImport(GoogleSignIn)
 import GoogleSignIn
@@ -37,7 +30,7 @@ struct EchoApp: App {
                             ProgressView()
                                 .progressViewStyle(CircularProgressViewStyle(tint: .white))
                             Text(locManager.t("app.restoring_session"))
-                                .font(.system(size: 14, weight: .medium))
+                                .font(AppTheme.Typography.caption)
                                 .foregroundColor(.white)
                         }
                         .padding(24)

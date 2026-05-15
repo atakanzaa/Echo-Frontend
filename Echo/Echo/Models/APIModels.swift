@@ -44,7 +44,7 @@ struct APIAnalysisResult: Decodable {
     let summary:            String?
     let moodScore:          Double?
     let moodLabel:          String?
-    let moodCategory:       String?   // "STRESS" | "NEUTRAL" | "CALM" | "MOTIVATED"
+    let moodCategory:       String?
     let topics:             [String]?
     let reflectiveQuestion: String?
     let keyEmotions:        [String]?
@@ -59,7 +59,6 @@ struct APIAnalysisResult: Decodable {
     }
 }
 
-/// Analizden çıkarılan hedef önizlemesi (goals endpoint'indeki tam APIGoal'dan farklı)
 struct APIGoalPreview: Decodable {
     let title:     String
     let timeframe: String?
@@ -96,7 +95,6 @@ struct APISummaryResponse: Decodable {
     let dailyMoodScores:     [APIDailyMoodScore]?
 }
 
-/// Günlük bazda mood verisi — Insights weekly chart ve emotion distribution
 struct APIDailyMoodScore: Decodable {
     let date:      String
     let moodScore: Double
@@ -114,10 +112,10 @@ struct APICalendarMonth: Decodable {
 
 struct APICalendarDay: Decodable {
     let day:              Int
-    let moodLabel:        String?   // nil = no entry
+    let moodLabel:        String?
     let entryId:          String?
-    let moodScore:        Double?   // 0.0-1.0 scale
-    let moodCategory:     String?   // "STRESS" | "NEUTRAL" | "CALM" | "MOTIVATED"
+    let moodScore:        Double?
+    let moodCategory:     String?
     let entryCount:       Int?
     let dominantEmotion:  String?
     let hasCoachSession:  Bool?
@@ -359,7 +357,6 @@ enum GoalCompletionType: String, Decodable {
     case ai = "AI"
 }
 
-/// /api/v1/goals endpoint'inden dönen tam hedef nesnesi
 struct APIGoal: Decodable, Identifiable {
     let id:                   String
     let title:                String
@@ -433,7 +430,7 @@ struct APIUserStats: Decodable {
     let moodScoreAvg:  Double
 }
 
-// MARK: — Profile Summary (AI-generated user profile)
+// MARK: — Profile Summary
 
 struct APIProfileSummary: Decodable {
     let userProfile:       String?
@@ -475,5 +472,4 @@ struct APIOnThisDayEntry: Decodable, Identifiable {
 
 // MARK: — Void / Empty Response
 
-/// Backend'den boş body döndüğünde kullanılır
 struct APIVoidResponse: Decodable {}

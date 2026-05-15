@@ -3,8 +3,6 @@ import Combine
 import OSLog
 import SwiftUI
 
-/// Uygulama genelinde auth durumunu tutar.
-/// APIClient'tan da erişilebilmesi için singleton + @MainActor.
 @MainActor
 final class AppState: ObservableObject {
 
@@ -15,7 +13,6 @@ final class AppState: ObservableObject {
     @Published var isRestoringSession: Bool = false
 
     private init() {
-        // Uygulama açılışında token varsa otomatik login
         isAuthenticated = TokenManager.shared.hasTokens
         if isAuthenticated {
             isRestoringSession = true
@@ -23,8 +20,6 @@ final class AppState: ObservableObject {
         }
     }
 
-    /// Keychain'deki token'ları backend'e doğrulayıp currentUser'ı restore eder.
-    /// Token geçersizse (süresi dolmuş, backend yeniden başlamış vb.) oturumu kapatır.
     func validateSession() async {
         isRestoringSession = true
         do {

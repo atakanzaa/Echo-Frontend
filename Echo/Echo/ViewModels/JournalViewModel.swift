@@ -75,7 +75,6 @@ final class JournalViewModel: ObservableObject {
 
 extension APIJournalEntry {
 
-    /// "Today", "Yesterday", "2 days ago" veya kısa tarih
     var relativeDate: String {
         guard let date = ISO8601DateFormatter().date(from: recordedAt) else { return entryDate }
         let days = Calendar.current.dateComponents([.day], from: date, to: Date()).day ?? 0
@@ -91,7 +90,6 @@ extension APIJournalEntry {
         }
     }
 
-    /// recordedAt → "SEP 22, 10:45 AM"
     var formattedDatetime: String {
         guard let date = ISO8601DateFormatter().date(from: recordedAt) else { return entryDate }
         let f = DateFormatter()
@@ -99,7 +97,6 @@ extension APIJournalEntry {
         return f.string(from: date).uppercased()
     }
 
-    /// audioDurationSeconds → "4m 12s"
     var formattedDuration: String {
         guard let sec = audioDurationSeconds, sec > 0 else { return "" }
         let m = sec / 60
@@ -107,15 +104,14 @@ extension APIJournalEntry {
         return m > 0 ? "\(m)m \(s)s" : "\(s)s"
     }
 
-    /// moodCategory (primary) or moodScore-range (fallback) → EmotionalState
     var emotionalState: EmotionalState {
-        if let category = analysis?.moodCategory {
+        if let category = analysis?.resolvedMoodCategory {
             switch category {
-            case "STRESS":    return .stress
-            case "NEUTRAL":   return .neutral
-            case "CALM":      return .calm
-            case "MOTIVATED": return .motivated
-            default: break
+            case .stress:    return .stress
+            case .neutral:   return .neutral
+            case .calm:      return .calm
+            case .motivated: return .motivated
+            case .unknown:   break
             }
         }
         guard let score = analysis?.moodScore else { return .neutral }

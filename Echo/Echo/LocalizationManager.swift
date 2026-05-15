@@ -1,12 +1,7 @@
-//
-//  LocalizationManager.swift
-//  Echo
-//
-
 import SwiftUI
 import Combine
 
-class LocalizationManager: ObservableObject {
+final class LocalizationManager: ObservableObject {
     static let shared = LocalizationManager()
 
     @Published var currentLanguage: String {

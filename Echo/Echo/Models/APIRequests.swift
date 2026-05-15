@@ -84,7 +84,6 @@ struct SendCoachMessageBody: Encodable {
     let role:    CoachMessageRole
 }
 
-/// Journal hakkinda coach oturumu baslatma
 struct CreateCoachSessionBody: Encodable {
     let journalEntryId: String
 }

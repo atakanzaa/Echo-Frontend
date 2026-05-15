@@ -80,6 +80,8 @@ struct NotificationListView: View {
                                     )
                                 }
                                 .buttonStyle(.plain)
+                                .accessibilityLabel(item.title)
+                                .accessibilityHint(item.body)
                             }
                         }
                         .padding(.horizontal, AppTheme.Spacing.md)
@@ -89,10 +91,7 @@ struct NotificationListView: View {
             }
         }
         .onAppear {
-            Task {
-                await notificationVM.loadNotifications()
-                await notificationVM.refreshUnreadCount()
-            }
+            Task { await notificationVM.loadNotifications() }
         }
     }
 

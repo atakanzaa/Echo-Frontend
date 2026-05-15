@@ -309,10 +309,8 @@ struct APISelectedDayView: View {
     }
 }
 
-// MARK: - Unchanged supporting structs
+// MARK: - Supporting types
 
-// 4 score-range categories + empty (no entry)
-// 0.00-0.25 → stress | 0.25-0.50 → neutral | 0.50-0.75 → calm | 0.75-1.00 → motivated
 enum EmotionalState {
     case stress, neutral, calm, motivated, empty
 

@@ -2,8 +2,6 @@ import Foundation
 import Combine
 import Security
 
-/// JWT token'larını Keychain'de güvenle saklar.
-/// UserDefaults kullanılmaz — iCloud sync kapalı, cihaza özgü.
 final class TokenManager {
 
     static let shared = TokenManager()
@@ -48,11 +46,9 @@ final class TokenManager {
             kSecClass:           kSecClassGenericPassword,
             kSecAttrService:     service,
             kSecValueData:       data,
-            // iCloud'a yükleme, cihaza özgü, ilk unlock sonrası erişilebilir
             kSecAttrAccessible:  kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
         ]
 
-        // Var olanı sil, sonra ekle
         SecItemDelete(query as CFDictionary)
         let status = SecItemAdd(query as CFDictionary, nil)
 

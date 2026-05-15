@@ -75,8 +75,6 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
                 throw NSError(domain: "EchoRecording", code: -1,
                               userInfo: [NSLocalizedDescriptionKey: "No audio input available"])
             }
-            let inputRoute = session.currentRoute.inputs.map { $0.portType.rawValue }.joined(separator: ",")
-            let outputRoute = session.currentRoute.outputs.map { $0.portType.rawValue }.joined(separator: ",")
 
             let url = FileManager.default.temporaryDirectory
                 .appendingPathComponent("echo_\(Date().timeIntervalSince1970).m4a")
@@ -92,7 +90,7 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
             recorder = try AVAudioRecorder(url: url, settings: settings)
             recorder?.delegate = self
             recorder?.record()
-            Log.record.info("Journal recording started routeIn=\(inputRoute) routeOut=\(outputRoute)")
+            Log.record.info("Journal recording started")
 
             isRecording    = true
             elapsedSeconds = 0
@@ -104,18 +102,16 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
     }
 
     func stopRecording() {
-        // Capture actual duration before stop() resets currentTime
         let actual = Int(recorder?.currentTime ?? 0)
         elapsedSeconds = max(elapsedSeconds, actual)
         let m = elapsedSeconds / 60
         let s = elapsedSeconds % 60
         recordingTime = String(format: "%d:%02d", m, s)
 
-        recorder?.stop()   // triggers audioRecorderDidFinishRecording when file is flushed
+        recorder?.stop()
         timer?.invalidate()
         isRecording   = false
         setStatus("voice.status.processing")
-        // upload is initiated in the delegate once the file is fully written to disk
     }
 
     // MARK: — Upload
@@ -134,17 +130,13 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
             return
         }
 
-        let session = AVAudioSession.sharedInstance()
-        let inputRoute = session.currentRoute.inputs.map { $0.portType.rawValue }.joined(separator: ",")
-        let outputRoute = session.currentRoute.outputs.map { $0.portType.rawValue }.joined(separator: ",")
-        let bytesPerSecond = data.count / max(elapsedSeconds, 1)
-        Log.record.info("Journal upload prepared filename=\(url.lastPathComponent) bytes=\(data.count) durationSeconds=\(self.elapsedSeconds) bytesPerSecond=\(bytesPerSecond) routeIn=\(inputRoute) routeOut=\(outputRoute)")
+        Log.record.info("Journal upload prepared bytes=\(data.count, privacy: .public) durationSeconds=\(self.elapsedSeconds, privacy: .public)")
 
         isUploading = true
         let isoNow  = ISO8601DateFormatter().string(from: Date())
 
         do {
-            let entry: APIJournalEntry = try await APIClient.shared.upload(
+            let entry: APIJournalEntry = try await APIClient.shared.uploadWithAutoRefresh(
                 .uploadJournalEntry(
                     audioData:       data,
                     filename:        url.lastPathComponent,
@@ -160,7 +152,6 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
             errorMessage  = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
         }
 
-        // Clean up temp file
         try? FileManager.default.removeItem(at: url)
         audioFileURL = nil
     }
@@ -173,15 +164,15 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
         pollingTask?.cancel()
         pollingTask = Task {
             var attemptCount = 0
-            let maxAttempts  = 30  // 30 × 2s = 60s max wait
+            let maxAttempts  = AppConstants.Polling.journalStatusMaxAttempts
             while !Task.isCancelled && attemptCount < maxAttempts {
                 attemptCount += 1
                 do {
                     let status: APIEntryStatus = try await APIClient.shared.requestWithAutoRefresh(
                         .getJournalEntryStatus(id: entryId)
                     )
-                    switch status.status {
-                    case "complete":
+                    switch status.entryStatus {
+                    case .complete:
                         let entry: APIJournalEntry = try await APIClient.shared.requestWithAutoRefresh(
                             .getJournalEntry(id: entryId)
                         )
@@ -189,21 +180,19 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
                         setStatus("voice.status.complete")
                         isProcessing  = false
                         return
-                    case "failed":
+                    case .failed:
                         errorMessage = status.errorMessage ?? LocalizationManager.shared.t("home.error.processing_failed")
                         setStatus("voice.status.failed")
                         isProcessing  = false
                         return
                     default:
-                        let localizedStatus = EntryStatus(rawBackend: status.status).displayTitle
-                        setStatus("voice.status.processing", fallback: localizedStatus + "…")
+                        setStatus("voice.status.processing", fallback: status.entryStatus.displayTitle + "…")
                     }
                 } catch {
                     // polling sırasında hata → devam et
                 }
-                try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 sn
+                try? await Task.sleep(nanoseconds: AppConstants.Polling.journalStatusDelayNanoseconds)
             }
-            // Zaman aşımı
             if !Task.isCancelled {
                 errorMessage = LocalizationManager.shared.t("home.error.analysis_timed_out")
                 setStatus("voice.status.timeout")
@@ -227,9 +216,7 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
     }
 
     private func formatDateLabel(_ date: Date) -> String {
-        let f = DateFormatter()
-        f.dateFormat = "EEEE, MMM d"
-        return f.string(from: date).uppercased()
+        DateFormatting.weekdayMonthDayUppercased(from: date)
     }
 
     private func greetingForHour(_ hour: Int) -> String {
@@ -267,7 +254,6 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
 
     // MARK: — AVAudioRecorderDelegate
 
-    // Called after recorder.stop() flushes the file to disk
     nonisolated func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder,
                                                      successfully flag: Bool) {
         Task { @MainActor in

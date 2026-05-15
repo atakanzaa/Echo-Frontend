@@ -2,10 +2,6 @@ import Foundation
 import OSLog
 import Combine
 
-/// Merkezi HTTP istemci. Tüm API çağrıları buradan geçer.
-/// - 401 gelince otomatik token yeniler
-/// - Hata yanıtlarını `NetworkError`'a çevirir
-/// - JSON encoding: camelCase → snake_case; decoding: snake_case → camelCase
 @MainActor
 final class APIClient {
 
@@ -28,7 +24,6 @@ final class APIClient {
         return try await execute(urlRequest, endpoint: endpoint)
     }
 
-    /// Multipart upload için özel metod
     func upload<T: Decodable>(_ endpoint: APIRouter) async throws -> T {
         let boundary = UUID().uuidString
         var urlRequest = try endpoint.buildMultipartRequest(boundary: boundary)
@@ -157,8 +152,6 @@ final class APIClient {
 
 extension APIClient {
 
-    /// 401 aldığında refresh token ile yeni access token alır.
-    /// Başarılıysa isteği tekrar gönderir. Başarısızsa signOut yapar.
     func requestWithAutoRefresh<T: Decodable>(_ endpoint: APIRouter) async throws -> T {
         do {
             return try await request(endpoint)
