@@ -318,8 +318,6 @@ extension APICoachMessage {
 
     var formattedTime: String {
         guard let date = CoachDateParser.parse(createdAt) else { return "" }
-        let f = DateFormatter()
-        f.timeStyle = .short
-        return f.string(from: date)
+        return DateFormatting.shortTime(from: date)
     }
 }

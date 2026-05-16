@@ -77,26 +77,21 @@ extension APIJournalEntry {
 
     /// "Today", "Yesterday", "2 days ago" veya kısa tarih
     var relativeDate: String {
-        guard let date = ISO8601DateFormatter().date(from: recordedAt) else { return entryDate }
+        guard let date = DateFormatting.parseISO8601(recordedAt) else { return entryDate }
         let days = Calendar.current.dateComponents([.day], from: date, to: Date()).day ?? 0
         let loc = LocalizationManager.shared
         switch days {
         case 0:  return loc.t("common.today")
         case 1:  return loc.t("common.yesterday")
         case 2:  return String(format: loc.t("common.relative.days_ago_fmt"), 2)
-        default:
-            let f = DateFormatter()
-            f.dateStyle = .medium
-            return f.string(from: date)
+        default: return DateFormatting.mediumDate(from: date)
         }
     }
 
     /// recordedAt → "SEP 22, 10:45 AM"
     var formattedDatetime: String {
-        guard let date = ISO8601DateFormatter().date(from: recordedAt) else { return entryDate }
-        let f = DateFormatter()
-        f.dateFormat = "MMM d, h:mm a"
-        return f.string(from: date).uppercased()
+        guard let date = DateFormatting.parseISO8601(recordedAt) else { return entryDate }
+        return DateFormatting.journalEntryDatetime(from: date)
     }
 
     /// audioDurationSeconds → "4m 12s"
@@ -109,13 +104,13 @@ extension APIJournalEntry {
 
     /// moodCategory (primary) or moodScore-range (fallback) → EmotionalState
     var emotionalState: EmotionalState {
-        if let category = analysis?.moodCategory {
+        if let category = analysis?.resolvedMoodCategory {
             switch category {
-            case "STRESS":    return .stress
-            case "NEUTRAL":   return .neutral
-            case "CALM":      return .calm
-            case "MOTIVATED": return .motivated
-            default: break
+            case .stress:    return .stress
+            case .neutral:   return .neutral
+            case .calm:      return .calm
+            case .motivated: return .motivated
+            case .unknown:   break
             }
         }
         guard let score = analysis?.moodScore else { return .neutral }
@@ -150,13 +145,13 @@ extension APIJournalEntry {
 
 extension APIAnalysisResult {
     var moodLocalizationKey: String {
-        if let category = moodCategory?.uppercased() {
+        if let category = resolvedMoodCategory {
             switch category {
-            case "STRESS": return "calendar.emotion.stress"
-            case "NEUTRAL": return "calendar.emotion.neutral"
-            case "CALM": return "calendar.emotion.calm"
-            case "MOTIVATED": return "calendar.emotion.motivated"
-            default: break
+            case .stress:    return "calendar.emotion.stress"
+            case .neutral:   return "calendar.emotion.neutral"
+            case .calm:      return "calendar.emotion.calm"
+            case .motivated: return "calendar.emotion.motivated"
+            case .unknown:   break
             }
         }
 

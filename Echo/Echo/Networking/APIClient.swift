@@ -142,8 +142,13 @@ final class APIClient {
                 return CancellationError()
             case .timedOut:
                 return NetworkError.timeout
-            case .notConnectedToInternet, .networkConnectionLost:
+            case .notConnectedToInternet, .networkConnectionLost,
+                 .dnsLookupFailed, .cannotFindHost, .cannotConnectToHost:
                 return NetworkError.noInternetConnection
+            case .secureConnectionFailed, .serverCertificateHasBadDate,
+                 .serverCertificateUntrusted, .serverCertificateNotYetValid,
+                 .clientCertificateRejected, .clientCertificateRequired:
+                return NetworkError.invalidResponse
             default:
                 return NetworkError.noInternetConnection
             }

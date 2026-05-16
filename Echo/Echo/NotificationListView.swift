@@ -49,7 +49,7 @@ struct NotificationListView: View {
                         LazyVStack(spacing: AppTheme.Spacing.sm) {
                             ForEach(notificationVM.notifications) { item in
                                 Button {
-                                    Task { await notificationVM.openNotification(item) }
+                                    Task { await notificationVM.markRead(item.id) }
                                     selectedTab = item.tab
                                 } label: {
                                     HStack(alignment: .top, spacing: AppTheme.Spacing.sm) {
@@ -89,10 +89,7 @@ struct NotificationListView: View {
             }
         }
         .onAppear {
-            Task {
-                await notificationVM.loadNotifications()
-                await notificationVM.refreshUnreadCount()
-            }
+            Task { await notificationVM.loadNotifications() }
         }
     }
 

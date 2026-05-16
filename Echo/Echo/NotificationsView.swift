@@ -33,24 +33,6 @@ struct NotificationsView: View {
         }
     }
 
-    @ViewBuilder
-    private func notifSection<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(title)
-                .font(AppTheme.Typography.label).fontWeight(.bold)
-                .tracking(0.6)
-                .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
-                .padding(.horizontal, AppTheme.Spacing.md)
-
-            VStack(spacing: 0) {
-                content()
-            }
-            .padding(AppTheme.Spacing.md)
-            .background(AppTheme.Colors.surfaceElevated(colorScheme))
-            .cornerRadius(AppTheme.Spacing.radiusLg)
-            .padding(.horizontal, AppTheme.Spacing.md)
-        }
-    }
 }
 
 private struct NotifToggleRow: View {

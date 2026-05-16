@@ -110,7 +110,11 @@ final class GoalViewModel: ObservableObject {
     }
 
     func dismissGoal(_ goal: APIGoal) {
-        markNotCompleted(goal)
+        mutateGoal(goal.id) {
+            let _: APIGoal = try await APIClient.shared.requestWithAutoRefresh(.dismissGoal(id: goal.id))
+            self.successMessage = self.localizedGoalMessage("goal.success.not_completed", title: goal.title)
+            await self.refresh()
+        }
     }
 
     func deleteGoal(_ goal: APIGoal) {

@@ -14,9 +14,7 @@ final class CalendarViewModel: ObservableObject {
     private let dayEntryTask = TaskGuard()
 
     var displayMonthYear: String {
-        let f = DateFormatter()
-        f.dateFormat = "MMMM yyyy"
-        return f.string(from: currentDate)
+        DateFormatting.monthYear(from: currentDate)
     }
 
     var year:  Int { Calendar.current.component(.year,  from: currentDate) }
@@ -75,13 +73,13 @@ final class CalendarViewModel: ObservableObject {
     /// Maps APICalendarDay to EmotionalState using backend moodCategory (primary) or moodScore (fallback).
     func emotionalState(for day: APICalendarDay) -> EmotionalState {
         guard day.entryId != nil else { return .empty }
-        if let category = day.moodCategory {
+        if let category = day.resolvedMoodCategory {
             switch category {
-            case "STRESS":    return .stress
-            case "NEUTRAL":   return .neutral
-            case "CALM":      return .calm
-            case "MOTIVATED": return .motivated
-            default: break
+            case .stress:    return .stress
+            case .neutral:   return .neutral
+            case .calm:      return .calm
+            case .motivated: return .motivated
+            case .unknown:   break
             }
         }
         // Fallback: score-range if moodCategory absent

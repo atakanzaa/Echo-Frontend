@@ -1,5 +1,4 @@
 import Foundation
-import Combine
 import OSLog
 import SwiftUI
 
@@ -30,6 +29,8 @@ final class AppState: ObservableObject {
         do {
             let user: APIUser = try await APIClient.shared.requestWithAutoRefresh(.me)
             currentUser = user
+        } catch is CancellationError {
+            // Task cancelled — don't sign out
         } catch {
             signOut()
         }
@@ -40,12 +41,13 @@ final class AppState: ObservableObject {
         do {
             try TokenManager.shared.saveAccessToken(authResponse.accessToken)
             try TokenManager.shared.saveRefreshToken(authResponse.refreshToken)
-            currentUser       = authResponse.user
-            isAuthenticated   = true
+            currentUser        = authResponse.user
+            isAuthenticated    = true
             isRestoringSession = false
-            Log.auth.info("User session restored successfully")
+            Log.auth.info("User signed in successfully")
         } catch {
-            Log.auth.error("Token persistence failed: \(error.localizedDescription)")
+            Log.auth.error("Token persistence failed — signing out: \(error.localizedDescription, privacy: .public)")
+            signOut()
         }
     }
 

@@ -15,7 +15,16 @@ enum AppTab: String, CaseIterable {
     case premium
     case settings
     case notifications
+    case notificationList = "notification_list"
     case help
+    case aboutApp = "about-app"
+    case dataPrivacy = "data-privacy"
+    case termsOfUse = "terms-of-use"
+    case privacyPolicy = "privacy-policy"
+    case acknowledgements
+    case aiProfile = "ai-profile"
+    case editProfile = "edit-profile"
+    case changePassword = "change-password"
 
     var isPrimaryNavigationTab: Bool {
         switch self {

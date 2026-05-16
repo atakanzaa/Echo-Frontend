@@ -37,6 +37,7 @@ enum DateFormatting {
         $0.dateFormat = "yyyy-MM-dd"
     }
     private static let weekdayAbbreviationFormatter = formatter { $0.setLocalizedDateFormatFromTemplate("EEE") }
+    private static let journalEntryDatetimeFormatter = formatter { $0.setLocalizedDateFormatFromTemplate("MMMdhma") }
 
     static func parseISO8601(_ string: String) -> Date? {
         for formatter in iso8601Parsers {
@@ -90,5 +91,9 @@ enum DateFormatting {
     static func weekdayAbbreviation(from dateString: String) -> String? {
         guard let date = apiDateFormatter.date(from: dateString) else { return nil }
         return weekdayAbbreviationFormatter.string(from: date)
+    }
+
+    static func journalEntryDatetime(from date: Date) -> String {
+        journalEntryDatetimeFormatter.string(from: date).uppercased(with: .autoupdatingCurrent)
     }
 }
