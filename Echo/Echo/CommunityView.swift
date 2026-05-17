@@ -18,8 +18,8 @@ struct CommunityView: View {
 
                 // Feed pill tabs — gradient active
                 HStack(spacing: AppTheme.Spacing.sm) {
-                    feedTab(locManager.t("community.global"), tab: "global")
-                    feedTab(locManager.t("community.following"), tab: "following")
+                    feedTab(locManager.t("community.global"), tab: CommunityTab.global.rawValue)
+                    feedTab(locManager.t("community.following"), tab: CommunityTab.following.rawValue)
                     Spacer()
                 }
                 .padding(.horizontal, AppTheme.Layout.screenHorizontal)

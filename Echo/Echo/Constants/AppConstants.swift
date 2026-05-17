@@ -3,7 +3,8 @@ import Foundation
 enum AppConstants {
     enum Brand {
         static let companyDisplayName = "Echo"
-        static let websiteURL = URL(string: "https://echojournal.net")!
+        // swiftlint:disable:next force_unwrapping
+        static let websiteURL: URL = URL(string: "https://echojournal.net")!
     }
 
     enum API {
@@ -70,5 +71,11 @@ enum AppConstants {
         static let shortVersionLabel = "v\(shortVersion)"
         static let fullVersionLabel = "\(shortVersion) (\(buildNumber))"
         static let footerVersionLabel = "\(appDisplayName) \(fullVersionLabel)"
+    }
+
+    enum UserDefaultsKeys {
+        static let appLanguage  = "appLanguage"
+        static let darkMode     = "darkMode"
+        static let privateMode  = "privateMode"
     }
 }

@@ -109,13 +109,13 @@ extension APIJournalEntry {
 
     /// moodCategory (primary) or moodScore-range (fallback) → EmotionalState
     var emotionalState: EmotionalState {
-        if let category = analysis?.moodCategory {
-            switch category {
-            case "STRESS":    return .stress
-            case "NEUTRAL":   return .neutral
-            case "CALM":      return .calm
-            case "MOTIVATED": return .motivated
-            default: break
+        if let resolved = analysis?.resolvedMoodCategory {
+            switch resolved {
+            case .stress:    return .stress
+            case .neutral:   return .neutral
+            case .calm:      return .calm
+            case .motivated: return .motivated
+            case .unknown:   break
             }
         }
         guard let score = analysis?.moodScore else { return .neutral }
@@ -128,15 +128,11 @@ extension APIJournalEntry {
     }
 
     var statusLocalizationKey: String? {
-        switch status.lowercased() {
-        case "complete", "completed", "done", "success":
-            return "journal.status.complete"
-        case "failed", "error":
-            return "journal.status.failed"
-        case "processing", "pending", "queued", "analyzing", "transcribing", "uploading", "uploaded", "in_progress", "in-progress":
-            return "journal.status.processing"
-        default:
-            return nil
+        switch entryStatus {
+        case .complete:                          return "journal.status.complete"
+        case .failed:                            return "journal.status.failed"
+        case .queued, .processing, .transcribing, .analyzing: return "journal.status.processing"
+        case .unknown:                           return nil
         }
     }
 
@@ -150,13 +146,13 @@ extension APIJournalEntry {
 
 extension APIAnalysisResult {
     var moodLocalizationKey: String {
-        if let category = moodCategory?.uppercased() {
-            switch category {
-            case "STRESS": return "calendar.emotion.stress"
-            case "NEUTRAL": return "calendar.emotion.neutral"
-            case "CALM": return "calendar.emotion.calm"
-            case "MOTIVATED": return "calendar.emotion.motivated"
-            default: break
+        if let resolved = resolvedMoodCategory {
+            switch resolved {
+            case .stress:    return "calendar.emotion.stress"
+            case .neutral:   return "calendar.emotion.neutral"
+            case .calm:      return "calendar.emotion.calm"
+            case .motivated: return "calendar.emotion.motivated"
+            case .unknown:   break
             }
         }
 

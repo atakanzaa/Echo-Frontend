@@ -80,10 +80,6 @@ final class GoalsHubViewModel: ObservableObject {
         pendingManualCreate = true
         isCreating = true
         goalViewModel.createGoal(title: manualTitle, timeframe: manualTimeframe)
-        if !goalViewModel.isCreateInFlight() && errorMessage != nil {
-            isCreating = false
-            pendingManualCreate = false
-        }
     }
 
     func completeGoal(_ goal: APIGoal) {

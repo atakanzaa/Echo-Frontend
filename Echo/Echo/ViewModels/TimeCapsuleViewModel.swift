@@ -128,7 +128,7 @@ final class TimeCapsuleViewModel: NSObject, ObservableObject, AVAudioRecorderDel
     // MARK: — Helpers
 
     var nextUnlockCountdown: String {
-        guard let next = capsules.filter({ $0.status == "sealed" })
+        guard let next = capsules.filter({ CapsuleStatus(rawBackend: $0.status) == .sealed })
             .compactMap({ ISO8601DateFormatter().date(from: $0.unlockAt) })
             .sorted().first else { return LocalizationManager.shared.t("capsule.next_unlock_none") }
         let days = Calendar.current.dateComponents([.day], from: Date(), to: next).day ?? 0
@@ -182,7 +182,7 @@ final class TimeCapsuleViewModel: NSObject, ObservableObject, AVAudioRecorderDel
 }
 
 extension APITimeCapsule {
-    var isSealed: Bool { status == "sealed" }
+    var isSealed: Bool { CapsuleStatus(rawBackend: status) == .sealed }
 
     var unlockDateFormatted: String {
         guard let d = ISO8601DateFormatter().date(from: unlockAt) else { return unlockAt }

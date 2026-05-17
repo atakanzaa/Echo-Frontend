@@ -5,7 +5,7 @@ import Combine
 final class CommunityViewModel: ObservableObject {
 
     @Published var posts:          [APICommunityPost] = []
-    @Published var selectedTab     = "global"
+    @Published var selectedTab     = CommunityTab.global.rawValue
     @Published var isLoading       = false
     @Published var isLoadingMore   = false
     @Published var showCreatePost  = false

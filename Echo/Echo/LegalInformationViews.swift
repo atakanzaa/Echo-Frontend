@@ -340,7 +340,8 @@ struct AcknowledgementsView: View {
 
     @State private var activeWebDestination: WebDestination?
 
-    private let googleSignInRepository = URL(string: "https://github.com/google/GoogleSignIn-iOS")!
+    // swiftlint:disable:next force_unwrapping
+    private let googleSignInRepository: URL = URL(string: "https://github.com/google/GoogleSignIn-iOS")!
 
     var body: some View {
         ZStack {

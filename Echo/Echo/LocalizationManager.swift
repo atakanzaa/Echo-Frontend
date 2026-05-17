@@ -11,12 +11,12 @@ class LocalizationManager: ObservableObject {
 
     @Published var currentLanguage: String {
         didSet {
-            UserDefaults.standard.set(currentLanguage, forKey: "appLanguage")
+            UserDefaults.standard.set(currentLanguage, forKey: AppConstants.UserDefaultsKeys.appLanguage)
         }
     }
 
     private init() {
-        currentLanguage = UserDefaults.standard.string(forKey: "appLanguage") ?? "tr"
+        currentLanguage = UserDefaults.standard.string(forKey: AppConstants.UserDefaultsKeys.appLanguage) ?? "tr"
     }
 
     func t(_ key: String) -> String {

@@ -17,7 +17,7 @@ struct EchoApp: App {
     @StateObject private var locManager = LocalizationManager.shared
     @StateObject private var notificationVM = NotificationViewModel.shared
     @Environment(\.scenePhase) private var scenePhase
-    @AppStorage("privateMode") private var privateMode = false
+    @AppStorage(AppConstants.UserDefaultsKeys.privateMode) private var privateMode = false
 
     var body: some Scene {
         WindowGroup {
