@@ -325,7 +325,7 @@ final class PostDetailViewModel: ObservableObject {
 
 extension APIPostComment {
     var relativeTime: String {
-        guard let date = ISO8601DateFormatter().date(from: createdAt) else { return "" }
+        guard let date = DateFormatting.parseISO8601(createdAt) else { return "" }
         let diff = Int(Date().timeIntervalSince(date))
         let loc = LocalizationManager.shared
         switch diff {

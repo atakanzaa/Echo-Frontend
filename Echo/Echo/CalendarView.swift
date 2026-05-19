@@ -185,7 +185,7 @@ struct APISelectedDayView: View {
     @EnvironmentObject var locManager: LocalizationManager
 
     var formattedDate: String {
-        guard let date = ISO8601DateFormatter().date(from: entry.recordedAt) else { return entry.entryDate }
+        guard let date = DateFormatting.parseISO8601(entry.recordedAt) else { return entry.entryDate }
         let f = DateFormatter()
         f.dateFormat = "EEEE, d MMM"
         f.locale = Locale(identifier: locManager.currentLanguage == "tr" ? "tr_TR" : "en_US")

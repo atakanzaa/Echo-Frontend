@@ -45,7 +45,9 @@ final class AppState: ObservableObject {
             isRestoringSession = false
             Log.auth.info("User session restored successfully")
         } catch {
-            Log.auth.error("Token persistence failed: \(error.localizedDescription)")
+            // Partial keychain writes must be cleaned up to avoid inconsistent state.
+            TokenManager.shared.clearAll()
+            Log.auth.error("Token persistence failed: \(error.localizedDescription, privacy: .public)")
         }
     }
 

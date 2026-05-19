@@ -92,7 +92,7 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
             recorder = try AVAudioRecorder(url: url, settings: settings)
             recorder?.delegate = self
             recorder?.record()
-            Log.record.info("Journal recording started routeIn=\(inputRoute) routeOut=\(outputRoute)")
+            Log.record.info("Journal recording started routeIn=\(inputRoute, privacy: .public) routeOut=\(outputRoute, privacy: .public)")
 
             isRecording    = true
             elapsedSeconds = 0
@@ -138,10 +138,10 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
         let inputRoute = session.currentRoute.inputs.map { $0.portType.rawValue }.joined(separator: ",")
         let outputRoute = session.currentRoute.outputs.map { $0.portType.rawValue }.joined(separator: ",")
         let bytesPerSecond = data.count / max(elapsedSeconds, 1)
-        Log.record.info("Journal upload prepared filename=\(url.lastPathComponent) bytes=\(data.count) durationSeconds=\(self.elapsedSeconds) bytesPerSecond=\(bytesPerSecond) routeIn=\(inputRoute) routeOut=\(outputRoute)")
+        Log.record.info("Journal upload prepared bytes=\(data.count, privacy: .public) durationSeconds=\(self.elapsedSeconds, privacy: .public) bytesPerSecond=\(bytesPerSecond, privacy: .public) routeIn=\(inputRoute, privacy: .public) routeOut=\(outputRoute, privacy: .public)")
 
         isUploading = true
-        let isoNow  = ISO8601DateFormatter().string(from: Date())
+        let isoNow  = DateFormatting.iso8601String(from: Date())
 
         do {
             let entry: APIJournalEntry = try await APIClient.shared.upload(
@@ -180,8 +180,8 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
                     let status: APIEntryStatus = try await APIClient.shared.requestWithAutoRefresh(
                         .getJournalEntryStatus(id: entryId)
                     )
-                    switch status.status {
-                    case "complete":
+                    switch status.entryStatus {
+                    case .complete:
                         let entry: APIJournalEntry = try await APIClient.shared.requestWithAutoRefresh(
                             .getJournalEntry(id: entryId)
                         )
@@ -189,13 +189,13 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
                         setStatus("voice.status.complete")
                         isProcessing  = false
                         return
-                    case "failed":
+                    case .failed:
                         errorMessage = status.errorMessage ?? LocalizationManager.shared.t("home.error.processing_failed")
                         setStatus("voice.status.failed")
                         isProcessing  = false
                         return
                     default:
-                        let localizedStatus = EntryStatus(rawBackend: status.status).displayTitle
+                        let localizedStatus = status.entryStatus.displayTitle
                         setStatus("voice.status.processing", fallback: localizedStatus + "…")
                     }
                 } catch {

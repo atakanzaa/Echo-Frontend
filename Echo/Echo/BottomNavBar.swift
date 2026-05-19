@@ -21,11 +21,12 @@ struct RoundedCornerShape: Shape {
 struct BottomNavBar: View {
     @Binding var selectedTab: String
     @EnvironmentObject var locManager: LocalizationManager
+    @Environment(\.colorScheme) private var colorScheme
     var unreadNotificationCount: Int = 0
     var onMenuTap: (() -> Void)? = nil
 
     var body: some View {
-        let inactiveColor = AppTheme.Colors.textMuted(.dark)
+        let inactiveColor = AppTheme.Colors.textMuted(colorScheme)
         let tabs: [(id: String, icon: String, labelKey: String)] = [
             ("home",      "house.fill",    "nav.home"),
             ("journal",   "book.fill",     "nav.journal"),
@@ -68,7 +69,7 @@ struct BottomNavBar: View {
         .padding(.top, AppTheme.Layout.headerBottom)
         .padding(.bottom, AppTheme.Spacing.xl)
         .background(
-            AppTheme.Colors.background(.dark).opacity(0.95)
+            AppTheme.Colors.background(colorScheme).opacity(0.95)
         )
         .clipShape(RoundedCornerShape(radius: 32, corners: [.topLeft, .topRight]))
         .shadow(color: Color.black.opacity(0.4), radius: 16, x: 0, y: -4)

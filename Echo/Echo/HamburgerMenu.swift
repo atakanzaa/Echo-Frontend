@@ -37,7 +37,7 @@ struct HamburgerMenuView: View {
             VStack(spacing: 0) {
                 // Header — Echo wordmark + close
                 HStack {
-                    Text("Echo")
+                    Text(AppConstants.Brand.companyDisplayName)
                         .font(.system(size: 22, weight: .bold))
                         .foregroundStyle(AppTheme.Gradients.accent)
                     Spacer()

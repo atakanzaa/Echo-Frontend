@@ -301,7 +301,7 @@ struct JournalDetailView: View {
     }
 
     private var formattedDate: String {
-        guard let date = ISO8601DateFormatter().date(from: entry.recordedAt) else { return entry.entryDate }
+        guard let date = DateFormatting.parseISO8601(entry.recordedAt) else { return entry.entryDate }
         let f = DateFormatter(); f.dateFormat = "MMMM d, yyyy"
         return f.string(from: date)
     }
