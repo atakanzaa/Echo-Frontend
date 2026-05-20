@@ -91,7 +91,6 @@ struct NotificationListView: View {
         .onAppear {
             Task {
                 await notificationVM.loadNotifications()
-                await notificationVM.refreshUnreadCount()
             }
         }
     }

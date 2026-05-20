@@ -126,15 +126,7 @@ final class PostDetailViewModel: ObservableObject {
         let liked    = post.isLikedByMe
         let newCount = max(0, liked ? post.likesCount - 1 : post.likesCount + 1)
         let original = post
-        post = APICommunityPost(
-            id: post.id, userId: post.userId, displayName: post.displayName,
-            content: post.content, contentType: post.contentType,
-            audioUrl: post.audioUrl, audioDuration: post.audioDuration,
-            imageUrl: post.imageUrl, emoji: post.emoji,
-            isAnonymous: post.isAnonymous, likesCount: newCount,
-            commentsCount: post.commentsCount, isLikedByMe: !liked,
-            createdAt: post.createdAt
-        )
+        post = post.copy(likesCount: newCount, isLikedByMe: !liked)
         Task {
             defer { postLikeMutations.finish(id: original.id) }
             do {
@@ -233,27 +225,11 @@ final class PostDetailViewModel: ObservableObject {
     }
 
     private func incrementCommentsCount() {
-        post = APICommunityPost(
-            id: post.id, userId: post.userId, displayName: post.displayName,
-            content: post.content, contentType: post.contentType,
-            audioUrl: post.audioUrl, audioDuration: post.audioDuration,
-            imageUrl: post.imageUrl, emoji: post.emoji,
-            isAnonymous: post.isAnonymous, likesCount: post.likesCount,
-            commentsCount: post.commentsCount + 1, isLikedByMe: post.isLikedByMe,
-            createdAt: post.createdAt
-        )
+        post = post.copy(commentsCount: post.commentsCount + 1)
     }
 
     private func decrementCommentsCount() {
-        post = APICommunityPost(
-            id: post.id, userId: post.userId, displayName: post.displayName,
-            content: post.content, contentType: post.contentType,
-            audioUrl: post.audioUrl, audioDuration: post.audioDuration,
-            imageUrl: post.imageUrl, emoji: post.emoji,
-            isAnonymous: post.isAnonymous, likesCount: post.likesCount,
-            commentsCount: max(0, post.commentsCount - 1), isLikedByMe: post.isLikedByMe,
-            createdAt: post.createdAt
-        )
+        post = post.copy(commentsCount: max(0, post.commentsCount - 1))
     }
 
     func refresh() async {

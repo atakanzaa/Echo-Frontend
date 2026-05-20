@@ -121,7 +121,7 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
     // MARK: — Upload
 
     private func uploadRecording() async {
-        guard elapsedSeconds >= 3 else {
+        guard elapsedSeconds >= AppConstants.Recording.minimumDurationSeconds else {
             errorMessage = LocalizationManager.shared.t("home.error.recording_too_short")
             setStatus("voice.status.ready")
             return
@@ -173,7 +173,7 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
         pollingTask?.cancel()
         pollingTask = Task {
             var attemptCount = 0
-            let maxAttempts  = 30  // 30 × 2s = 60s max wait
+            let maxAttempts  = AppConstants.Polling.journalStatusMaxAttempts
             while !Task.isCancelled && attemptCount < maxAttempts {
                 attemptCount += 1
                 do {
@@ -199,11 +199,10 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
                         setStatus("voice.status.processing", fallback: localizedStatus + "…")
                     }
                 } catch {
-                    // polling sırasında hata → devam et
+                    // transient error — keep polling
                 }
-                try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 sn
+                try? await Task.sleep(nanoseconds: AppConstants.Polling.journalStatusDelayNanoseconds)
             }
-            // Zaman aşımı
             if !Task.isCancelled {
                 errorMessage = LocalizationManager.shared.t("home.error.analysis_timed_out")
                 setStatus("voice.status.timeout")
