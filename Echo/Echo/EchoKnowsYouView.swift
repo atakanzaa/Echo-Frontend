@@ -120,14 +120,7 @@ struct EchoKnowsYouView: View {
     }
 
     private func formatDate(_ dateStr: String) -> String {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        guard let date = formatter.date(from: dateStr) else {
-            // Try without fractional seconds
-            formatter.formatOptions = [.withInternetDateTime]
-            guard let date = formatter.date(from: dateStr) else { return dateStr }
-            return relativeFormat(date)
-        }
+        guard let date = DateFormatting.parseISO8601(dateStr) else { return dateStr }
         return relativeFormat(date)
     }
 

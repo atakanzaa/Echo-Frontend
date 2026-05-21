@@ -141,7 +141,7 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
         Log.record.info("Journal upload prepared filename=\(url.lastPathComponent) bytes=\(data.count) durationSeconds=\(self.elapsedSeconds) bytesPerSecond=\(bytesPerSecond) routeIn=\(inputRoute) routeOut=\(outputRoute)")
 
         isUploading = true
-        let isoNow  = ISO8601DateFormatter().string(from: Date())
+        let isoNow  = DateFormatting.iso8601String(from: Date())
 
         do {
             let entry: APIJournalEntry = try await APIClient.shared.upload(
@@ -173,15 +173,14 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
         pollingTask?.cancel()
         pollingTask = Task {
             var attemptCount = 0
-            let maxAttempts  = 30  // 30 × 2s = 60s max wait
-            while !Task.isCancelled && attemptCount < maxAttempts {
+            while !Task.isCancelled && attemptCount < AppConstants.Polling.journalStatusMaxAttempts {
                 attemptCount += 1
                 do {
                     let status: APIEntryStatus = try await APIClient.shared.requestWithAutoRefresh(
                         .getJournalEntryStatus(id: entryId)
                     )
-                    switch status.status {
-                    case "complete":
+                    switch status.entryStatus {
+                    case .complete:
                         let entry: APIJournalEntry = try await APIClient.shared.requestWithAutoRefresh(
                             .getJournalEntry(id: entryId)
                         )
@@ -189,21 +188,20 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
                         setStatus("voice.status.complete")
                         isProcessing  = false
                         return
-                    case "failed":
+                    case .failed:
                         errorMessage = status.errorMessage ?? LocalizationManager.shared.t("home.error.processing_failed")
                         setStatus("voice.status.failed")
                         isProcessing  = false
                         return
                     default:
-                        let localizedStatus = EntryStatus(rawBackend: status.status).displayTitle
+                        let localizedStatus = status.entryStatus.displayTitle
                         setStatus("voice.status.processing", fallback: localizedStatus + "…")
                     }
                 } catch {
-                    // polling sırasında hata → devam et
+                    // Network error during polling — continue retrying
                 }
-                try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 sn
+                try? await Task.sleep(nanoseconds: AppConstants.Polling.journalStatusDelayNanoseconds)
             }
-            // Zaman aşımı
             if !Task.isCancelled {
                 errorMessage = LocalizationManager.shared.t("home.error.analysis_timed_out")
                 setStatus("voice.status.timeout")

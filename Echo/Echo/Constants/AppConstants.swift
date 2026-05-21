@@ -3,7 +3,12 @@ import Foundation
 enum AppConstants {
     enum Brand {
         static let companyDisplayName = "Echo"
-        static let websiteURL = URL(string: "https://echojournal.net")!
+        static let websiteURL: URL = {
+            guard let url = URL(string: "https://echojournal.net") else {
+                preconditionFailure("Invalid brand URL constant")
+            }
+            return url
+        }()
     }
 
     enum API {

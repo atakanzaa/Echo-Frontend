@@ -116,7 +116,7 @@ final class CoachViewModel: ObservableObject {
             id:        tempId,
             role:      "user",
             content:   text,
-            createdAt: ISO8601DateFormatter().string(from: Date())
+            createdAt: DateFormatting.iso8601String(from: Date())
         )
         messages.append(tempMsg)
 
@@ -314,12 +314,10 @@ enum CoachDateParser {
 }
 
 extension APICoachMessage {
-    var isUser: Bool { role == "user" }
+    var isUser: Bool { messageRole == .user }
 
     var formattedTime: String {
         guard let date = CoachDateParser.parse(createdAt) else { return "" }
-        let f = DateFormatter()
-        f.timeStyle = .short
-        return f.string(from: date)
+        return DateFormatting.shortTime(from: date)
     }
 }
