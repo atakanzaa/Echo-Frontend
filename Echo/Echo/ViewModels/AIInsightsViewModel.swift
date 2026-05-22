@@ -39,7 +39,8 @@ final class AIInsightsViewModel: ObservableObject {
     var isTrendPositive: Bool { (insights?.emotionalTrend ?? 0) >= 0 }
 
     var selectedPeriodLabel: String {
-        periodOptions.first(where: { $0.days == selectedPeriod })?.label ?? "ai.last_7_days"
+        let key = periodOptions.first(where: { $0.days == selectedPeriod })?.label ?? "ai.last_7_days"
+        return LocalizationManager.shared.t(key)
     }
 
     func loadEligibility() {

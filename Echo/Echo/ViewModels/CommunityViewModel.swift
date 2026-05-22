@@ -45,22 +45,7 @@ final class CommunityViewModel: ObservableObject {
         guard likeMutations.start(id: post.id) else { return }
         let liked    = posts[idx].isLikedByMe
         let newCount = max(0, liked ? posts[idx].likesCount - 1 : posts[idx].likesCount + 1)
-        posts[idx]   = APICommunityPost(
-            id:            post.id,
-            userId:        post.userId,
-            displayName:   post.displayName,
-            content:       post.content,
-            contentType:   post.contentType,
-            audioUrl:      post.audioUrl,
-            audioDuration: post.audioDuration,
-            imageUrl:      post.imageUrl,
-            emoji:         post.emoji,
-            isAnonymous:   post.isAnonymous,
-            likesCount:    newCount,
-            commentsCount: post.commentsCount,
-            isLikedByMe:   !liked,
-            createdAt:     post.createdAt
-        )
+        posts[idx]   = post.copy(likesCount: newCount, isLikedByMe: !liked)
         Task {
             defer { likeMutations.finish(id: post.id) }
             do {

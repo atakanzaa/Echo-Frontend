@@ -52,7 +52,6 @@ final class TokenManager {
             kSecAttrAccessible:  kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
         ]
 
-        // Var olanı sil, sonra ekle
         SecItemDelete(query as CFDictionary)
         let status = SecItemAdd(query as CFDictionary, nil)
 

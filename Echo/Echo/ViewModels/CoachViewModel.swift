@@ -142,7 +142,6 @@ final class CoachViewModel: ObservableObject {
         }
     }
 
-
     func acceptSuggestion(_ suggestion: APIGoalSuggestion) {
         guard let sessionId = activeSessionId else { return }
         guard sendMutationGuard.start(id: suggestion.id) else { return }

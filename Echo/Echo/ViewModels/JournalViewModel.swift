@@ -107,15 +107,14 @@ extension APIJournalEntry {
         return m > 0 ? "\(m)m \(s)s" : "\(s)s"
     }
 
-    /// moodCategory (primary) or moodScore-range (fallback) → EmotionalState
     var emotionalState: EmotionalState {
-        if let category = analysis?.moodCategory {
+        if let category = analysis?.resolvedMoodCategory {
             switch category {
-            case "STRESS":    return .stress
-            case "NEUTRAL":   return .neutral
-            case "CALM":      return .calm
-            case "MOTIVATED": return .motivated
-            default: break
+            case .stress:    return .stress
+            case .neutral:   return .neutral
+            case .calm:      return .calm
+            case .motivated: return .motivated
+            case .unknown:   break
             }
         }
         guard let score = analysis?.moodScore else { return .neutral }
@@ -128,14 +127,14 @@ extension APIJournalEntry {
     }
 
     var statusLocalizationKey: String? {
-        switch status.lowercased() {
-        case "complete", "completed", "done", "success":
+        switch entryStatus {
+        case .complete:
             return "journal.status.complete"
-        case "failed", "error":
+        case .failed:
             return "journal.status.failed"
-        case "processing", "pending", "queued", "analyzing", "transcribing", "uploading", "uploaded", "in_progress", "in-progress":
+        case .queued, .processing, .transcribing, .analyzing:
             return "journal.status.processing"
-        default:
+        case .unknown:
             return nil
         }
     }

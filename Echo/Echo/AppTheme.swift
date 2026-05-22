@@ -40,10 +40,6 @@ extension AppTheme {
 
         static var accentForeground: Color { .white }
 
-        static func tabActive(_ s: ColorScheme) -> Color {
-            s == .dark ? accent : accent
-        }
-
         static func textPrimary(_ s: ColorScheme) -> Color {
             s == .dark ? .white : Color(red: 0.102, green: 0.063, blue: 0.141)
         }

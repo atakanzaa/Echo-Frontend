@@ -364,6 +364,7 @@ struct FlowLayout: Layout {
     }
 }
 
+@MainActor
 final class CoachJournalContext: ObservableObject {
     static let shared = CoachJournalContext()
     @Published var pendingJournalEntryId: String?

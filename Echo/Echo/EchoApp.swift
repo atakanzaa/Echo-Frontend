@@ -76,7 +76,7 @@ struct EchoApp: App {
 private struct PrivacyCoverView: View {
     var body: some View {
         ZStack {
-            Color(red: 0.078, green: 0.039, blue: 0.114)
+            AppTheme.Colors.background(.dark)
                 .ignoresSafeArea()
 
             VStack(spacing: 12) {
