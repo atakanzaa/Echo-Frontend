@@ -301,9 +301,8 @@ struct JournalDetailView: View {
     }
 
     private var formattedDate: String {
-        guard let date = ISO8601DateFormatter().date(from: entry.recordedAt) else { return entry.entryDate }
-        let f = DateFormatter(); f.dateFormat = "MMMM d, yyyy"
-        return f.string(from: date)
+        guard let date = DateFormatting.parseISO8601(entry.recordedAt) else { return entry.entryDate }
+        return DateFormatting.fullJournalDate(from: date)
     }
 
     private func emotionColor(_ emotion: String) -> Color {
@@ -316,9 +315,7 @@ struct JournalDetailView: View {
 
     private var isAnalysisProcessing: Bool {
         guard entry.analysis == nil else { return false }
-        let normalized = entry.status.lowercased()
-        let terminal = ["complete", "completed", "done", "success", "failed", "error"]
-        return !terminal.contains(normalized)
+        return !entry.entryStatus.isTerminal
     }
 
     @ViewBuilder

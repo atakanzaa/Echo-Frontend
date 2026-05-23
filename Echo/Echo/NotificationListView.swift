@@ -49,9 +49,9 @@ struct NotificationListView: View {
                         LazyVStack(spacing: AppTheme.Spacing.sm) {
                             ForEach(notificationVM.notifications) { item in
                                 Button {
-                                    Task { await notificationVM.openNotification(item) }
-                                    selectedTab = item.tab
-                                } label: {
+                                Task { await notificationVM.markRead(item.id) }
+                                selectedTab = item.tab
+                            } label: {
                                     HStack(alignment: .top, spacing: AppTheme.Spacing.sm) {
                                         Circle()
                                             .fill(item.isRead ? AppTheme.Colors.textMuted(colorScheme).opacity(0.35) : AppTheme.Colors.accent)

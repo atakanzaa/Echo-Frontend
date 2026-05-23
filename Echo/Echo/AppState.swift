@@ -36,17 +36,13 @@ final class AppState: ObservableObject {
         isRestoringSession = false
     }
 
-    func signIn(with authResponse: APIAuthResponse) {
-        do {
-            try TokenManager.shared.saveAccessToken(authResponse.accessToken)
-            try TokenManager.shared.saveRefreshToken(authResponse.refreshToken)
-            currentUser       = authResponse.user
-            isAuthenticated   = true
-            isRestoringSession = false
-            Log.auth.info("User session restored successfully")
-        } catch {
-            Log.auth.error("Token persistence failed: \(error.localizedDescription)")
-        }
+    func signIn(with authResponse: APIAuthResponse) throws {
+        try TokenManager.shared.saveAccessToken(authResponse.accessToken)
+        try TokenManager.shared.saveRefreshToken(authResponse.refreshToken)
+        currentUser        = authResponse.user
+        isAuthenticated    = true
+        isRestoringSession = false
+        Log.auth.info("User signed in successfully")
     }
 
     func signOut() {

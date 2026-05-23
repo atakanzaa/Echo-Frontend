@@ -227,6 +227,7 @@ final class CommunityViewModel: ObservableObject {
         } catch is CancellationError {
             isLoadingMore = false
         } catch {
+            errorMessage = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
             isLoadingMore = false
         }
     }
@@ -234,7 +235,7 @@ final class CommunityViewModel: ObservableObject {
 
 extension APICommunityPost {
     var relativeTime: String {
-        guard let date = ISO8601DateFormatter().date(from: createdAt) else { return "" }
+        guard let date = DateFormatting.parseISO8601(createdAt) else { return "" }
         let diff = Int(Date().timeIntervalSince(date))
         let loc = LocalizationManager.shared
         switch diff {

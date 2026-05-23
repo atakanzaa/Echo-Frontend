@@ -141,7 +141,7 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
         Log.record.info("Journal upload prepared filename=\(url.lastPathComponent) bytes=\(data.count) durationSeconds=\(self.elapsedSeconds) bytesPerSecond=\(bytesPerSecond) routeIn=\(inputRoute) routeOut=\(outputRoute)")
 
         isUploading = true
-        let isoNow  = ISO8601DateFormatter().string(from: Date())
+        let isoNow  = DateFormatting.iso8601String(from: Date())
 
         do {
             let entry: APIJournalEntry = try await APIClient.shared.upload(
@@ -173,7 +173,7 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
         pollingTask?.cancel()
         pollingTask = Task {
             var attemptCount = 0
-            let maxAttempts  = 30  // 30 × 2s = 60s max wait
+            let maxAttempts  = AppConstants.Polling.journalStatusMaxAttempts
             while !Task.isCancelled && attemptCount < maxAttempts {
                 attemptCount += 1
                 do {
@@ -201,7 +201,7 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
                 } catch {
                     // polling sırasında hata → devam et
                 }
-                try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 sn
+                try? await Task.sleep(nanoseconds: AppConstants.Polling.journalStatusDelayNanoseconds)
             }
             // Zaman aşımı
             if !Task.isCancelled {

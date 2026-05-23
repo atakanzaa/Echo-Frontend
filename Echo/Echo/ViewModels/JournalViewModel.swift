@@ -77,23 +77,19 @@ extension APIJournalEntry {
 
     /// "Today", "Yesterday", "2 days ago" veya kısa tarih
     var relativeDate: String {
-        guard let date = ISO8601DateFormatter().date(from: recordedAt) else { return entryDate }
+        guard let date = DateFormatting.parseISO8601(recordedAt) else { return entryDate }
         let days = Calendar.current.dateComponents([.day], from: date, to: Date()).day ?? 0
         let loc = LocalizationManager.shared
         switch days {
         case 0:  return loc.t("common.today")
         case 1:  return loc.t("common.yesterday")
         case 2:  return String(format: loc.t("common.relative.days_ago_fmt"), 2)
-        default:
-            let f = DateFormatter()
-            f.dateStyle = .medium
-            return f.string(from: date)
+        default: return DateFormatting.mediumDate(from: date)
         }
     }
 
-    /// recordedAt → "SEP 22, 10:45 AM"
     var formattedDatetime: String {
-        guard let date = ISO8601DateFormatter().date(from: recordedAt) else { return entryDate }
+        guard let date = DateFormatting.parseISO8601(recordedAt) else { return entryDate }
         let f = DateFormatter()
         f.dateFormat = "MMM d, h:mm a"
         return f.string(from: date).uppercased()
@@ -107,15 +103,14 @@ extension APIJournalEntry {
         return m > 0 ? "\(m)m \(s)s" : "\(s)s"
     }
 
-    /// moodCategory (primary) or moodScore-range (fallback) → EmotionalState
     var emotionalState: EmotionalState {
-        if let category = analysis?.moodCategory {
-            switch category {
-            case "STRESS":    return .stress
-            case "NEUTRAL":   return .neutral
-            case "CALM":      return .calm
-            case "MOTIVATED": return .motivated
-            default: break
+        if let resolved = analysis?.resolvedMoodCategory {
+            switch resolved {
+            case .stress:    return .stress
+            case .neutral:   return .neutral
+            case .calm:      return .calm
+            case .motivated: return .motivated
+            case .unknown:   break
             }
         }
         guard let score = analysis?.moodScore else { return .neutral }

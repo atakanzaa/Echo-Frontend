@@ -17,7 +17,7 @@ struct EchoApp: App {
     @StateObject private var locManager = LocalizationManager.shared
     @StateObject private var notificationVM = NotificationViewModel.shared
     @Environment(\.scenePhase) private var scenePhase
-    @AppStorage("privateMode") private var privateMode = false
+    @AppStorage(AppConstants.StorageKeys.privateMode) private var privateMode = false
 
     var body: some Scene {
         WindowGroup {
@@ -76,7 +76,7 @@ struct EchoApp: App {
 private struct PrivacyCoverView: View {
     var body: some View {
         ZStack {
-            Color(red: 0.078, green: 0.039, blue: 0.114)
+            AppTheme.Colors.background(.dark)
                 .ignoresSafeArea()
 
             VStack(spacing: 12) {

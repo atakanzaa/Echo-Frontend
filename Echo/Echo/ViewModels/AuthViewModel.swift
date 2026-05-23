@@ -28,7 +28,7 @@ final class AuthViewModel: ObservableObject {
 
         do {
             let response: APIAuthResponse = try await client.request(.register(body))
-            appState.signIn(with: response)
+            try appState.signIn(with: response)
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -47,7 +47,7 @@ final class AuthViewModel: ObservableObject {
 
         do {
             let response: APIAuthResponse = try await client.request(.login(body))
-            appState.signIn(with: response)
+            try appState.signIn(with: response)
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -100,7 +100,7 @@ final class AuthViewModel: ObservableObject {
         do {
             let body = ChangePasswordBody(currentPassword: currentPassword, newPassword: newPassword)
             let response: APIAuthResponse = try await client.requestWithAutoRefresh(.changePassword(body))
-            appState.signIn(with: response)
+            try appState.signIn(with: response)
             return true
         } catch {
             errorMessage = error.localizedDescription
@@ -123,7 +123,7 @@ final class AuthViewModel: ObservableObject {
                 language: LocalizationManager.shared.currentLanguage
             )
             let response: APIAuthResponse = try await client.request(.googleLogin(body))
-            appState.signIn(with: response)
+            try appState.signIn(with: response)
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -150,7 +150,7 @@ final class AuthViewModel: ObservableObject {
                 language: LocalizationManager.shared.currentLanguage
             )
             let response: APIAuthResponse = try await client.request(.appleLogin(body))
-            appState.signIn(with: response)
+            try appState.signIn(with: response)
         } catch {
             errorMessage = error.localizedDescription
         }

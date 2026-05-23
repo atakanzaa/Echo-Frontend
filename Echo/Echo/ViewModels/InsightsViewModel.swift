@@ -9,24 +9,15 @@ final class InsightsViewModel: ObservableObject {
     @Published var errorMessage: String?
     private let summaryTask = TaskGuard()
 
-    // MARK: — Gerçek veri bazlı haftalık mood scores (placeholder kaldırıldı)
-
-    /// Son 7 girişin mood score'ları (0-10 skalasına çevrilmiş)
     var weeklyScores: [Double] {
         guard let scores = summary?.dailyMoodScores, !scores.isEmpty else { return [] }
         return scores.suffix(7).map { $0.moodScore * 10 }
     }
 
-    /// Haftalık chart için gün etiketleri (gerçek tarihlerden)
     var weeklyDayLabels: [String] {
         guard let scores = summary?.dailyMoodScores, !scores.isEmpty else { return [] }
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        let dayFormatter = DateFormatter()
-        dayFormatter.dateFormat = "EEE"
-        dayFormatter.locale = Locale(identifier: "tr_TR")
         return scores.suffix(7).compactMap { score in
-            formatter.date(from: score.date).map { dayFormatter.string(from: $0) }
+            DateFormatting.weekdayAbbreviation(from: score.date)
         }
     }
 
