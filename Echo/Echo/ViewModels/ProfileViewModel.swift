@@ -46,10 +46,8 @@ final class ProfileViewModel: ObservableObject {
     func updateLanguage(_ language: String) {
         guard !isUpdatingLanguage else { return }
         isUpdatingLanguage = true
-        Task {
-            LocalizationManager.shared.currentLanguage = language
-            isUpdatingLanguage = false
-        }
+        LocalizationManager.shared.currentLanguage = language
+        isUpdatingLanguage = false
     }
 
     func logout() {

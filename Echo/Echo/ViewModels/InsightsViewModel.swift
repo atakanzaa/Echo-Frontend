@@ -17,16 +17,19 @@ final class InsightsViewModel: ObservableObject {
         return scores.suffix(7).map { $0.moodScore * 10 }
     }
 
+    private static let weekdayFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "EEE"
+        f.locale = .autoupdatingCurrent
+        return f
+    }()
+
     /// Haftalık chart için gün etiketleri (gerçek tarihlerden)
     var weeklyDayLabels: [String] {
         guard let scores = summary?.dailyMoodScores, !scores.isEmpty else { return [] }
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        let dayFormatter = DateFormatter()
-        dayFormatter.dateFormat = "EEE"
-        dayFormatter.locale = Locale(identifier: "tr_TR")
         return scores.suffix(7).compactMap { score in
-            formatter.date(from: score.date).map { dayFormatter.string(from: $0) }
+            DateFormatting.weekdayAbbreviation(from: score.date)
+                ?? DateFormatting.parseISO8601(score.date).map { Self.weekdayFormatter.string(from: $0) }
         }
     }
 
@@ -41,10 +44,10 @@ final class InsightsViewModel: ObservableObject {
         let total = scores.count
 
         let order: [(key: String, state: EmotionalState)] = [
-            ("STRESS", .stress),
-            ("NEUTRAL", .neutral),
-            ("CALM", .calm),
-            ("MOTIVATED", .motivated)
+            (MoodCategory.stress.rawValue,    .stress),
+            (MoodCategory.neutral.rawValue,   .neutral),
+            (MoodCategory.calm.rawValue,      .calm),
+            (MoodCategory.motivated.rawValue, .motivated)
         ]
 
         var raw: [(emotion: EmotionalState, label: String, pct: Double, count: Int)] = []
