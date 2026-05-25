@@ -1,7 +1,3 @@
-//
-//  PostDetailView.swift
-//  Echo
-
 import SwiftUI
 
 struct PostDetailView: View {

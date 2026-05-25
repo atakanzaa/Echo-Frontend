@@ -1,7 +1,3 @@
-//
-//  CreatePostView.swift
-//  Echo
-
 import SwiftUI
 import PhotosUI
 

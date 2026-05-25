@@ -266,7 +266,6 @@ struct ProfileStatCell: View {
     }
 }
 
-// Retain SettingItemView for SettingsView (used there)
 struct SettingItemView: View {
     let icon: String; let iconColor: Color; let title: String; let subtitle: String
     var badge: String? = nil

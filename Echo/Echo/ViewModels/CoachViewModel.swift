@@ -91,7 +91,6 @@ final class CoachViewModel: ObservableObject {
     }
 
     func closeSession() {
-        // Aktif session'ı soft-close et (arka planda)
         if let sid = activeSessionId {
             Task {
                 try? await APIClient.shared.requestWithAutoRefresh(.endCoachSession(sessionId: sid)) as APIVoidResponse
@@ -110,7 +109,6 @@ final class CoachViewModel: ObservableObject {
         inputText = ""
         isSending = true
 
-        // Optimistic: kullanıcı mesajını hemen ekle
         let tempId = UUID().uuidString
         let tempMsg = APICoachMessage(
             id:        tempId,
@@ -128,7 +126,6 @@ final class CoachViewModel: ObservableObject {
                 let response: [APICoachMessage] = try await APIClient.shared.requestWithAutoRefresh(
                     .sendCoachMessage(sessionId: sessionId, body: SendCoachMessageBody(content: text, role: .user))
                 )
-                // Temp mesajı kaldır, backend yanıtını ekle
                 messages.removeAll { $0.id == tempId }
                 messages.append(contentsOf: response)
                 isSending = false
@@ -197,7 +194,6 @@ final class CoachViewModel: ObservableObject {
     // MARK: — Yardımcı
 
     private func refreshSessionInList(sessionId: String) {
-        // Güncellenmiş session'ı listenin başına taşı (son activity göstergesi için)
         guard let idx = sessions.firstIndex(where: { $0.id == sessionId }) else { return }
         let session = sessions.remove(at: idx)
         sessions.insert(session, at: 0)
