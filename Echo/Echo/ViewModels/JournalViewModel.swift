@@ -107,15 +107,14 @@ extension APIJournalEntry {
         return m > 0 ? "\(m)m \(s)s" : "\(s)s"
     }
 
-    /// moodCategory (primary) or moodScore-range (fallback) → EmotionalState
     var emotionalState: EmotionalState {
-        if let category = analysis?.moodCategory {
+        if let category = analysis?.resolvedMoodCategory {
             switch category {
-            case "STRESS":    return .stress
-            case "NEUTRAL":   return .neutral
-            case "CALM":      return .calm
-            case "MOTIVATED": return .motivated
-            default: break
+            case .stress:    return .stress
+            case .neutral:   return .neutral
+            case .calm:      return .calm
+            case .motivated: return .motivated
+            case .unknown:   break
             }
         }
         guard let score = analysis?.moodScore else { return .neutral }
@@ -150,13 +149,13 @@ extension APIJournalEntry {
 
 extension APIAnalysisResult {
     var moodLocalizationKey: String {
-        if let category = moodCategory?.uppercased() {
+        if let category = resolvedMoodCategory, category != .unknown {
             switch category {
-            case "STRESS": return "calendar.emotion.stress"
-            case "NEUTRAL": return "calendar.emotion.neutral"
-            case "CALM": return "calendar.emotion.calm"
-            case "MOTIVATED": return "calendar.emotion.motivated"
-            default: break
+            case .stress:    return "calendar.emotion.stress"
+            case .neutral:   return "calendar.emotion.neutral"
+            case .calm:      return "calendar.emotion.calm"
+            case .motivated: return "calendar.emotion.motivated"
+            case .unknown:   break
             }
         }
 
