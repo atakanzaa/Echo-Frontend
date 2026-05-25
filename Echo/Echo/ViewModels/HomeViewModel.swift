@@ -160,7 +160,6 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
             errorMessage  = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
         }
 
-        // Clean up temp file
         try? FileManager.default.removeItem(at: url)
         audioFileURL = nil
     }
@@ -173,7 +172,7 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
         pollingTask?.cancel()
         pollingTask = Task {
             var attemptCount = 0
-            let maxAttempts  = 30  // 30 × 2s = 60s max wait
+            let maxAttempts = AppConstants.Polling.journalStatusMaxAttempts
             while !Task.isCancelled && attemptCount < maxAttempts {
                 attemptCount += 1
                 do {
@@ -199,9 +198,8 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
                         setStatus("voice.status.processing", fallback: localizedStatus + "…")
                     }
                 } catch {
-                    // polling sırasında hata → devam et
                 }
-                try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 sn
+                try? await Task.sleep(nanoseconds: AppConstants.Polling.journalStatusDelayNanoseconds)
             }
             // Zaman aşımı
             if !Task.isCancelled {

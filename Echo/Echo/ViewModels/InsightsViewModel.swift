@@ -17,17 +17,9 @@ final class InsightsViewModel: ObservableObject {
         return scores.suffix(7).map { $0.moodScore * 10 }
     }
 
-    /// Haftalık chart için gün etiketleri (gerçek tarihlerden)
     var weeklyDayLabels: [String] {
         guard let scores = summary?.dailyMoodScores, !scores.isEmpty else { return [] }
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        let dayFormatter = DateFormatter()
-        dayFormatter.dateFormat = "EEE"
-        dayFormatter.locale = Locale(identifier: "tr_TR")
-        return scores.suffix(7).compactMap { score in
-            formatter.date(from: score.date).map { dayFormatter.string(from: $0) }
-        }
+        return scores.suffix(7).compactMap { DateFormatting.weekdayAbbreviation(from: $0.date) }
     }
 
     var totalEntriesText: String { summary.map { "\($0.recordedDays)" } ?? "—" }
@@ -40,18 +32,18 @@ final class InsightsViewModel: ObservableObject {
         guard let scores = summary?.dailyMoodScores, !scores.isEmpty else { return [] }
         let total = scores.count
 
-        let order: [(key: String, state: EmotionalState)] = [
-            ("STRESS", .stress),
-            ("NEUTRAL", .neutral),
-            ("CALM", .calm),
-            ("MOTIVATED", .motivated)
+        let order: [(key: String, state: EmotionalState, labelKey: String)] = [
+            ("STRESS",    .stress,    "calendar.emotion.stress"),
+            ("NEUTRAL",   .neutral,   "calendar.emotion.neutral"),
+            ("CALM",      .calm,      "calendar.emotion.calm"),
+            ("MOTIVATED", .motivated, "calendar.emotion.motivated")
         ]
 
         var raw: [(emotion: EmotionalState, label: String, pct: Double, count: Int)] = []
         for item in order {
             guard let pct = dist[item.key], pct > 0 else { continue }
             let count = Int((Double(total) * pct / 100.0).rounded())
-            raw.append((emotion: item.state, label: item.key.capitalized, pct: pct, count: max(count, 1)))
+            raw.append((emotion: item.state, label: item.labelKey, pct: pct, count: max(count, 1)))
         }
 
         guard !raw.isEmpty else { return [] }
