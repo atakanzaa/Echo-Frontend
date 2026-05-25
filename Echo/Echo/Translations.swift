@@ -1,8 +1,3 @@
-//
-//  Translations.swift
-//  Echo
-//
-
 import Foundation
 
 let translations: [String: [String: String]] = [
@@ -294,6 +289,7 @@ let translations: [String: [String: String]] = [
         "goal.success.added": "\"%@\" added to your goals.",
         "goal.success.completed": "\"%@\" marked as completed.",
         "goal.success.not_completed": "\"%@\" marked as not completed.",
+        "goal.success.dismissed": "\"%@\" dismissed.",
         "goal.success.deleted": "\"%@\" removed from your goals.",
         "goals.title": "Goals",
         "goals.current_title": "Current Goals",
@@ -851,6 +847,7 @@ let translations: [String: [String: String]] = [
         "goal.success.added": "\"%@\" hedefi eklendi.",
         "goal.success.completed": "\"%@\" tamamlandı olarak işaretlendi.",
         "goal.success.not_completed": "\"%@\" tamamlanmadı olarak işaretlendi.",
+        "goal.success.dismissed": "\"%@\" reddedildi.",
         "goal.success.deleted": "\"%@\" hedeflerden kaldırıldı.",
         "goals.title": "Hedefler",
         "goals.current_title": "Mevcut Hedefler",
