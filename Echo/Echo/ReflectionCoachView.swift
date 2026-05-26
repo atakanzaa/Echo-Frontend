@@ -191,14 +191,10 @@ struct ReflectionCoachView: View {
     }
 
     private func sessionTimestamp() -> String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: locManager.currentLanguage == "tr" ? "tr_TR" : "en_US")
-        formatter.setLocalizedDateFormatFromTemplate("EEEE HH:mm")
-
-        if let iso = currentSession?.updatedAt, let date = CoachDateParser.parse(iso) {
-            return formatter.string(from: date)
+        if let iso = currentSession?.updatedAt, let date = DateFormatting.parseISO8601(iso) {
+            return DateFormatting.weekdayTime(from: date)
         }
-        return formatter.string(from: Date())
+        return DateFormatting.weekdayTime(from: Date())
     }
 }
 

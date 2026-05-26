@@ -52,20 +52,7 @@ struct AppNotification: Identifiable, Hashable {
 
     private static func parseDate(_ value: String?) -> Date {
         guard let value, !value.isEmpty else { return Date() }
-
-        let isoWithFractional = ISO8601DateFormatter()
-        isoWithFractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        if let date = isoWithFractional.date(from: value) {
-            return date
-        }
-
-        let iso = ISO8601DateFormatter()
-        iso.formatOptions = [.withInternetDateTime]
-        if let date = iso.date(from: value) {
-            return date
-        }
-
-        return Date()
+        return DateFormatting.parseISO8601(value) ?? Date()
     }
 }
 

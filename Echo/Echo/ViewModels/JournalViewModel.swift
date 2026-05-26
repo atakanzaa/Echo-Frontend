@@ -89,9 +89,7 @@ extension APIJournalEntry {
     /// recordedAt → "SEP 22, 10:45 AM"
     var formattedDatetime: String {
         guard let date = DateFormatting.parseISO8601(recordedAt) else { return entryDate }
-        let f = DateFormatter()
-        f.dateFormat = "MMM d, h:mm a"
-        return f.string(from: date).uppercased()
+        return DateFormatting.compactDateTime(from: date)
     }
 
     /// audioDurationSeconds → "4m 12s"

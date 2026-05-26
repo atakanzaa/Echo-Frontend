@@ -80,7 +80,7 @@ final class TimeCapsuleViewModel: NSObject, ObservableObject, AVAudioRecorderDel
     func createCapsule() {
         isCreating = true
         let unlockDate = Calendar.current.date(byAdding: .day, value: unlockInDays, to: Date()) ?? Date()
-        let iso = ISO8601DateFormatter().string(from: unlockDate)
+        let iso = DateFormatting.iso8601String(from: unlockDate)
         let body = CreateCapsuleBody(
             title:       capsuleTitle.isEmpty ? nil : capsuleTitle,
             contentText: nil,

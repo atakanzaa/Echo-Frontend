@@ -141,7 +141,7 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
         Log.record.info("Journal upload prepared filename=\(url.lastPathComponent) bytes=\(data.count) durationSeconds=\(self.elapsedSeconds) bytesPerSecond=\(bytesPerSecond) routeIn=\(inputRoute) routeOut=\(outputRoute)")
 
         isUploading = true
-        let isoNow  = ISO8601DateFormatter().string(from: Date())
+        let isoNow  = DateFormatting.iso8601String(from: Date())
 
         do {
             let entry: APIJournalEntry = try await APIClient.shared.upload(

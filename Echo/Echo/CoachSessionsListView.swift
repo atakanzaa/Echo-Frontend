@@ -308,7 +308,7 @@ struct SessionRowView: View {
     }
 
     private func relativeDate(_ iso: String) -> String {
-        guard let date = CoachDateParser.parse(iso) else { return locManager.t("coach.just_now") }
+        guard let date = DateFormatting.parseISO8601(iso) else { return locManager.t("coach.just_now") }
         let diff = Calendar.current.dateComponents([.minute, .hour, .day], from: date, to: Date())
         if let day = diff.day, day >= 2  { return "\(day) \(locManager.t("coach.days_ago"))" }
         if let day = diff.day, day == 1  { return locManager.t("coach.yesterday") }

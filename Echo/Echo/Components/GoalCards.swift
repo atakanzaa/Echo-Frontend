@@ -205,14 +205,7 @@ extension APIGoal {
     var completedTimeLabel: String {
         guard let completedAt, !completedAt.isEmpty else { return "" }
 
-        let formatter = ISO8601DateFormatter()
-        let shortFormatter = DateFormatter()
-        shortFormatter.dateStyle = .medium
-        shortFormatter.timeStyle = .short
-
-        if let date = formatter.date(from: completedAt) {
-            return shortFormatter.string(from: date)
-        }
-        return completedAt
+        guard let date = DateFormatting.parseISO8601(completedAt) else { return completedAt }
+        return DateFormatting.mediumDateTime(from: date)
     }
 }
