@@ -6,10 +6,9 @@ final class ProfileViewModel: ObservableObject {
 
     @Published var user:              APIUser?
     @Published var profileSummary:    APIProfileSummary?
-    @Published var isLoading          = false
-    @Published var isLoggingOut       = false
-    @Published var isUpdatingLanguage = false
-    @Published var errorMessage:      String?
+    @Published var isLoading     = false
+    @Published var isLoggingOut  = false
+    @Published var errorMessage: String?
 
     var preferredLanguage: String { LocalizationManager.shared.currentLanguage }
 
@@ -44,12 +43,7 @@ final class ProfileViewModel: ObservableObject {
     }
 
     func updateLanguage(_ language: String) {
-        guard !isUpdatingLanguage else { return }
-        isUpdatingLanguage = true
-        Task {
-            LocalizationManager.shared.currentLanguage = language
-            isUpdatingLanguage = false
-        }
+        LocalizationManager.shared.currentLanguage = language
     }
 
     func logout() {

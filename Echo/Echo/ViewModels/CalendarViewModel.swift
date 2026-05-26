@@ -14,9 +14,7 @@ final class CalendarViewModel: ObservableObject {
     private let dayEntryTask = TaskGuard()
 
     var displayMonthYear: String {
-        let f = DateFormatter()
-        f.dateFormat = "MMMM yyyy"
-        return f.string(from: currentDate)
+        DateFormatting.monthYear(from: currentDate)
     }
 
     var year:  Int { Calendar.current.component(.year,  from: currentDate) }

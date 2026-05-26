@@ -141,11 +141,9 @@ struct ProfileView: View {
         .onAppear { viewModel.loadProfile() }
         .confirmationDialog(locManager.t("settings.language"), isPresented: $showLanguagePicker, titleVisibility: .visible) {
             Button(locManager.t("settings.language_segment_en")) {
-                viewModel.updateLanguage("en")
                 locManager.currentLanguage = "en"
             }
-            Button(locManager.t("settings.language_segment_tr"))  {
-                viewModel.updateLanguage("tr")
+            Button(locManager.t("settings.language_segment_tr")) {
                 locManager.currentLanguage = "tr"
             }
             Button(locManager.t("common.cancel"), role: .cancel) { }

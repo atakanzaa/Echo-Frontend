@@ -47,6 +47,7 @@ struct BottomNavBar: View {
                         ? AppTheme.Colors.accent
                         : inactiveColor)
                 }
+                .accessibilityLabel(locManager.t(tab.labelKey))
             }
 
             Button(action: { onMenuTap?() }) {
@@ -63,6 +64,8 @@ struct BottomNavBar: View {
                 .frame(maxWidth: .infinity)
                 .foregroundColor(inactiveColor)
             }
+            .accessibilityLabel(locManager.t("nav.menu"))
+            .accessibilityValue(unreadNotificationCount > 0 ? "\(unreadNotificationCount)" : "")
         }
         .padding(.horizontal, AppTheme.Layout.screenHorizontal)
         .padding(.top, AppTheme.Layout.headerBottom)

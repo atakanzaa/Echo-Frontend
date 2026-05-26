@@ -16,9 +16,7 @@ final class JournalViewModel: ObservableObject {
     }
 
     func loadByDate(_ date: Date) {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        let dateStr = formatter.string(from: date)
+        let dateStr = DateFormatting.apiDateString(from: date)
         loadTask.run { [weak self] in
             await self?.performLoadByDate(dateStr)
         }
@@ -77,23 +75,20 @@ extension APIJournalEntry {
 
     /// "Today", "Yesterday", "2 days ago" veya kısa tarih
     var relativeDate: String {
-        guard let date = ISO8601DateFormatter().date(from: recordedAt) else { return entryDate }
+        guard let date = DateFormatting.parseISO8601(recordedAt) else { return entryDate }
         let days = Calendar.current.dateComponents([.day], from: date, to: Date()).day ?? 0
         let loc = LocalizationManager.shared
         switch days {
         case 0:  return loc.t("common.today")
         case 1:  return loc.t("common.yesterday")
         case 2:  return String(format: loc.t("common.relative.days_ago_fmt"), 2)
-        default:
-            let f = DateFormatter()
-            f.dateStyle = .medium
-            return f.string(from: date)
+        default: return DateFormatting.mediumDate(from: date)
         }
     }
 
     /// recordedAt → "SEP 22, 10:45 AM"
     var formattedDatetime: String {
-        guard let date = ISO8601DateFormatter().date(from: recordedAt) else { return entryDate }
+        guard let date = DateFormatting.parseISO8601(recordedAt) else { return entryDate }
         let f = DateFormatter()
         f.dateFormat = "MMM d, h:mm a"
         return f.string(from: date).uppercased()

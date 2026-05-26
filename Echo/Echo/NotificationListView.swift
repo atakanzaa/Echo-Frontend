@@ -99,12 +99,8 @@ struct NotificationListView: View {
     private func relativeTime(_ date: Date) -> String {
         let seconds = Int(Date().timeIntervalSince(date))
         if seconds < 60 { return locManager.t("common.relative.now") }
-        if seconds < 3600 {
-            return String(format: locManager.t("common.relative.minutes_ago_fmt"), seconds / 60)
-        }
-        if seconds < 86400 {
-            return String(format: locManager.t("common.relative.hours_ago_fmt"), seconds / 3600)
-        }
+        if seconds < 3600 { return String(format: locManager.t("common.relative.minutes_ago_fmt"), seconds / 60) }
+        if seconds < 86400 { return String(format: locManager.t("common.relative.hours_ago_fmt"), seconds / 3600) }
         return String(format: locManager.t("common.relative.days_ago_fmt"), seconds / 86400)
     }
 }

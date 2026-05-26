@@ -45,22 +45,7 @@ final class CommunityViewModel: ObservableObject {
         guard likeMutations.start(id: post.id) else { return }
         let liked    = posts[idx].isLikedByMe
         let newCount = max(0, liked ? posts[idx].likesCount - 1 : posts[idx].likesCount + 1)
-        posts[idx]   = APICommunityPost(
-            id:            post.id,
-            userId:        post.userId,
-            displayName:   post.displayName,
-            content:       post.content,
-            contentType:   post.contentType,
-            audioUrl:      post.audioUrl,
-            audioDuration: post.audioDuration,
-            imageUrl:      post.imageUrl,
-            emoji:         post.emoji,
-            isAnonymous:   post.isAnonymous,
-            likesCount:    newCount,
-            commentsCount: post.commentsCount,
-            isLikedByMe:   !liked,
-            createdAt:     post.createdAt
-        )
+        posts[idx]   = post.copy(likesCount: newCount, isLikedByMe: !liked)
         Task {
             defer { likeMutations.finish(id: post.id) }
             do {
@@ -234,7 +219,7 @@ final class CommunityViewModel: ObservableObject {
 
 extension APICommunityPost {
     var relativeTime: String {
-        guard let date = ISO8601DateFormatter().date(from: createdAt) else { return "" }
+        guard let date = DateFormatting.parseISO8601(createdAt) else { return "" }
         let diff = Int(Date().timeIntervalSince(date))
         let loc = LocalizationManager.shared
         switch diff {
@@ -245,8 +230,7 @@ extension APICommunityPost {
         case 3600..<86400:
             return String(format: loc.t("common.relative.hours_ago_fmt"), diff / 3600)
         default:
-            let f = DateFormatter(); f.dateStyle = .short
-            return f.string(from: date)
+            return DateFormatting.shortDate(from: date)
         }
     }
 
