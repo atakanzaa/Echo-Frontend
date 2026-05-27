@@ -10,7 +10,7 @@ struct GoalSuggestionCardView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
             HStack(spacing: AppTheme.Spacing.sm) {
-                Image(systemName: suggestion.suggestionType == "COMPLETE_GOAL_CONFIRM" ? "checkmark.seal.fill" : "target")
+                Image(systemName: suggestion.suggestionType == AppConstants.GoalSuggestionType.completeGoalConfirm ? "checkmark.seal.fill" : "target")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(AppTheme.Colors.accent)
                 Text(suggestion.message)

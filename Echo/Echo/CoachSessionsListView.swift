@@ -324,13 +324,13 @@ func localizedCoachSessionTitle(_ rawTitle: String?, locManager: LocalizationMan
     let trimmed = rawTitle.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !trimmed.isEmpty else { return locManager.t("coach.session_fallback") }
 
-    if trimmed.compare("New Conversation", options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame {
+    if trimmed.compare(AppConstants.CoachSession.defaultTitle, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame {
         return locManager.t("coach.title_new_conversation")
     }
 
-    if trimmed.range(of: "Journal Discussion", options: [.caseInsensitive, .diacriticInsensitive]) != nil {
+    if trimmed.range(of: AppConstants.CoachSession.journalDiscussion, options: [.caseInsensitive, .diacriticInsensitive]) != nil {
         return trimmed.replacingOccurrences(
-            of: "Journal Discussion",
+            of: AppConstants.CoachSession.journalDiscussion,
             with: locManager.t("coach.title_journal_discussion"),
             options: [.caseInsensitive, .diacriticInsensitive],
             range: nil

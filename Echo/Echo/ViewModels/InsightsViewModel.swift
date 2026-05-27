@@ -24,7 +24,7 @@ final class InsightsViewModel: ObservableObject {
         formatter.dateFormat = "yyyy-MM-dd"
         let dayFormatter = DateFormatter()
         dayFormatter.dateFormat = "EEE"
-        dayFormatter.locale = Locale(identifier: "tr_TR")
+        dayFormatter.locale = Locale.autoupdatingCurrent
         return scores.suffix(7).compactMap { score in
             formatter.date(from: score.date).map { dayFormatter.string(from: $0) }
         }

@@ -151,7 +151,7 @@ final class CoachViewModel: ObservableObject {
             do {
                 let goal: APIGoal = try await APIClient.shared.requestWithAutoRefresh(.acceptGoalSuggestion(id: suggestion.id))
                 coachSuggestions.removeAll { $0.id == suggestion.id }
-                let key = suggestion.suggestionType == "COMPLETE_GOAL_CONFIRM" ? "goal.success.completed" : "goal.success.added"
+                let key = suggestion.suggestionType == AppConstants.GoalSuggestionType.completeGoalConfirm ? "goal.success.completed" : "goal.success.added"
                 coachSuccessMessage = LocalizationManager.shared.t(key, goal.title)
                 await fetchCoachSuggestions(sessionId: sessionId)
             } catch {
@@ -257,6 +257,7 @@ final class CoachViewModel: ObservableObject {
         } catch is CancellationError {
             isLoadingMore = false
         } catch {
+            listError = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
             isLoadingMore = false
         }
     }
@@ -265,7 +266,7 @@ final class CoachViewModel: ObservableObject {
     private func fetchCoachSuggestions(sessionId: String) async {
         do {
             let result: [APIGoalSuggestion] = try await APIClient.shared.requestWithAutoRefresh(
-                .getGoalSuggestions(sourceType: "COACH", journalEntryId: nil, sessionId: sessionId)
+                .getGoalSuggestions(sourceType: AppConstants.GoalSource.coach, journalEntryId: nil, sessionId: sessionId)
             )
             guard activeSessionId == sessionId else { return }
             coachSuggestions = result
@@ -314,7 +315,7 @@ enum CoachDateParser {
 }
 
 extension APICoachMessage {
-    var isUser: Bool { role == "user" }
+    var isUser: Bool { messageRole == .user }
 
     var formattedTime: String {
         guard let date = CoachDateParser.parse(createdAt) else { return "" }

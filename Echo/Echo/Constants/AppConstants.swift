@@ -3,7 +3,12 @@ import Foundation
 enum AppConstants {
     enum Brand {
         static let companyDisplayName = "Echo"
-        static let websiteURL = URL(string: "https://echojournal.net")!
+        static let websiteURL: URL = {
+            guard let url = URL(string: "https://echojournal.net") else {
+                fatalError("Invalid brand website URL — check AppConstants.Brand.websiteURL")
+            }
+            return url
+        }()
     }
 
     enum API {
@@ -56,6 +61,20 @@ enum AppConstants {
 
     enum Pagination {
         static let defaultPageSize = 20
+    }
+
+    enum GoalSource {
+        static let journal = "JOURNAL"
+        static let coach   = "COACH"
+    }
+
+    enum GoalSuggestionType {
+        static let completeGoalConfirm = "COMPLETE_GOAL_CONFIRM"
+    }
+
+    enum CoachSession {
+        static let defaultTitle        = "New Conversation"
+        static let journalDiscussion   = "Journal Discussion"
     }
 
     enum OAuth {

@@ -159,7 +159,7 @@ final class GoalViewModel: ObservableObject {
     private func performLoadJournalSuggestions(entryId: String) async {
         do {
             let result: [APIGoalSuggestion] = try await APIClient.shared.requestWithAutoRefresh(
-                .getGoalSuggestions(sourceType: "JOURNAL", journalEntryId: entryId, sessionId: nil)
+                .getGoalSuggestions(sourceType: AppConstants.GoalSource.journal, journalEntryId: entryId, sessionId: nil)
             )
             journalSuggestions = result
         } catch is CancellationError {

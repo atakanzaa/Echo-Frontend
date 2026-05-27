@@ -340,7 +340,7 @@ struct AcknowledgementsView: View {
 
     @State private var activeWebDestination: WebDestination?
 
-    private let googleSignInRepository = URL(string: "https://github.com/google/GoogleSignIn-iOS")!
+    private let googleSignInRepository = URL(string: "https://github.com/google/GoogleSignIn-iOS")
 
     var body: some View {
         ZStack {
@@ -372,18 +372,20 @@ struct AcknowledgementsView: View {
 
                             Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
 
-                            SettingsItemView(
-                                icon: "link.circle.fill",
-                                title: locManager.t("ack.source_repository"),
-                                subtitle: googleSignInRepository.absoluteString,
-                                showArrow: true,
-                                onTap: {
-                                    activeWebDestination = .custom(
-                                        title: "GoogleSignIn-iOS",
-                                        url: googleSignInRepository
-                                    )
-                                }
-                            )
+                            if let repoURL = googleSignInRepository {
+                                SettingsItemView(
+                                    icon: "link.circle.fill",
+                                    title: locManager.t("ack.source_repository"),
+                                    subtitle: repoURL.absoluteString,
+                                    showArrow: true,
+                                    onTap: {
+                                        activeWebDestination = .custom(
+                                            title: "GoogleSignIn-iOS",
+                                            url: repoURL
+                                        )
+                                    }
+                                )
+                            }
                         }
 
                         AppVersionFooter()

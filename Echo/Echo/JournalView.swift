@@ -136,7 +136,7 @@ struct APIJournalEntryCard: View {
 
                 Spacer()
 
-                if entry.status == "complete", let analysis = entry.analysis {
+                if entry.entryStatus == .complete, let analysis = entry.analysis {
                     HStack(spacing: 5) {
                         Circle().fill(entry.emotionalState.color).frame(width: 7, height: 7)
                         Text(locManager.t(analysis.moodLocalizationKey))
@@ -165,7 +165,7 @@ struct APIJournalEntryCard: View {
                 .lineSpacing(2)
 
             // Row 4: divider + AI insight badge (if complete)
-            if entry.status == "complete" {
+            if entry.entryStatus == .complete {
                 Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
                 HStack(spacing: 5) {
                     Image(systemName: "sparkles").font(.system(size: 10))

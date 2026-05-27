@@ -227,6 +227,7 @@ final class CommunityViewModel: ObservableObject {
         } catch is CancellationError {
             isLoadingMore = false
         } catch {
+            errorMessage = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
             isLoadingMore = false
         }
     }

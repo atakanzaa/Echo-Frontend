@@ -180,8 +180,8 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
                     let status: APIEntryStatus = try await APIClient.shared.requestWithAutoRefresh(
                         .getJournalEntryStatus(id: entryId)
                     )
-                    switch status.status {
-                    case "complete":
+                    switch status.entryStatus {
+                    case .complete:
                         let entry: APIJournalEntry = try await APIClient.shared.requestWithAutoRefresh(
                             .getJournalEntry(id: entryId)
                         )
@@ -189,14 +189,13 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
                         setStatus("voice.status.complete")
                         isProcessing  = false
                         return
-                    case "failed":
+                    case .failed:
                         errorMessage = status.errorMessage ?? LocalizationManager.shared.t("home.error.processing_failed")
                         setStatus("voice.status.failed")
                         isProcessing  = false
                         return
                     default:
-                        let localizedStatus = EntryStatus(rawBackend: status.status).displayTitle
-                        setStatus("voice.status.processing", fallback: localizedStatus + "…")
+                        setStatus("voice.status.processing", fallback: status.entryStatus.displayTitle + "…")
                     }
                 } catch {
                     // polling sırasında hata → devam et
