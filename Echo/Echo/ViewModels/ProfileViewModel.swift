@@ -6,10 +6,9 @@ final class ProfileViewModel: ObservableObject {
 
     @Published var user:              APIUser?
     @Published var profileSummary:    APIProfileSummary?
-    @Published var isLoading          = false
-    @Published var isLoggingOut       = false
-    @Published var isUpdatingLanguage = false
-    @Published var errorMessage:      String?
+    @Published var isLoading     = false
+    @Published var isLoggingOut  = false
+    @Published var errorMessage: String?
 
     var preferredLanguage: String { LocalizationManager.shared.currentLanguage }
 
@@ -25,44 +24,40 @@ final class ProfileViewModel: ObservableObject {
         loadTask?.cancel()
         isLoading    = true
         errorMessage = nil
-        loadTask = Task {
+        loadTask = Task { [weak self] in
+            guard let self else { return }
             do {
                 async let userReq: APIUser = APIClient.shared.requestWithAutoRefresh(.me)
-                async let summaryReq: APIProfileSummary? = loadProfileSummary()
+                async let summaryReq: APIProfileSummary? = self.loadProfileSummary()
 
                 let (u, s) = try await (userReq, summaryReq)
                 guard !Task.isCancelled else { return }
-                user            = u
-                profileSummary  = s
-                isLoading       = false
+                self.user           = u
+                self.profileSummary = s
+                self.isLoading      = false
             } catch {
                 guard !Task.isCancelled else { return }
-                errorMessage = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
-                isLoading    = false
+                self.errorMessage = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
+                self.isLoading    = false
             }
         }
     }
 
     func updateLanguage(_ language: String) {
-        guard !isUpdatingLanguage else { return }
-        isUpdatingLanguage = true
-        Task {
-            LocalizationManager.shared.currentLanguage = language
-            isUpdatingLanguage = false
-        }
+        LocalizationManager.shared.currentLanguage = language
     }
 
     func logout() {
         guard !isLoggingOut else { return }
         loadTask?.cancel()
         isLoggingOut = true
-        logoutTask = Task {
+        logoutTask = Task { [weak self] in
             if let refreshToken = TokenManager.shared.refreshToken() {
                 let body = LogoutBody(refreshToken: refreshToken)
                 let _: APIVoidResponse? = try? await APIClient.shared.requestWithAutoRefresh(.logout(body))
             }
             AppState.shared.signOut()
-            isLoggingOut = false
+            self?.isLoggingOut = false
         }
     }
 

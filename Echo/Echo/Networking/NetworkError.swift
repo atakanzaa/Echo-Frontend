@@ -47,7 +47,11 @@ enum NetworkError: LocalizedError {
             return turkish ? "Beklenmeyen bir hata oluştu. Tekrar deneyin." : "Something unexpected happened. Please try again."
             #endif
         case .keychainError(let status):
+            #if DEBUG
             return turkish ? "Güvenli depolama hatası: \(status)" : "Secure storage error: \(status)"
+            #else
+            return turkish ? "Güvenli depolama hatası oluştu." : "A secure storage error occurred."
+            #endif
         case .noInternetConnection:
             return turkish ? "İnternet bağlantısı yok." : "No internet connection."
         }

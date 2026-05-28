@@ -88,10 +88,11 @@ final class TimeCapsuleViewModel: NSObject, ObservableObject, AVAudioRecorderDel
             unlockAt:    iso
         )
 
-        Task {
+        Task { [weak self] in
+            guard let self else { return }
             do {
                 let capsule: APITimeCapsule
-                if let audioFileURL {
+                if let audioFileURL = self.audioFileURL {
                     let audioData = try Data(contentsOf: audioFileURL)
                     guard !audioData.isEmpty else {
                         throw NetworkError.invalidResponse
@@ -108,19 +109,19 @@ final class TimeCapsuleViewModel: NSObject, ObservableObject, AVAudioRecorderDel
                         .createCapsule(audioData: nil, filename: nil, body: body)
                     )
                 }
-                capsules.insert(capsule, at: 0)
-                isCreating       = false
-                showCreateSheet  = false
-                capsuleTitle     = ""
-                unlockInDays     = 90
-                if let url = audioFileURL {
+                self.capsules.insert(capsule, at: 0)
+                self.isCreating       = false
+                self.showCreateSheet  = false
+                self.capsuleTitle     = ""
+                self.unlockInDays     = 90
+                if let url = self.audioFileURL {
                     try? FileManager.default.removeItem(at: url)
                 }
-                audioFileURL     = nil
-                recordingTime    = "0:00"
+                self.audioFileURL     = nil
+                self.recordingTime    = "0:00"
             } catch {
-                errorMessage = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
-                isCreating   = false
+                self.errorMessage = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
+                self.isCreating   = false
             }
         }
     }

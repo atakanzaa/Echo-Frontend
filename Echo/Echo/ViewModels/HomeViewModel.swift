@@ -31,6 +31,7 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
     private var audioFileURL: URL?
     private var pollingTask: Task<Void, Never>?
     private let loadRecentTask = TaskGuard()
+    private let onThisDayTask = TaskGuard()
 
     // MARK: — Recent Entries
 
@@ -38,7 +39,7 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
         loadRecentTask.run { [weak self] in
             await self?.performLoadRecent(limit: limit)
         }
-        Task { [weak self] in
+        onThisDayTask.run { [weak self] in
             await self?.loadOnThisDay()
         }
     }
@@ -121,7 +122,7 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
     // MARK: — Upload
 
     private func uploadRecording() async {
-        guard elapsedSeconds >= 3 else {
+        guard elapsedSeconds >= AppConstants.Recording.minimumDurationSeconds else {
             errorMessage = LocalizationManager.shared.t("home.error.recording_too_short")
             setStatus("voice.status.ready")
             return
@@ -289,6 +290,7 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
 
     func cancelAll() {
         loadRecentTask.cancel()
+        onThisDayTask.cancel()
         pollingTask?.cancel()
         pollingTask = nil
     }

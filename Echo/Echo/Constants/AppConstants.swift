@@ -3,7 +3,12 @@ import Foundation
 enum AppConstants {
     enum Brand {
         static let companyDisplayName = "Echo"
-        static let websiteURL = URL(string: "https://echojournal.net")!
+        static let websiteURL: URL = {
+            guard let url = URL(string: "https://echojournal.net") else {
+                preconditionFailure("Invalid hardcoded website URL")
+            }
+            return url
+        }()
     }
 
     enum API {
@@ -66,7 +71,7 @@ enum AppConstants {
         static let appDisplayName = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String ?? Brand.companyDisplayName
         static let shortVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"
         static let buildNumber = Bundle.main.object(forInfoDictionaryKey: kCFBundleVersionKey as String) as? String ?? "1"
-        static let bundleIdentifier = Bundle.main.bundleIdentifier ?? "Yel.Echo"
+        static let bundleIdentifier = Bundle.main.bundleIdentifier ?? "net.echojournal.echo"
         static let shortVersionLabel = "v\(shortVersion)"
         static let fullVersionLabel = "\(shortVersion) (\(buildNumber))"
         static let footerVersionLabel = "\(appDisplayName) \(fullVersionLabel)"
