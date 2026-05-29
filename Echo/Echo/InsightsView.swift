@@ -330,6 +330,7 @@ struct EmotionStatBarView: View {
     let count: Int
     let percentage: Int
     @EnvironmentObject var locManager: LocalizationManager
+    @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -337,7 +338,7 @@ struct EmotionStatBarView: View {
                 Circle().fill(emotion.color).frame(width: 8, height: 8)
                 Text(locManager.t(emotion.label)).font(AppTheme.Typography.label).fontWeight(.semibold).foregroundColor(.white)
                 Spacer()
-                Text("\(count) \(locManager.t("profile.days"))").font(AppTheme.Typography.label).foregroundColor(Color(red: 0.612, green: 0.639, blue: 0.686))
+                Text("\(count) \(locManager.t("profile.days"))").font(AppTheme.Typography.label).foregroundColor(AppTheme.Colors.textMuted(colorScheme))
             }
             GeometryReader { geo in
                 ZStack(alignment: .leading) {

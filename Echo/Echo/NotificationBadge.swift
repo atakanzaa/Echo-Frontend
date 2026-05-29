@@ -11,7 +11,7 @@ struct NotificationBadge: View {
                     .foregroundColor(.white)
                     .padding(.horizontal, 5)
                     .padding(.vertical, 2)
-                    .background(Color.red)
+                    .background(AppTheme.Colors.destructive)
                     .clipShape(Capsule())
             }
         }

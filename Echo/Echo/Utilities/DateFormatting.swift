@@ -36,6 +36,8 @@ enum DateFormatting {
         $0.locale = Locale(identifier: "en_US_POSIX")
         $0.dateFormat = "yyyy-MM-dd"
     }
+    private static let monthDayYearFormatter = formatter { $0.setLocalizedDateFormatFromTemplate("MMMM d yyyy") }
+    private static let shortMonthDayTimeFormatter = formatter { $0.dateFormat = "MMM d, h:mm a" }
     private static let weekdayAbbreviationFormatter = formatter { $0.setLocalizedDateFormatFromTemplate("EEE") }
 
     static func parseISO8601(_ string: String) -> Date? {
@@ -85,6 +87,14 @@ enum DateFormatting {
 
     static func apiDateString(from date: Date) -> String {
         apiDateFormatter.string(from: date)
+    }
+
+    static func monthDayYear(from date: Date) -> String {
+        monthDayYearFormatter.string(from: date)
+    }
+
+    static func shortMonthDayTime(from date: Date) -> String {
+        shortMonthDayTimeFormatter.string(from: date).uppercased(with: .autoupdatingCurrent)
     }
 
     static func weekdayAbbreviation(from dateString: String) -> String? {
