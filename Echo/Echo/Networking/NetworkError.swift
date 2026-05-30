@@ -15,7 +15,7 @@ enum NetworkError: LocalizedError {
     case noInternetConnection
 
     var errorDescription: String? {
-        let turkish = Locale.autoupdatingCurrent.identifier.lowercased().hasPrefix("tr")
+        let turkish = LocalizationManager.shared.currentLanguage == "tr"
 
         switch self {
         case .invalidURL:

@@ -226,10 +226,14 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
         }
     }
 
-    private func formatDateLabel(_ date: Date) -> String {
+    private static let dateLabelFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "EEEE, MMM d"
-        return f.string(from: date).uppercased()
+        return f
+    }()
+
+    private func formatDateLabel(_ date: Date) -> String {
+        Self.dateLabelFormatter.string(from: date).uppercased()
     }
 
     private func greetingForHour(_ hour: Int) -> String {
