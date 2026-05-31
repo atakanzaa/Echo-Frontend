@@ -34,6 +34,10 @@ extension AppTheme {
             Color(red: 0.369, green: 0.055, blue: 0.702)
         }
 
+        static var accentLight: Color {
+            Color(red: 0.769, green: 0.604, blue: 1.0)
+        }
+
         static func accentSoft(_ s: ColorScheme) -> Color {
             s == .dark ? accent.opacity(0.15) : accent.opacity(0.10)
         }

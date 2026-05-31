@@ -10,7 +10,7 @@ struct HamburgerMenuView: View {
     @EnvironmentObject private var notificationVM: NotificationViewModel
     @Environment(\.colorScheme) var colorScheme
 
-    private let accentLight = Color(red: 0.769, green: 0.604, blue: 1.0) // #c49aff
+    private let accentLight = AppTheme.Colors.accentLight
 
     private var effectiveUnreadCount: Int {
         unreadNotificationCount ?? notificationVM.unreadCount
@@ -206,7 +206,7 @@ struct HamburgerMenuView: View {
                     .frame(width: 28, height: 28)
                 Text(label)
                     .font(AppTheme.Typography.body)
-                    .foregroundColor(isActive ? Color(red: 0.769, green: 0.604, blue: 1.0) : .white)
+                    .foregroundColor(isActive ? AppTheme.Colors.accentLight : .white)
                 if badgeCount > 0 {
                     NotificationBadge(count: badgeCount)
                 }
