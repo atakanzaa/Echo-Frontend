@@ -15,7 +15,16 @@ enum AppTab: String, CaseIterable {
     case premium
     case settings
     case notifications
+    case notificationList = "notification_list"
     case help
+    case aboutApp = "about-app"
+    case dataPrivacy = "data-privacy"
+    case termsOfUse = "terms-of-use"
+    case privacyPolicy = "privacy-policy"
+    case acknowledgements
+    case aiProfile = "ai-profile"
+    case editProfile = "edit-profile"
+    case changePassword = "change-password"
 
     var isPrimaryNavigationTab: Bool {
         switch self {
@@ -153,6 +162,28 @@ enum CoachMessageRole: String, Codable {
 
     init(rawBackend value: String) {
         self = CoachMessageRole(rawValue: value.lowercased()) ?? .unknown
+    }
+}
+
+enum GoalSuggestionType: String, Codable {
+    case createGoal = "CREATE_GOAL"
+    case completeGoalConfirm = "COMPLETE_GOAL_CONFIRM"
+    case unknown
+
+    init(from decoder: Decoder) throws {
+        let raw = try decoder.singleValueContainer().decode(String.self).uppercased()
+        self = GoalSuggestionType(rawValue: raw) ?? .unknown
+    }
+}
+
+enum GoalSuggestionSourceType: String, Codable {
+    case journal = "JOURNAL"
+    case coach = "COACH"
+    case unknown
+
+    init(from decoder: Decoder) throws {
+        let raw = try decoder.singleValueContainer().decode(String.self).uppercased()
+        self = GoalSuggestionSourceType(rawValue: raw) ?? .unknown
     }
 }
 

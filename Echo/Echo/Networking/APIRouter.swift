@@ -77,12 +77,16 @@ enum APIRouter {
     case getUnreadNotificationsCount
     case markNotificationRead(id: String)
     case markAllNotificationsRead
+    case registerPushToken(RegisterPushTokenBody)
+    case unregisterPushToken(UnregisterPushTokenBody)
+    case getNotificationPreferences
+    case updateNotificationPreferences(UpdateNotificationPreferencesBody)
 
     // Goals
     case getActiveGoals
     case getAllGoals
     case createGoal(CreateGoalBody)
-    case getGoalSuggestions(sourceType: String?, journalEntryId: String?, sessionId: String?)
+    case getGoalSuggestions(sourceType: GoalSuggestionSourceType?, journalEntryId: String?, sessionId: String?)
     case acceptGoalSuggestion(id: String)
     case rejectGoalSuggestion(id: String)
     case completeGoal(id: String)
@@ -245,6 +249,14 @@ extension APIRouter {
             return ("/notifications/\(id)/read", "PUT", nil, false)
         case .markAllNotificationsRead:
             return ("/notifications/read-all", "PUT", nil, false)
+        case .registerPushToken(let b):
+            return ("/notifications/push-token", "POST", try? Self.encoder.encode(b), false)
+        case .unregisterPushToken(let b):
+            return ("/notifications/push-token", "DELETE", try? Self.encoder.encode(b), false)
+        case .getNotificationPreferences:
+            return ("/notifications/preferences", "GET", nil, false)
+        case .updateNotificationPreferences(let b):
+            return ("/notifications/preferences", "PUT", try? Self.encoder.encode(b), false)
 
         // Goals
         case .getActiveGoals:          return ("/goals", "GET", nil, false)
@@ -252,7 +264,7 @@ extension APIRouter {
         case .createGoal(let body):    return ("/goals", "POST", try? Self.encoder.encode(body), false)
         case .getGoalSuggestions(let sourceType, let journalEntryId, let sessionId):
             var items: [String] = []
-            if let sourceType, !sourceType.isEmpty { items.append("sourceType=\(sourceType)") }
+            if let sourceType, sourceType != .unknown { items.append("sourceType=\(sourceType.rawValue)") }
             if let journalEntryId, !journalEntryId.isEmpty { items.append("journalEntryId=\(journalEntryId)") }
             if let sessionId, !sessionId.isEmpty { items.append("sessionId=\(sessionId)") }
             let query = items.isEmpty ? "" : "?" + items.joined(separator: "&")

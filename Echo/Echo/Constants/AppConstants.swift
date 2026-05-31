@@ -62,6 +62,19 @@ enum AppConstants {
         static let googleClientId = "965240810843-ibiovp5mr1pr9vmnpqpjn11n1bnketf1.apps.googleusercontent.com"
     }
 
+    enum Push {
+        static let platform = "IOS"
+
+        // The aps-environment entitlement determines which APNs server iOS
+        // talks to. Debug builds register through sandbox, release builds
+        // (TestFlight + App Store) through production.
+        #if DEBUG
+        static let environment = "DEVELOPMENT"
+        #else
+        static let environment = "PRODUCTION"
+        #endif
+    }
+
     enum AppInfo {
         static let appDisplayName = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String ?? Brand.companyDisplayName
         static let shortVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"

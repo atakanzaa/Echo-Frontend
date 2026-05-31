@@ -4,7 +4,7 @@ struct AppNotification: Identifiable, Hashable {
     let id: String
     let title: String
     let body: String
-    let tab: String
+    let tab: AppTab
     let createdAt: Date
     var isRead: Bool
 
@@ -17,36 +17,36 @@ struct AppNotification: Identifiable, Hashable {
         isRead = api.isRead
     }
 
-    private static func resolveTab(type: String, targetType: String?) -> String {
+    private static func resolveTab(type: String, targetType: String?) -> AppTab {
         let normalizedTarget = targetType?.uppercased()
         switch normalizedTarget {
         case "JOURNAL_ENTRY":
-            return "journal"
+            return .journal
         case "ACHIEVEMENT":
-            return "achievements"
+            return .achievements
         case "POST":
-            return "community"
+            return .community
         case "CAPSULE":
-            return "timecapsule"
+            return .timeCapsule
         default:
             break
         }
 
         switch type.uppercased() {
         case "ANALYSIS_COMPLETE":
-            return "journal"
+            return .journal
         case "ACHIEVEMENT_EARNED":
-            return "achievements"
+            return .achievements
         case "POST_COMMENTED", "POST_LIKED", "COMMENT_REPLIED":
-            return "community"
+            return .community
         case "CAPSULE_UNLOCKED":
-            return "timecapsule"
+            return .timeCapsule
         case "MOOD_ALERT":
-            return "coach"
+            return .coach
         case "INSIGHT_UNLOCKED", "WEEKLY_REFLECTION":
-            return "insights"
+            return .insights
         default:
-            return "home"
+            return .home
         }
     }
 
@@ -71,7 +71,7 @@ struct AppNotification: Identifiable, Hashable {
 
 struct NotificationNavigation: Identifiable {
     let id = UUID()
-    let tab: String
+    let tab: AppTab
 }
 
 struct APINotificationItem: Decodable {
@@ -124,4 +124,46 @@ struct APINotificationItem: Decodable {
 
 struct APIUnreadCountResponse: Decodable {
     let count: Int
+}
+
+struct RegisterPushTokenBody: Encodable {
+    let token: String
+    let platform: String
+    let environment: String
+}
+
+struct UnregisterPushTokenBody: Encodable {
+    let token: String
+}
+
+struct APINotificationPreferences: Decodable {
+    let masterEnabled: Bool
+    let dailyRemindersEnabled: Bool
+    let communityEnabled: Bool
+    let achievementsEnabled: Bool
+    let insightsEnabled: Bool
+    let moodAlertsEnabled: Bool
+    let capsulesEnabled: Bool
+    let coachEnabled: Bool
+    let systemEnabled: Bool
+    let preferredLocalHour: Int
+    let quietHoursStartLocal: Int?
+    let quietHoursEndLocal: Int?
+    let timezone: String?
+}
+
+struct UpdateNotificationPreferencesBody: Encodable {
+    var masterEnabled: Bool?
+    var dailyRemindersEnabled: Bool?
+    var communityEnabled: Bool?
+    var achievementsEnabled: Bool?
+    var insightsEnabled: Bool?
+    var moodAlertsEnabled: Bool?
+    var capsulesEnabled: Bool?
+    var coachEnabled: Bool?
+    var systemEnabled: Bool?
+    var preferredLocalHour: Int?
+    var quietHoursStartLocal: Int?
+    var quietHoursEndLocal: Int?
+    var timezone: String?
 }

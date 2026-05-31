@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct NotificationListView: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     @EnvironmentObject private var notificationVM: NotificationViewModel
     @EnvironmentObject var locManager: LocalizationManager
     @EnvironmentObject private var tabNavigation: TabNavigationManager
@@ -16,7 +16,7 @@ struct NotificationListView: View {
                     title: locManager.t("notifications.title"),
                     showBack: true,
                     onBack: {
-                        selectedTab = tabNavigation.goBack(from: selectedTab, fallback: "profile")
+                        selectedTab = tabNavigation.goBack(from: selectedTab, fallback: .profile)
                     }
                 ) {
                     Button(action: {

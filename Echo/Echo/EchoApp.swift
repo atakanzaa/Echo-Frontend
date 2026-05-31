@@ -13,9 +13,11 @@ import GoogleSignIn
 @main
 struct EchoApp: App {
 
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var appState = AppState.shared
     @StateObject private var locManager = LocalizationManager.shared
     @StateObject private var notificationVM = NotificationViewModel.shared
+    @StateObject private var pushManager = PushNotificationManager.shared
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("privateMode") private var privateMode = false
 
@@ -56,6 +58,7 @@ struct EchoApp: App {
             .environmentObject(appState)
             .environmentObject(locManager)
             .environmentObject(notificationVM)
+            .environmentObject(pushManager)
             .privacySensitive(appState.isAuthenticated || privateMode)
             .animation(.easeInOut(duration: 0.3), value: appState.isAuthenticated)
             .animation(.easeInOut(duration: 0.2), value: appState.isRestoringSession)

@@ -50,10 +50,18 @@ final class AppState: ObservableObject {
     }
 
     func signOut() {
-        TokenManager.shared.clearAll()
-        currentUser     = nil
-        isAuthenticated = false
-        isRestoringSession = false
-        Log.auth.info("User signed out")
+        // Unregister the push token before clearing auth so the backend can
+        // call DELETE /push-token while we still have valid credentials. We
+        // detach into a Task so signOut() stays synchronous; if the request
+        // fails (e.g. offline), the worst case is a stale row server-side
+        // that APNs feedback will eventually invalidate.
+        Task { @MainActor in
+            await PushNotificationManager.shared.unregisterCurrentTokenIfPossible()
+            TokenManager.shared.clearAll()
+            self.currentUser     = nil
+            self.isAuthenticated = false
+            self.isRestoringSession = false
+            Log.auth.info("User signed out")
+        }
     }
 }
