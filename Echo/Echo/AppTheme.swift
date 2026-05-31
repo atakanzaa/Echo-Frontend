@@ -174,7 +174,7 @@ extension AppTheme {
         static let rowMinHeight: CGFloat = 56
         static let chipHPadding: CGFloat = 10
         static let chipVPadding: CGFloat = 6
-        static let bottomFloatingOffset: CGFloat = navAwareBottomInset + Spacing.sm
+        static let bottomFloatingOffset: CGFloat = navAwareBottomInset + Spacing.xl
         static let sheetBottomInset: CGFloat = Spacing.xl
     }
 }
@@ -294,6 +294,12 @@ extension View {
 
     func echoIconContainer(_ color: Color, size: CGFloat = AppTheme.Layout.iconButtonSize, radius: CGFloat = AppTheme.Spacing.radiusSm) -> some View {
         modifier(EchoIconContainerModifier(color: color, size: size, radius: radius))
+    }
+
+    func echoSectionContent() -> some View {
+        self
+            .padding(.horizontal, AppTheme.Spacing.md)
+            .padding(.vertical, AppTheme.Spacing.sm)
     }
 }
 

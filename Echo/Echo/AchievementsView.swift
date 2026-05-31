@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct AchievementsView: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     @EnvironmentObject var locManager: LocalizationManager
     @EnvironmentObject private var tabNavigation: TabNavigationManager
     @StateObject private var viewModel = AchievementsViewModel()
@@ -23,7 +23,7 @@ struct AchievementsView: View {
                     title: locManager.t("nav.achievements"),
                     showBack: true,
                     onBack: {
-                        selectedTab = tabNavigation.goBack(from: selectedTab, fallback: "profile")
+                        selectedTab = tabNavigation.goBack(from: selectedTab, fallback: .profile)
                     },
                     showMenu: true,
                     onMenu: { isMenuOpen.toggle() }

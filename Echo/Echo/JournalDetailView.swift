@@ -3,7 +3,7 @@ import Combine
 
 struct JournalDetailView: View {
     let entry: APIJournalEntry
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     @EnvironmentObject var locManager: LocalizationManager
     @StateObject private var goalViewModel = GoalViewModel()
     @State private var showTranscript = false
@@ -277,7 +277,7 @@ struct JournalDetailView: View {
     private var coachButton: some View {
         Button(action: {
             CoachJournalContext.shared.pendingJournalEntryId = entry.id
-            selectedTab = "coach"
+            selectedTab = .coach
             dismiss()
         }) {
             HStack(spacing: 10) {

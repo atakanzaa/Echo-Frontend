@@ -19,18 +19,18 @@ struct RoundedCornerShape: Shape {
 // MARK: - Bottom Nav Bar
 
 struct BottomNavBar: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     @EnvironmentObject var locManager: LocalizationManager
     var unreadNotificationCount: Int = 0
     var onMenuTap: (() -> Void)? = nil
 
     var body: some View {
         let inactiveColor = AppTheme.Colors.textMuted(.dark)
-        let tabs: [(id: String, icon: String, labelKey: String)] = [
-            ("home",      "house.fill",    "nav.home"),
-            ("journal",   "book.fill",     "nav.journal"),
-            ("community", "person.3.fill", "nav.community"),
-            ("coach",     "sparkles",      "nav.coach"),
+        let tabs: [(id: AppTab, icon: String, labelKey: String)] = [
+            (.home,      "house.fill",    "nav.home"),
+            (.journal,   "book.fill",     "nav.journal"),
+            (.community, "person.3.fill", "nav.community"),
+            (.coach,     "sparkles",      "nav.coach"),
         ]
 
         HStack(spacing: 0) {

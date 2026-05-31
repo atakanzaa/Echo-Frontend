@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct JournalView: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     @StateObject private var viewModel = JournalViewModel()
     @State private var searchText = ""
     @EnvironmentObject var locManager: LocalizationManager
@@ -87,7 +87,7 @@ struct JournalView: View {
                 .font(AppTheme.Typography.body).foregroundColor(AppTheme.Colors.textMuted(colorScheme))
                 .multilineTextAlignment(.center).padding(.horizontal, AppTheme.Spacing.xl)
             if searchText.isEmpty {
-                Button(action: { selectedTab = "home" }) {
+                Button(action: { selectedTab = .home }) {
                     Text(locManager.t("journal.record_now"))
                         .font(AppTheme.Typography.bodyEm).foregroundColor(.white)
                         .padding(.horizontal, AppTheme.Spacing.xl).padding(.vertical, AppTheme.Spacing.sm + 4)

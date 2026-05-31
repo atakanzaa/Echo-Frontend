@@ -2,7 +2,7 @@ import SwiftUI
 
 struct HamburgerMenuView: View {
     @Binding var isMenuOpen: Bool
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     var userName: String = ""
     var unreadNotificationCount: Int? = nil
     var onLogout: (() -> Void)? = nil
@@ -84,33 +84,33 @@ struct HamburgerMenuView: View {
                 .cornerRadius(AppTheme.Spacing.radiusMd)
                 .padding(.horizontal, AppTheme.Spacing.md)
                 .padding(.bottom, AppTheme.Spacing.md)
-                .onTapGesture { navigate("profile") }
+                .onTapGesture { navigate(.profile) }
 
                 ScrollView(showsIndicators: false) {
-                    VStack(spacing: 4) {
+                    VStack(spacing: 2) {
                         // Main nav
-                        drawerItem(icon: "house.fill",        label: locManager.t("nav.home"),         tab: "home")
-                        drawerItem(icon: "book.fill",         label: locManager.t("nav.journal"),      tab: "journal")
-                        drawerItem(icon: "person.3.fill",     label: locManager.t("nav.community"),    tab: "community")
-                        drawerItem(icon: "sparkles",          label: locManager.t("hamburger.ai_coach"), tab: "coach")
+                        drawerItem(icon: "house.fill",        label: locManager.t("nav.home"),         tab: .home)
+                        drawerItem(icon: "book.fill",         label: locManager.t("nav.journal"),      tab: .journal)
+                        drawerItem(icon: "person.3.fill",     label: locManager.t("nav.community"),    tab: .community)
+                        drawerItem(icon: "sparkles",          label: locManager.t("hamburger.ai_coach"), tab: .coach)
 
                         Divider()
                             .background(Color.white.opacity(0.08))
                             .padding(.vertical, AppTheme.Spacing.sm)
 
-                        drawerItem(icon: "calendar",          label: locManager.t("nav.calendar"),     tab: "calendar")
-                        drawerItem(icon: "target",            label: locManager.t("nav.goals"),        tab: "goals")
-                        drawerItem(icon: "chart.bar.fill",    label: locManager.t("nav.insights"),     tab: "insights")
-                        drawerItem(icon: "brain.head.profile",label: locManager.t("nav.ai_insights"),  tab: "aiinsights")
-                        drawerItem(icon: "trophy.fill",       label: locManager.t("nav.achievements"), tab: "achievements")
-                        drawerItem(icon: "clock.fill",        label: locManager.t("nav.time_capsule"), tab: "timecapsule")
+                        drawerItem(icon: "calendar",          label: locManager.t("nav.calendar"),     tab: .calendar)
+                        drawerItem(icon: "target",            label: locManager.t("nav.goals"),        tab: .goals)
+                        drawerItem(icon: "chart.bar.fill",    label: locManager.t("nav.insights"),     tab: .insights)
+                        drawerItem(icon: "brain.head.profile",label: locManager.t("nav.ai_insights"),  tab: .aiInsights)
+                        drawerItem(icon: "trophy.fill",       label: locManager.t("nav.achievements"), tab: .achievements)
+                        drawerItem(icon: "clock.fill",        label: locManager.t("nav.time_capsule"), tab: .timeCapsule)
 
                         Divider()
                             .background(Color.white.opacity(0.08))
                             .padding(.vertical, AppTheme.Spacing.sm)
 
                         // Premium card
-                        Button(action: { navigate("premium") }) {
+                        Button(action: { navigate(.premium) }) {
                             HStack {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(locManager.t("hamburger.echo_premium"))
@@ -146,14 +146,14 @@ struct HamburgerMenuView: View {
                             .background(Color.white.opacity(0.08))
                             .padding(.vertical, AppTheme.Spacing.sm)
 
-                        drawerItem(icon: "gear", label: locManager.t("nav.settings"), tab: "settings")
+                        drawerItem(icon: "gear", label: locManager.t("nav.settings"), tab: .settings)
                         drawerItem(
                             icon: "bell.fill",
                             label: locManager.t("notifications.title"),
-                            tab: "notification_list",
+                            tab: .notificationList,
                             badgeCount: effectiveUnreadCount
                         )
-                        drawerItem(icon: "questionmark.circle", label: locManager.t("nav.help_support"), tab: "help")
+                        drawerItem(icon: "questionmark.circle", label: locManager.t("nav.help_support"), tab: .help)
 
                         // Logout
                         Button(action: { isMenuOpen = false; onLogout?() }) {
@@ -167,7 +167,7 @@ struct HamburgerMenuView: View {
                                     .foregroundColor(AppTheme.Colors.destructive)
                                 Spacer()
                             }
-                            .padding(.vertical, 10)
+                            .padding(.vertical, AppTheme.Spacing.sm)
                             .padding(.horizontal, AppTheme.Spacing.sm)
                         }
                     }
@@ -190,13 +190,13 @@ struct HamburgerMenuView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
     }
 
-    private func navigate(_ tab: String) {
+    private func navigate(_ tab: AppTab) {
         selectedTab = tab
         withAnimation(.easeInOut(duration: 0.25)) { isMenuOpen = false }
     }
 
     @ViewBuilder
-    private func drawerItem(icon: String, label: String, tab: String, badgeCount: Int = 0) -> some View {
+    private func drawerItem(icon: String, label: String, tab: AppTab, badgeCount: Int = 0) -> some View {
         let isActive = selectedTab == tab
         Button(action: { navigate(tab) }) {
             HStack(spacing: AppTheme.Spacing.sm) {
@@ -212,7 +212,7 @@ struct HamburgerMenuView: View {
                 }
                 Spacer()
             }
-            .padding(.vertical, 10)
+            .padding(.vertical, AppTheme.Spacing.sm)
             .padding(.horizontal, AppTheme.Spacing.sm)
             .background(isActive ? Color(red: 0.153, green: 0.102, blue: 0.200) : Color.clear)
             .cornerRadius(AppTheme.Spacing.radiusSm)

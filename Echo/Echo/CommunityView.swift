@@ -2,7 +2,7 @@ import SwiftUI
 import Combine
 
 struct CommunityView: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     @StateObject private var viewModel = CommunityViewModel()
     @State private var isMenuOpen = false
     @State private var expandedPostId: String?
@@ -18,8 +18,8 @@ struct CommunityView: View {
 
                 // Feed pill tabs — gradient active
                 HStack(spacing: AppTheme.Spacing.sm) {
-                    feedTab(locManager.t("community.global"), tab: "global")
-                    feedTab(locManager.t("community.following"), tab: "following")
+                    feedTab(locManager.t("community.global"), tab: .global)
+                    feedTab(locManager.t("community.following"), tab: .following)
                     Spacer()
                 }
                 .padding(.horizontal, AppTheme.Layout.screenHorizontal)
@@ -106,7 +106,7 @@ struct CommunityView: View {
     }
 
     @ViewBuilder
-    private func feedTab(_ label: String, tab: String) -> some View {
+    private func feedTab(_ label: String, tab: CommunityTab) -> some View {
         let isActive = viewModel.selectedTab == tab
         Button(action: { viewModel.loadFeed(tab: tab) }) {
             Text(label)

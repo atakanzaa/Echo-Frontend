@@ -5,7 +5,7 @@ import Combine
 final class CommunityViewModel: ObservableObject {
 
     @Published var posts:          [APICommunityPost] = []
-    @Published var selectedTab     = "global"
+    @Published var selectedTab:    CommunityTab = .global
     @Published var isLoading       = false
     @Published var isLoadingMore   = false
     @Published var showCreatePost  = false
@@ -20,7 +20,7 @@ final class CommunityViewModel: ObservableObject {
 
     // MARK: — Feed
 
-    func loadFeed(tab: String? = nil, reset: Bool = true) {
+    func loadFeed(tab: CommunityTab? = nil, reset: Bool = true) {
         let activeTab = tab ?? selectedTab
         if tab != nil { selectedTab = activeTab }
         feedTask.run { [weak self] in
@@ -168,7 +168,7 @@ final class CommunityViewModel: ObservableObject {
         likeMutations.reset()
     }
 
-    private func performLoadFeed(activeTab: String, reset: Bool) async {
+    private func performLoadFeed(activeTab: CommunityTab, reset: Bool) async {
         if reset {
             currentPage = 0
             hasMore = true
@@ -184,9 +184,8 @@ final class CommunityViewModel: ObservableObject {
         errorMessage = nil
         do {
             let page = currentPage
-            let tabValue = CommunityTab(rawValue: activeTab) ?? .global
             let paged: APIPagedResponse<APICommunityPost> = try await APIClient.shared.requestWithAutoRefresh(
-                .getCommunityFeed(tab: tabValue, page: page, size: pageSize)
+                .getCommunityFeed(tab: activeTab, page: page, size: pageSize)
             )
             guard !Task.isCancelled else { return }
             guard selectedTab == activeTab else {
@@ -209,11 +208,10 @@ final class CommunityViewModel: ObservableObject {
         }
     }
 
-    private func performLoadMore(activeTab: String, page: Int) async {
+    private func performLoadMore(activeTab: CommunityTab, page: Int) async {
         do {
-            let tabValue = CommunityTab(rawValue: activeTab) ?? .global
             let paged: APIPagedResponse<APICommunityPost> = try await APIClient.shared.requestWithAutoRefresh(
-                .getCommunityFeed(tab: tabValue, page: page, size: pageSize)
+                .getCommunityFeed(tab: activeTab, page: page, size: pageSize)
             )
             guard !Task.isCancelled else { return }
             guard selectedTab == activeTab else {

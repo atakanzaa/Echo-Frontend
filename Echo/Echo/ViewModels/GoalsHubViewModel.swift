@@ -12,10 +12,13 @@ final class GoalsHubViewModel: ObservableObject {
     @Published private(set) var isCreating = false
     @Published var errorMessage: String?
     @Published var successMessage: String?
+    @Published private(set) var aiSuggestions: [APIGoalSuggestion] = []
+    @Published private(set) var inFlightSuggestionIds: Set<String> = []
 
     private let goalViewModel = GoalViewModel()
     private var cancellables: Set<AnyCancellable> = []
     private var pendingManualCreate = false
+    private let suggestionsTask = TaskGuard()
 
     init() {
         goalViewModel.$allGoals
@@ -64,16 +67,28 @@ final class GoalsHubViewModel: ObservableObject {
         completedGoals.first?.title
     }
 
+    var completedThisWeek: Int {
+        let weekStart = Calendar.current.dateInterval(of: .weekOfYear, for: Date())?.start ?? Date()
+        let iso = ISO8601DateFormatter()
+        return completedGoals.filter { goal in
+            guard let str = goal.completedAt, let date = iso.date(from: str) else { return false }
+            return date >= weekStart
+        }.count
+    }
+
     func load() {
         goalViewModel.loadGoals()
+        loadSuggestions()
     }
 
     func cancelAll() {
         goalViewModel.cancelAll()
+        suggestionsTask.cancel()
     }
 
     func refresh() async {
         await goalViewModel.refresh()
+        loadSuggestions()
     }
 
     func createManualGoal() {
@@ -96,5 +111,62 @@ final class GoalsHubViewModel: ObservableObject {
 
     func isInFlight(goalId: String) -> Bool {
         goalViewModel.isInFlight(goalId: goalId)
+    }
+
+    // MARK: — AI Suggestions
+
+    func loadSuggestions() {
+        suggestionsTask.run { [weak self] in
+            await self?.performLoadSuggestions()
+        }
+    }
+
+    func acceptSuggestion(_ suggestion: APIGoalSuggestion) {
+        guard inFlightSuggestionIds.insert(suggestion.id).inserted else { return }
+        Task {
+            defer { inFlightSuggestionIds.remove(suggestion.id) }
+            do {
+                let _: APIGoal = try await APIClient.shared.requestWithAutoRefresh(
+                    .acceptGoalSuggestion(id: suggestion.id)
+                )
+                aiSuggestions.removeAll { $0.id == suggestion.id }
+                goalViewModel.loadGoals()
+            } catch {
+                errorMessage = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
+            }
+        }
+    }
+
+    func rejectSuggestion(_ suggestion: APIGoalSuggestion) {
+        guard inFlightSuggestionIds.insert(suggestion.id).inserted else { return }
+        Task {
+            defer { inFlightSuggestionIds.remove(suggestion.id) }
+            do {
+                let _: APIVoidResponse = try await APIClient.shared.requestWithAutoRefresh(
+                    .rejectGoalSuggestion(id: suggestion.id)
+                )
+                aiSuggestions.removeAll { $0.id == suggestion.id }
+            } catch {
+                errorMessage = (error as? NetworkError)?.localizedDescription ?? error.localizedDescription
+            }
+        }
+    }
+
+    func isSuggestionInFlight(id: String) -> Bool {
+        inFlightSuggestionIds.contains(id)
+    }
+
+    private func performLoadSuggestions() async {
+        do {
+            let result: [APIGoalSuggestion] = try await APIClient.shared.requestWithAutoRefresh(
+                .getGoalSuggestions(sourceType: nil, journalEntryId: nil, sessionId: nil)
+            )
+            guard !Task.isCancelled else { return }
+            aiSuggestions = result.filter { $0.suggestionType == .createGoal }
+        } catch is CancellationError {
+            return
+        } catch {
+            // Sessizce geç — AI önerileri kritik değil; ana akış bozulmasın
+        }
     }
 }

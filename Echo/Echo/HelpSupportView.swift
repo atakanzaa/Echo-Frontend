@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct HelpSupportView: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     @State private var expandedQuestion: String? = nil
     @Environment(\.colorScheme) var colorScheme
     @EnvironmentObject var locManager: LocalizationManager
@@ -37,7 +37,7 @@ struct HelpSupportView: View {
                 DetailScreenHeader(
                     title: locManager.t("nav.help_support"),
                     selectedTab: $selectedTab,
-                    fallback: "settings"
+                    fallback: .settings
                 )
 
                 ScrollView {
@@ -78,7 +78,7 @@ struct HelpSupportView: View {
                         .cornerRadius(AppTheme.Spacing.radiusMd)
                         .padding(.horizontal, AppTheme.Spacing.md)
 
-                        VStack(alignment: .leading, spacing: 10) {
+                        VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
                             Text(locManager.t("help.frequently_asked"))
                                 .font(AppTheme.Typography.label).fontWeight(.bold)
                                 .tracking(0.6)
@@ -110,13 +110,13 @@ struct HelpSupportView: View {
                                     }
                                 }
                             }
-                            .padding(AppTheme.Spacing.md)
+                            .echoSectionContent()
                             .background(AppTheme.Colors.surfaceElevated(colorScheme))
                             .cornerRadius(AppTheme.Spacing.radiusLg)
                             .padding(.horizontal, AppTheme.Spacing.md)
                         }
 
-                        VStack(alignment: .leading, spacing: 10) {
+                        VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
                             Text(locManager.t("help.quick_actions"))
                                 .font(AppTheme.Typography.label).fontWeight(.bold)
                                 .tracking(0.6)
@@ -174,7 +174,7 @@ struct HelpSupportView: View {
                                     action: { ExternalNavigator.requestAppReview() }
                                 )
                             }
-                            .padding(AppTheme.Spacing.md)
+                            .echoSectionContent()
                             .background(AppTheme.Colors.surfaceElevated(colorScheme))
                             .cornerRadius(AppTheme.Spacing.radiusLg)
                             .padding(.horizontal, AppTheme.Spacing.md)

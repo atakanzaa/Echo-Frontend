@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct CoachSessionsListView: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     @EnvironmentObject var locManager: LocalizationManager
     @StateObject private var viewModel = CoachViewModel()
     @State private var isMenuOpen       = false

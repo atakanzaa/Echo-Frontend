@@ -2,7 +2,7 @@ import SwiftUI
 import Combine
 
 struct EditProfileView: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     @EnvironmentObject var locManager: LocalizationManager
     @EnvironmentObject private var tabNavigation: TabNavigationManager
     @Environment(\.colorScheme) var colorScheme
@@ -17,12 +17,12 @@ struct EditProfileView: View {
                     title: locManager.t("profile.edit_profile"),
                     showBack: true,
                     onBack: {
-                        selectedTab = tabNavigation.goBack(from: selectedTab, fallback: "profile")
+                        selectedTab = tabNavigation.goBack(from: selectedTab, fallback: .profile)
                     }
                 ) {
                     Button(action: {
                         viewModel.save {
-                            selectedTab = tabNavigation.goBack(from: selectedTab, fallback: "profile")
+                            selectedTab = tabNavigation.goBack(from: selectedTab, fallback: .profile)
                         }
                     }) {
                         if viewModel.isSaving {

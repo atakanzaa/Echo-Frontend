@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct PremiumView: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     @State private var selectedPlan: String = "yearly"
     @State private var activeWebDestination: WebDestination?
     @State private var activeLegalSheet: NativeLegalDestination?
@@ -28,7 +28,7 @@ struct PremiumView: View {
                 HStack {
                     Spacer()
                     Button(action: {
-                        selectedTab = tabNavigation.goBack(from: selectedTab, fallback: "home")
+                        selectedTab = tabNavigation.goBack(from: selectedTab, fallback: .home)
                     }) {
                         Image(systemName: "xmark")
                             .font(.system(size: 16, weight: .semibold))

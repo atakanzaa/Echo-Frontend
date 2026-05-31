@@ -2,7 +2,7 @@ import SwiftUI
 import Combine
 
 struct EchoKnowsYouView: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     @EnvironmentObject var locManager: LocalizationManager
     @EnvironmentObject private var tabNavigation: TabNavigationManager
     @Environment(\.colorScheme) var colorScheme
@@ -17,7 +17,7 @@ struct EchoKnowsYouView: View {
                     title: locManager.t("profile.ai_profile"),
                     showBack: true,
                     onBack: {
-                        selectedTab = tabNavigation.goBack(from: selectedTab, fallback: "profile")
+                        selectedTab = tabNavigation.goBack(from: selectedTab, fallback: .profile)
                     }
                 )
 

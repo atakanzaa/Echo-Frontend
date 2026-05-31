@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct AboutAppView: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     @EnvironmentObject var locManager: LocalizationManager
     @Environment(\.colorScheme) private var colorScheme
 
@@ -16,7 +16,7 @@ struct AboutAppView: View {
                 DetailScreenHeader(
                     title: locManager.t("about.title"),
                     selectedTab: $selectedTab,
-                    fallback: "settings"
+                    fallback: .settings
                 )
 
                 ScrollView {
@@ -120,7 +120,7 @@ struct AboutAppView: View {
 }
 
 struct DataAndAIUsageView: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     @EnvironmentObject var locManager: LocalizationManager
     @Environment(\.colorScheme) private var colorScheme
 
@@ -132,7 +132,7 @@ struct DataAndAIUsageView: View {
                 DetailScreenHeader(
                     title: locManager.t("privacy.title"),
                     selectedTab: $selectedTab,
-                    fallback: "settings"
+                    fallback: .settings
                 )
 
                 ScrollView {
@@ -257,33 +257,33 @@ struct NativeLegalSheet: View {
 }
 
 struct TermsOfUseView: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
 
     var body: some View {
         LegalPolicyPage(
             destination: .terms,
             selectedTab: $selectedTab,
-            fallback: "settings"
+            fallback: .settings
         )
     }
 }
 
 struct PrivacyPolicyView: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
 
     var body: some View {
         LegalPolicyPage(
             destination: .privacy,
             selectedTab: $selectedTab,
-            fallback: "settings"
+            fallback: .settings
         )
     }
 }
 
 private struct LegalPolicyPage: View {
     let destination: NativeLegalDestination
-    @Binding var selectedTab: String
-    let fallback: String
+    @Binding var selectedTab: AppTab
+    let fallback: AppTab
 
     @EnvironmentObject private var locManager: LocalizationManager
     @Environment(\.colorScheme) private var colorScheme
@@ -334,7 +334,7 @@ private struct LegalPolicyContent: View {
 }
 
 struct AcknowledgementsView: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     @EnvironmentObject var locManager: LocalizationManager
     @Environment(\.colorScheme) private var colorScheme
 
@@ -350,7 +350,7 @@ struct AcknowledgementsView: View {
                 DetailScreenHeader(
                     title: locManager.t("ack.title"),
                     selectedTab: $selectedTab,
-                    fallback: "settings"
+                    fallback: .settings
                 )
 
                 ScrollView {

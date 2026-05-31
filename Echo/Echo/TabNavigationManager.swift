@@ -3,10 +3,10 @@ import Combine
 
 @MainActor
 final class TabNavigationManager: ObservableObject {
-    private var history: [String] = []
+    private var history: [AppTab] = []
     private var suppressNextRecord = false
 
-    func recordTransition(from oldTab: String, to newTab: String) {
+    func recordTransition(from oldTab: AppTab, to newTab: AppTab) {
         guard oldTab != newTab else { return }
 
         if suppressNextRecord {
@@ -20,7 +20,7 @@ final class TabNavigationManager: ObservableObject {
         }
     }
 
-    func goBack(from currentTab: String, fallback: String) -> String {
+    func goBack(from currentTab: AppTab, fallback: AppTab) -> AppTab {
         suppressNextRecord = true
 
         while let previousTab = history.popLast() {

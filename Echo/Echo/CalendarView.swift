@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct EmotionalHeatmapCalendarView: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     @StateObject private var viewModel = CalendarViewModel()
     @State private var isMenuOpen = false
     @Environment(\.colorScheme) var colorScheme
@@ -90,10 +90,12 @@ struct EmotionalHeatmapCalendarView: View {
                             // Legend
                             LegendView()
                             // Day Details
-                            if let entry = viewModel.selectedEntry {
-                                APISelectedDayView(entry: entry, selectedTab: $selectedTab)
-                                    .padding(.horizontal, AppTheme.Spacing.md)
-                                    .padding(.bottom, AppTheme.Spacing.md)
+                            if !viewModel.selectedEntries.isEmpty {
+                                ForEach(viewModel.selectedEntries, id: \.id) { entry in
+                                    APISelectedDayView(entry: entry, selectedTab: $selectedTab)
+                                        .padding(.horizontal, AppTheme.Spacing.md)
+                                }
+                                .padding(.bottom, AppTheme.Spacing.md)
                             }
                         } else {
                             EmptyStateView(
@@ -180,7 +182,7 @@ struct APICalendarGridView: View {
 
 struct APISelectedDayView: View {
     let entry: APIJournalEntry
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     @Environment(\.colorScheme) var colorScheme
     @EnvironmentObject var locManager: LocalizationManager
 
@@ -468,16 +470,16 @@ struct CalendarStatPill: View {
 }
 
 struct BottomNavigationView: View {
-    let currentPage: String
-    @Binding var selectedTab: String
+    let currentPage: AppTab
+    @Binding var selectedTab: AppTab
     @Environment(\.colorScheme) var colorScheme
     @EnvironmentObject var locManager: LocalizationManager
 
-    private static let items: [(icon: String, label: String, tab: String)] = [
-        ("book.fill",      "nav.journal",  "journal"),
-        ("calendar",       "nav.calendar", "calendar"),
-        ("chart.bar.fill", "nav.insights", "insights"),
-        ("gear",           "nav.settings", "settings")
+    private static let items: [(icon: String, label: String, tab: AppTab)] = [
+        ("book.fill",      "nav.journal",  .journal),
+        ("calendar",       "nav.calendar", .calendar),
+        ("chart.bar.fill", "nav.insights", .insights),
+        ("gear",           "nav.settings", .settings)
     ]
 
     var body: some View {

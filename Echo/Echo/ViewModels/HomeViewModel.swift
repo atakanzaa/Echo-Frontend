@@ -154,6 +154,11 @@ final class HomeViewModel: NSObject, ObservableObject, AVAudioRecorderDelegate {
             )
             isUploading = false
             startPolling(entryId: entry.id)
+            // First successful journal is the canonical moment to ask for push
+            // permission. The manager guards itself so repeat calls are no-ops.
+            Task { @MainActor in
+                await PushNotificationManager.shared.requestAuthorizationIfNeeded()
+            }
         } catch {
             isUploading   = false
             setStatus("voice.status.ready")

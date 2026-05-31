@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ProfileView: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     @EnvironmentObject var locManager: LocalizationManager
     @EnvironmentObject private var tabNavigation: TabNavigationManager
     @StateObject private var viewModel = ProfileViewModel()
@@ -18,7 +18,7 @@ struct ProfileView: View {
                     title: locManager.t("nav.profile"),
                     showBack: true,
                     onBack: {
-                        selectedTab = tabNavigation.goBack(from: selectedTab, fallback: "home")
+                        selectedTab = tabNavigation.goBack(from: selectedTab, fallback: .home)
                     },
                     showMenu: true,
                     onMenu: { withAnimation(.easeInOut(duration: 0.25)) { isMenuOpen.toggle() } }
@@ -53,54 +53,68 @@ struct ProfileView: View {
                             }
 
                             // Account Settings section
-                            profileSection(locManager.t("settings.account")) {
-                                profileRow(icon: "person.circle", label: locManager.t("profile.edit_profile"), color: AppTheme.Colors.accent) {
-                                    selectedTab = "edit-profile"
-                                }
+                            SettingsSectionView(title: locManager.t("settings.account")) {
+                                SettingsItemView(
+                                    icon: "person.circle",
+                                    title: locManager.t("profile.edit_profile"),
+                                    showArrow: true,
+                                    onTap: { selectedTab = .editProfile }
+                                )
                                 Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
-                                profileRow(icon: "shield.fill", label: locManager.t("settings.privacy_security"), color: AppTheme.Colors.moodVeryPositive) {
-                                    selectedTab = "data-privacy"
-                                }
+                                SettingsItemView(
+                                    icon: "shield.fill",
+                                    iconColor: AppTheme.Colors.moodVeryPositive,
+                                    title: locManager.t("settings.privacy_security"),
+                                    showArrow: true,
+                                    onTap: { selectedTab = .dataPrivacy }
+                                )
                                 Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
-                                profileRow(icon: "bell.fill", label: locManager.t("nav.notifications"), color: AppTheme.Colors.accent) { selectedTab = "notifications" }
+                                SettingsItemView(
+                                    icon: "bell.fill",
+                                    title: locManager.t("nav.notifications"),
+                                    showArrow: true,
+                                    onTap: { selectedTab = .notifications }
+                                )
                             }
 
                             // Experience section
-                            profileSection(locManager.t("profile.experience")) {
-                                HStack {
-                                    HStack(spacing: AppTheme.Spacing.sm) {
-                                        Image(systemName: "crown.fill")
-                                            .font(.system(size: 16))
-                                            .foregroundColor(AppTheme.Colors.gold)
-                                            .frame(width: 32, height: 32)
-                                            .background(AppTheme.Colors.gold.opacity(0.12))
-                                            .cornerRadius(AppTheme.Spacing.radiusSm)
-                                        Text(locManager.t("nav.premium"))
-                                            .font(AppTheme.Typography.body)
-                                            .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
-                                    }
-                                    Spacer()
-                                    Text(locManager.t("common.active"))
-                                        .font(AppTheme.Typography.label).fontWeight(.semibold)
-                                        .foregroundColor(AppTheme.Colors.gold)
-                                        .padding(.horizontal, AppTheme.Spacing.sm).padding(.vertical, 4)
-                                        .background(AppTheme.Colors.gold.opacity(0.15))
-                                        .cornerRadius(AppTheme.Spacing.radiusFull)
-                                }
-                                .padding(.vertical, 4)
+                            SettingsSectionView(title: locManager.t("profile.experience")) {
+                                premiumStatusRow
                                 Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
-                                profileRow(icon: "trophy.fill", label: locManager.t("nav.achievements"), color: AppTheme.Colors.gold) { selectedTab = "achievements" }
+                                SettingsItemView(
+                                    icon: "trophy.fill",
+                                    iconColor: AppTheme.Colors.gold,
+                                    title: locManager.t("nav.achievements"),
+                                    showArrow: true,
+                                    onTap: { selectedTab = .achievements }
+                                )
                                 Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
-                                profileRow(icon: "globe", label: locManager.t("settings.language"), color: AppTheme.Colors.textMuted(colorScheme)) {
-                                    showLanguagePicker = true
-                                }
+                                SettingsItemView(
+                                    icon: "globe",
+                                    iconColor: AppTheme.Colors.textMuted(colorScheme),
+                                    title: locManager.t("settings.language"),
+                                    showArrow: true,
+                                    onTap: { showLanguagePicker = true }
+                                )
                             }
 
                             // More section
-                            profileSection(locManager.t("profile.more")) {
-                                profileRow(icon: "questionmark.circle.fill", label: locManager.t("profile.help_center"), color: AppTheme.Colors.moodVeryPositive) { selectedTab = "help" }
+                            SettingsSectionView(title: locManager.t("profile.more")) {
+                                SettingsItemView(
+                                    icon: "questionmark.circle.fill",
+                                    iconColor: AppTheme.Colors.moodVeryPositive,
+                                    title: locManager.t("profile.help_center"),
+                                    showArrow: true,
+                                    onTap: { selectedTab = .help }
+                                )
                                 Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
-                                profileRow(icon: "gear", label: locManager.t("nav.settings"), color: AppTheme.Colors.textMuted(colorScheme)) { selectedTab = "settings" }
+                                SettingsItemView(
+                                    icon: "gear",
+                                    iconColor: AppTheme.Colors.textMuted(colorScheme),
+                                    title: locManager.t("nav.settings"),
+                                    showArrow: true,
+                                    onTap: { selectedTab = .settings }
+                                )
                             }
 
                             // Logout
@@ -158,7 +172,7 @@ struct ProfileView: View {
 
     @ViewBuilder
     private func echoKnowsYouCard(summary: APIProfileSummary) -> some View {
-        Button(action: { selectedTab = "ai-profile" }) {
+        Button(action: { selectedTab = .aiProfile }) {
             HStack(spacing: AppTheme.Spacing.sm) {
                 Image(systemName: "sparkles")
                     .font(.system(size: 16, weight: .semibold))
@@ -196,45 +210,28 @@ struct ProfileView: View {
 
     // MARK: - Helpers
 
-    @ViewBuilder
-    private func profileSection<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
-            Text(title.uppercased())
-                .font(AppTheme.Typography.label).fontWeight(.bold)
-                .tracking(0.6)
-                .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
-                .padding(.horizontal, AppTheme.Spacing.md)
+    private var premiumStatusRow: some View {
+        HStack(spacing: AppTheme.Spacing.md) {
+            Image(systemName: "crown.fill")
+                .font(.system(size: 18))
+                .echoIconContainer(AppTheme.Colors.gold, size: AppTheme.Layout.compactControlHeight)
 
-            VStack(spacing: 0) {
-                content()
-            }
-            .padding(AppTheme.Spacing.md)
-            .echoCard(colorScheme)
-            .padding(.horizontal, AppTheme.Spacing.md)
-        }
-    }
+            Text(locManager.t("nav.premium"))
+                .font(AppTheme.Typography.bodyEm)
+                .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
 
-    @ViewBuilder
-    private func profileRow(icon: String, label: String, color: Color, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: AppTheme.Spacing.sm) {
-                Image(systemName: icon)
-                    .font(.system(size: 16))
-                    .foregroundColor(color)
-                    .frame(width: 32, height: 32)
-                    .background(color.opacity(0.12))
-                    .cornerRadius(AppTheme.Spacing.radiusSm)
-                Text(label)
-                    .font(AppTheme.Typography.body)
-                    .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
-                Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
-            }
-            .padding(.vertical, 4)
+            Spacer()
+
+            Text(locManager.t("common.active"))
+                .font(AppTheme.Typography.label).fontWeight(.semibold)
+                .foregroundColor(AppTheme.Colors.gold)
+                .padding(.horizontal, AppTheme.Spacing.sm)
+                .padding(.vertical, AppTheme.Spacing.xs)
+                .background(AppTheme.Colors.gold.opacity(0.15))
+                .cornerRadius(AppTheme.Spacing.radiusFull)
         }
-        .frame(maxWidth: .infinity, minHeight: AppTheme.Layout.rowMinHeight)
+        .frame(maxWidth: .infinity, minHeight: AppTheme.Layout.rowMinHeight, alignment: .leading)
+        .padding(.vertical, AppTheme.Spacing.sm)
     }
 }
 

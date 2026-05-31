@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var selectedTab: String = "home"
+    @State private var selectedTab: AppTab = .home
     @State private var isMenuOpen = false
     @StateObject private var userViewModel = ProfileViewModel()
     @StateObject private var tabNavigation = TabNavigationManager()
@@ -9,36 +9,38 @@ struct ContentView: View {
     @EnvironmentObject private var appState: AppState
     @EnvironmentObject private var notificationVM: NotificationViewModel
 
-    private let mainTabs = ["home", "journal", "community", "coach"]
+    private let mainTabs: [AppTab] = [.home, .journal, .community, .coach]
 
     var body: some View {
         ZStack(alignment: .bottom) {
             // Page content
             ZStack {
-                if selectedTab == "home"          { VoiceRecordingView(selectedTab: $selectedTab) }
-                else if selectedTab == "journal"   { JournalView(selectedTab: $selectedTab) }
-                else if selectedTab == "community" { CommunityView(selectedTab: $selectedTab) }
-                else if selectedTab == "coach"     { NavigationStack { CoachSessionsListView(selectedTab: $selectedTab) } }
-                else if selectedTab == "goals"     { GoalsView(selectedTab: $selectedTab) }
-                else if selectedTab == "calendar"  { CalendarView(selectedTab: $selectedTab) }
-                else if selectedTab == "insights"  { InsightsView(selectedTab: $selectedTab) }
-                else if selectedTab == "aiinsights"    { AIInsightsView(selectedTab: $selectedTab) }
-                else if selectedTab == "achievements"   { AchievementsView(selectedTab: $selectedTab) }
-                else if selectedTab == "timecapsule"    { TimeCapsuleView(selectedTab: $selectedTab) }
-                else if selectedTab == "premium"        { PremiumView(selectedTab: $selectedTab) }
-                else if selectedTab == "profile"        { ProfileView(selectedTab: $selectedTab) }
-                else if selectedTab == "settings"       { SettingsView(selectedTab: $selectedTab) }
-                else if selectedTab == "notifications"  { NotificationsView(selectedTab: $selectedTab) }
-                else if selectedTab == "notification_list" { NotificationListView(selectedTab: $selectedTab) }
-                else if selectedTab == "help"           { HelpSupportView(selectedTab: $selectedTab) }
-                else if selectedTab == "about-app"      { AboutAppView(selectedTab: $selectedTab) }
-                else if selectedTab == "data-privacy"   { DataAndAIUsageView(selectedTab: $selectedTab) }
-                else if selectedTab == "terms-of-use"   { TermsOfUseView(selectedTab: $selectedTab) }
-                else if selectedTab == "privacy-policy" { PrivacyPolicyView(selectedTab: $selectedTab) }
-                else if selectedTab == "acknowledgements" { AcknowledgementsView(selectedTab: $selectedTab) }
-                else if selectedTab == "ai-profile"    { EchoKnowsYouView(selectedTab: $selectedTab) }
-                else if selectedTab == "edit-profile"   { EditProfileView(selectedTab: $selectedTab) }
-                else if selectedTab == "change-password" { ChangePasswordView(selectedTab: $selectedTab) }
+                switch selectedTab {
+                case .home:             VoiceRecordingView(selectedTab: $selectedTab)
+                case .journal:          JournalView(selectedTab: $selectedTab)
+                case .community:        CommunityView(selectedTab: $selectedTab)
+                case .coach:            NavigationStack { CoachSessionsListView(selectedTab: $selectedTab) }
+                case .goals:            GoalsView(selectedTab: $selectedTab)
+                case .calendar:         CalendarView(selectedTab: $selectedTab)
+                case .insights:         InsightsView(selectedTab: $selectedTab)
+                case .aiInsights:       AIInsightsView(selectedTab: $selectedTab)
+                case .achievements:     AchievementsView(selectedTab: $selectedTab)
+                case .timeCapsule:      TimeCapsuleView(selectedTab: $selectedTab)
+                case .premium:          PremiumView(selectedTab: $selectedTab)
+                case .profile:          ProfileView(selectedTab: $selectedTab)
+                case .settings:         SettingsView(selectedTab: $selectedTab)
+                case .notifications:    NotificationsView(selectedTab: $selectedTab)
+                case .notificationList: NotificationListView(selectedTab: $selectedTab)
+                case .help:             HelpSupportView(selectedTab: $selectedTab)
+                case .aboutApp:         AboutAppView(selectedTab: $selectedTab)
+                case .dataPrivacy:      DataAndAIUsageView(selectedTab: $selectedTab)
+                case .termsOfUse:       TermsOfUseView(selectedTab: $selectedTab)
+                case .privacyPolicy:    PrivacyPolicyView(selectedTab: $selectedTab)
+                case .acknowledgements: AcknowledgementsView(selectedTab: $selectedTab)
+                case .aiProfile:        EchoKnowsYouView(selectedTab: $selectedTab)
+                case .editProfile:      EditProfileView(selectedTab: $selectedTab)
+                case .changePassword:   ChangePasswordView(selectedTab: $selectedTab)
+                }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 

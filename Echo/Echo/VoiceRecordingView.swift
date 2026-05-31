@@ -2,7 +2,7 @@ import SwiftUI
 import AVFoundation
 
 struct VoiceRecordingView: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     @StateObject private var viewModel = HomeViewModel()
     @State private var pulseScale: CGFloat = 1.0
     @State private var glowOpacity: Double = 0.15
@@ -107,7 +107,7 @@ struct VoiceRecordingView: View {
                     .overlay(Capsule().stroke(AppTheme.Colors.borderSubtle(colorScheme), lineWidth: 1))
                 }
 
-                Button(action: { selectedTab = "settings" }) {
+                Button(action: { selectedTab = .settings }) {
                     Image(systemName: "gearshape")
                         .font(.system(size: 18))
                         .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
@@ -341,7 +341,7 @@ struct VoiceRecordingView: View {
                     .font(AppTheme.Typography.caption).fontWeight(.semibold)
                     .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
                 Spacer()
-                Button(action: { selectedTab = "journal" }) {
+                Button(action: { selectedTab = .journal }) {
                     Text(locManager.t("voice.view_all"))
                         .font(AppTheme.Typography.label).fontWeight(.semibold)
                         .foregroundColor(AppTheme.Colors.accent)

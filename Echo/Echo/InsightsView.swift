@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct InsightsView: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     @StateObject private var viewModel     = InsightsViewModel()
     @StateObject private var goalViewModel = GoalViewModel()
     @State private var isMenuOpen = false
@@ -179,7 +179,7 @@ struct InsightsView: View {
                         .foregroundColor(AppTheme.Colors.textSecondary(colorScheme))
                 }
                 Spacer()
-                Button(action: { selectedTab = "goals" }) {
+                Button(action: { selectedTab = .goals }) {
                     Text(locManager.t("goals.view_action"))
                         .font(AppTheme.Typography.caption)
                         .fontWeight(.bold)

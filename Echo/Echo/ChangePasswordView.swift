@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ChangePasswordView: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     @EnvironmentObject var locManager: LocalizationManager
     @EnvironmentObject private var tabNavigation: TabNavigationManager
     @Environment(\.colorScheme) private var colorScheme
@@ -21,7 +21,7 @@ struct ChangePasswordView: View {
                     title: locManager.t("settings.change_password"),
                     showBack: true,
                     onBack: {
-                        selectedTab = tabNavigation.goBack(from: selectedTab, fallback: "settings")
+                        selectedTab = tabNavigation.goBack(from: selectedTab, fallback: .settings)
                     }
                 )
 

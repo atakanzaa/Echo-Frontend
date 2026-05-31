@@ -139,8 +139,8 @@ struct LegalWebViewSheet: UIViewControllerRepresentable {
 
 struct DetailScreenHeader: View {
     let title: String
-    @Binding var selectedTab: String
-    let fallback: String
+    @Binding var selectedTab: AppTab
+    let fallback: AppTab
 
     @EnvironmentObject private var tabNavigation: TabNavigationManager
     @Environment(\.colorScheme) private var colorScheme

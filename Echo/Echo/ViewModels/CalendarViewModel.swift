@@ -7,7 +7,7 @@ final class CalendarViewModel: ObservableObject {
     @Published var calendarData: APICalendarMonth?
     @Published var currentDate  = Date()
     @Published var selectedDay: Int?
-    @Published var selectedEntry: APIJournalEntry?
+    @Published var selectedEntries: [APIJournalEntry] = []
     @Published var isLoading    = false
     @Published var errorMessage: String?
     private let monthTask = TaskGuard()
@@ -50,12 +50,13 @@ final class CalendarViewModel: ObservableObject {
         selectedDay = day
         guard let calendarData else { return }
         if let apiDay = calendarData.days.first(where: { $0.day == day }),
-           let entryId = apiDay.entryId {
+           (apiDay.entryId != nil || (apiDay.entryCount ?? 0) > 0) {
+            let dateStr = String(format: "%04d-%02d-%02d", year, month, day)
             dayEntryTask.run { [weak self] in
-                await self?.performSelectDay(entryId: entryId, day: day)
+                await self?.performSelectDay(dateString: dateStr, day: day)
             }
         } else {
-            selectedEntry = nil
+            selectedEntries = []
         }
     }
 
@@ -116,14 +117,14 @@ final class CalendarViewModel: ObservableObject {
         }
     }
 
-    private func performSelectDay(entryId: String, day: Int) async {
+    private func performSelectDay(dateString: String, day: Int) async {
         do {
-            let entry: APIJournalEntry = try await APIClient.shared.requestWithAutoRefresh(
-                .getJournalEntry(id: entryId)
+            let entries: [APIJournalEntry] = try await APIClient.shared.requestWithAutoRefresh(
+                .getJournalEntriesByDate(date: dateString)
             )
             guard !Task.isCancelled else { return }
             guard selectedDay == day else { return }
-            selectedEntry = entry
+            selectedEntries = entries
         } catch {
             // entry yüklenemezse sessizce geç
         }

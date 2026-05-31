@@ -2,7 +2,7 @@ import SwiftUI
 import UIKit
 
 struct SettingsView: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     @EnvironmentObject var locManager: LocalizationManager
     @AppStorage("darkMode") private var darkMode = true
     @AppStorage("privateMode") private var privateMode = false
@@ -31,7 +31,7 @@ struct SettingsView: View {
                                 title: locManager.t("settings.profile"),
                                 subtitle: locManager.t("settings.profile_sub"),
                                 showArrow: true,
-                                onTap: { selectedTab = "edit-profile" }
+                                onTap: { selectedTab = .editProfile }
                             )
 
                             Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
@@ -41,7 +41,7 @@ struct SettingsView: View {
                                 title: locManager.t("settings.change_password"),
                                 subtitle: locManager.t("settings.change_password_sub"),
                                 showArrow: true,
-                                onTap: { selectedTab = "change-password" }
+                                onTap: { selectedTab = .changePassword }
                             )
 
                             Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
@@ -51,7 +51,7 @@ struct SettingsView: View {
                                 title: locManager.t("settings.privacy"),
                                 subtitle: locManager.t("settings.privacy_sub"),
                                 showArrow: true,
-                                onTap: { selectedTab = "data-privacy" }
+                                onTap: { selectedTab = .dataPrivacy }
                             )
                         }
 
@@ -103,7 +103,7 @@ struct SettingsView: View {
                                 title: locManager.t("settings.data_privacy"),
                                 subtitle: locManager.t("settings.data_privacy_sub"),
                                 showArrow: true,
-                                onTap: { selectedTab = "data-privacy" }
+                                onTap: { selectedTab = .dataPrivacy }
                             )
                         }
 
@@ -114,7 +114,7 @@ struct SettingsView: View {
                                 title: locManager.t("settings.help_faq"),
                                 subtitle: locManager.t("settings.help_faq_sub"),
                                 showArrow: true,
-                                onTap: { selectedTab = "help" }
+                                onTap: { selectedTab = .help }
                             )
 
                             Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
@@ -177,7 +177,7 @@ struct SettingsView: View {
                                 title: locManager.t("settings.about_echo"),
                                 subtitle: locManager.t("settings.about_echo_sub"),
                                 showArrow: true,
-                                onTap: { selectedTab = "about-app" }
+                                onTap: { selectedTab = .aboutApp }
                             )
 
                             Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
@@ -195,7 +195,7 @@ struct SettingsView: View {
                                 title: locManager.t("settings.privacy_policy"),
                                 subtitle: locManager.t("settings.privacy_policy_sub"),
                                 showArrow: true,
-                                onTap: { selectedTab = "privacy-policy" }
+                                onTap: { selectedTab = .privacyPolicy }
                             )
 
                             Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
@@ -205,7 +205,7 @@ struct SettingsView: View {
                                 title: locManager.t("settings.terms_of_use"),
                                 subtitle: locManager.t("settings.terms_of_use_sub"),
                                 showArrow: true,
-                                onTap: { selectedTab = "terms-of-use" }
+                                onTap: { selectedTab = .termsOfUse }
                             )
 
                             Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
@@ -215,7 +215,7 @@ struct SettingsView: View {
                                 title: locManager.t("settings.data_ai_usage"),
                                 subtitle: locManager.t("settings.data_ai_usage_sub"),
                                 showArrow: true,
-                                onTap: { selectedTab = "data-privacy" }
+                                onTap: { selectedTab = .dataPrivacy }
                             )
 
                             Divider().background(AppTheme.Colors.borderSubtle(colorScheme))
@@ -225,7 +225,7 @@ struct SettingsView: View {
                                 title: locManager.t("settings.acknowledgements"),
                                 subtitle: locManager.t("settings.acknowledgements_sub"),
                                 showArrow: true,
-                                onTap: { selectedTab = "acknowledgements" }
+                                onTap: { selectedTab = .acknowledgements }
                             )
                         }
 
@@ -270,7 +270,7 @@ struct SettingsSectionView<Content: View>: View {
     @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
+        VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
             Text(title.uppercased())
                 .font(AppTheme.Typography.label).fontWeight(.bold)
                 .tracking(0.6)
@@ -280,7 +280,7 @@ struct SettingsSectionView<Content: View>: View {
             VStack(spacing: 0) {
                 content
             }
-            .padding(AppTheme.Spacing.md)
+            .echoSectionContent()
             .echoCard(colorScheme)
             .padding(.horizontal, AppTheme.Spacing.md)
         }
@@ -289,14 +289,23 @@ struct SettingsSectionView<Content: View>: View {
 
 struct SettingsItemView: View {
     let icon: String
+    let iconColor: Color
     let title: String
-    let subtitle: String
+    let subtitle: String?
     let showArrow: Bool
     let onTap: (() -> Void)?
     @Environment(\.colorScheme) var colorScheme
 
-    init(icon: String, title: String, subtitle: String, showArrow: Bool, onTap: (() -> Void)? = nil) {
+    init(
+        icon: String,
+        iconColor: Color = AppTheme.Colors.accent,
+        title: String,
+        subtitle: String? = nil,
+        showArrow: Bool,
+        onTap: (() -> Void)? = nil
+    ) {
         self.icon = icon
+        self.iconColor = iconColor
         self.title = title
         self.subtitle = subtitle
         self.showArrow = showArrow
@@ -305,7 +314,7 @@ struct SettingsItemView: View {
 
     var body: some View {
         Button(action: { onTap?() }) {
-            SettingsRowLayout(icon: icon, title: title, subtitle: subtitle) {
+            SettingsRowLayout(icon: icon, iconColor: iconColor, title: title, subtitle: subtitle) {
                 if showArrow {
                     Image(systemName: "chevron.right")
                         .font(.system(size: 12, weight: .semibold))
@@ -319,12 +328,25 @@ struct SettingsItemView: View {
 
 struct SettingsStaticItemView: View {
     let icon: String
+    let iconColor: Color
     let title: String
-    let subtitle: String
+    let subtitle: String?
     @Environment(\.colorScheme) var colorScheme
 
+    init(
+        icon: String,
+        iconColor: Color = AppTheme.Colors.accent,
+        title: String,
+        subtitle: String? = nil
+    ) {
+        self.icon = icon
+        self.iconColor = iconColor
+        self.title = title
+        self.subtitle = subtitle
+    }
+
     var body: some View {
-        SettingsRowLayout(icon: icon, title: title, subtitle: subtitle) {
+        SettingsRowLayout(icon: icon, iconColor: iconColor, title: title, subtitle: subtitle) {
             EmptyView()
         }
     }
@@ -332,13 +354,28 @@ struct SettingsStaticItemView: View {
 
 struct SettingsToggleView: View {
     let icon: String
+    let iconColor: Color
     let title: String
-    let subtitle: String
+    let subtitle: String?
     @Binding var isOn: Bool
     @Environment(\.colorScheme) var colorScheme
 
+    init(
+        icon: String,
+        iconColor: Color = AppTheme.Colors.accent,
+        title: String,
+        subtitle: String? = nil,
+        isOn: Binding<Bool>
+    ) {
+        self.icon = icon
+        self.iconColor = iconColor
+        self.title = title
+        self.subtitle = subtitle
+        self._isOn = isOn
+    }
+
     var body: some View {
-        SettingsRowLayout(icon: icon, title: title, subtitle: subtitle) {
+        SettingsRowLayout(icon: icon, iconColor: iconColor, title: title, subtitle: subtitle) {
             Toggle("", isOn: $isOn)
                 .labelsHidden()
                 .tint(AppTheme.Colors.accent)
@@ -348,36 +385,44 @@ struct SettingsToggleView: View {
 
 private struct SettingsRowLayout<Trailing: View>: View {
     let icon: String
+    let iconColor: Color
     let title: String
-    let subtitle: String
+    let subtitle: String?
     @ViewBuilder let trailing: Trailing
     @Environment(\.colorScheme) var colorScheme
 
     private let iconWidth: CGFloat = AppTheme.Layout.compactControlHeight
     private let rowSpacing: CGFloat = AppTheme.Spacing.md
 
+    private var hasSubtitle: Bool {
+        guard let s = subtitle else { return false }
+        return !s.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: AppTheme.Spacing.xs / 2) {
             HStack(alignment: .center, spacing: rowSpacing) {
                 Image(systemName: icon)
                     .font(.system(size: 18))
-                    .echoIconContainer(AppTheme.Colors.accent, size: iconWidth)
+                    .echoIconContainer(iconColor, size: iconWidth)
 
                 Text(title)
-                    .font(AppTheme.Typography.caption)
-                    .fontWeight(.semibold)
+                    .font(AppTheme.Typography.bodyEm)
                     .foregroundColor(AppTheme.Colors.textPrimary(colorScheme))
 
                 Spacer()
                 trailing
             }
 
-            Text(subtitle)
-                .font(AppTheme.Typography.label)
-                .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
-                .padding(.leading, iconWidth + rowSpacing)
+            if hasSubtitle, let subtitle {
+                Text(subtitle)
+                    .font(AppTheme.Typography.label)
+                    .fontWeight(.regular)
+                    .foregroundColor(AppTheme.Colors.textMuted(colorScheme))
+                    .padding(.leading, iconWidth + rowSpacing)
+            }
         }
         .frame(maxWidth: .infinity, minHeight: AppTheme.Layout.rowMinHeight, alignment: .leading)
-        .padding(.vertical, AppTheme.Spacing.xs)
+        .padding(.vertical, AppTheme.Spacing.sm)
     }
 }

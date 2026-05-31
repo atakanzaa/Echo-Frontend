@@ -376,8 +376,8 @@ struct APIGoal: Decodable, Identifiable {
 struct APIGoalSuggestion: Decodable, Identifiable {
     let id: String
     let goalId: String?
-    let suggestionType: String
-    let sourceType: String
+    let suggestionType: GoalSuggestionType
+    let sourceType: GoalSuggestionSourceType
     let title: String?
     let timeframe: String?
     let goalType: String?

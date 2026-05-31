@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct AIInsightsView: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     @StateObject private var viewModel = AIInsightsViewModel()
     @State private var isMenuOpen = false
     @EnvironmentObject var locManager: LocalizationManager
@@ -17,7 +17,7 @@ struct AIInsightsView: View {
                     title: locManager.t("nav.ai_insights"),
                     showBack: true,
                     onBack: {
-                        selectedTab = tabNavigation.goBack(from: selectedTab, fallback: "home")
+                        selectedTab = tabNavigation.goBack(from: selectedTab, fallback: .home)
                     },
                     showMenu: true,
                     onMenu: { isMenuOpen.toggle() }

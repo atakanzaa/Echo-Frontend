@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct TimeCapsuleView: View {
-    @Binding var selectedTab: String
+    @Binding var selectedTab: AppTab
     @StateObject private var viewModel = TimeCapsuleViewModel()
     @State private var isMenuOpen = false
     @Environment(\.colorScheme) var colorScheme
@@ -30,7 +30,7 @@ struct TimeCapsuleView: View {
                     title: locManager.t("nav.time_capsule"),
                     showBack: true,
                     onBack: {
-                        selectedTab = tabNavigation.goBack(from: selectedTab, fallback: "home")
+                        selectedTab = tabNavigation.goBack(from: selectedTab, fallback: .home)
                     },
                     showMenu: true,
                     onMenu: { isMenuOpen.toggle() }
