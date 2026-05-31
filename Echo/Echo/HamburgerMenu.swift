@@ -10,8 +10,6 @@ struct HamburgerMenuView: View {
     @EnvironmentObject private var notificationVM: NotificationViewModel
     @Environment(\.colorScheme) var colorScheme
 
-    private let accentLight = Color(red: 0.769, green: 0.604, blue: 1.0) // #c49aff
-
     private var effectiveUnreadCount: Int {
         unreadNotificationCount ?? notificationVM.unreadCount
     }
@@ -44,7 +42,7 @@ struct HamburgerMenuView: View {
                     Button(action: { withAnimation(.easeInOut(duration: 0.25)) { isMenuOpen = false } }) {
                         Image(systemName: "xmark")
                             .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(accentLight)
+                            .foregroundColor(AppTheme.Colors.accentLight)
                             .frame(width: 32, height: 32)
                             .background(Color(red: 0.165, green: 0.102, blue: 0.212))
                             .clipShape(Circle())
@@ -75,12 +73,12 @@ struct HamburgerMenuView: View {
                             .foregroundColor(.white)
                         Text(locManager.t("hamburger.profile_sub"))
                             .font(AppTheme.Typography.label)
-                            .foregroundColor(accentLight.opacity(0.7))
+                            .foregroundColor(AppTheme.Colors.accentLight.opacity(0.7))
                     }
                     Spacer()
                 }
                 .padding(AppTheme.Spacing.sm)
-                .background(Color(red: 0.165, green: 0.114, blue: 0.212))
+                .background(AppTheme.Colors.surfaceElevated(.dark))
                 .cornerRadius(AppTheme.Spacing.radiusMd)
                 .padding(.horizontal, AppTheme.Spacing.md)
                 .padding(.bottom, AppTheme.Spacing.md)
@@ -206,7 +204,7 @@ struct HamburgerMenuView: View {
                     .frame(width: 28, height: 28)
                 Text(label)
                     .font(AppTheme.Typography.body)
-                    .foregroundColor(isActive ? Color(red: 0.769, green: 0.604, blue: 1.0) : .white)
+                    .foregroundColor(isActive ? AppTheme.Colors.accentLight : .white)
                 if badgeCount > 0 {
                     NotificationBadge(count: badgeCount)
                 }
@@ -214,7 +212,7 @@ struct HamburgerMenuView: View {
             }
             .padding(.vertical, 10)
             .padding(.horizontal, AppTheme.Spacing.sm)
-            .background(isActive ? Color(red: 0.153, green: 0.102, blue: 0.200) : Color.clear)
+            .background(isActive ? AppTheme.Colors.accentSoft(.dark) : Color.clear)
             .cornerRadius(AppTheme.Spacing.radiusSm)
         }
     }

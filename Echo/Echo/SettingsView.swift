@@ -4,8 +4,8 @@ import UIKit
 struct SettingsView: View {
     @Binding var selectedTab: String
     @EnvironmentObject var locManager: LocalizationManager
-    @AppStorage("darkMode") private var darkMode = true
-    @AppStorage("privateMode") private var privateMode = false
+    @AppStorage(AppConstants.Storage.darkMode) private var darkMode = true
+    @AppStorage(AppConstants.Storage.privateMode) private var privateMode = false
     @State private var isMenuOpen = false
     @State private var activeWebDestination: WebDestination?
     @State private var showMailFallback = false

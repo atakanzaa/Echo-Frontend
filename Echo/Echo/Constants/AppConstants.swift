@@ -62,6 +62,12 @@ enum AppConstants {
         static let googleClientId = "965240810843-ibiovp5mr1pr9vmnpqpjn11n1bnketf1.apps.googleusercontent.com"
     }
 
+    enum Storage {
+        static let darkMode    = "darkMode"
+        static let privateMode = "privateMode"
+        static let language    = "appLanguage"
+    }
+
     enum AppInfo {
         static let appDisplayName = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String ?? Brand.companyDisplayName
         static let shortVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"

@@ -24,7 +24,8 @@ final class InsightsViewModel: ObservableObject {
         formatter.dateFormat = "yyyy-MM-dd"
         let dayFormatter = DateFormatter()
         dayFormatter.dateFormat = "EEE"
-        dayFormatter.locale = Locale(identifier: "tr_TR")
+        let lang = LocalizationManager.shared.currentLanguage
+        dayFormatter.locale = Locale(identifier: lang == "tr" ? "tr_TR" : "en_US")
         return scores.suffix(7).compactMap { score in
             formatter.date(from: score.date).map { dayFormatter.string(from: $0) }
         }
@@ -41,10 +42,10 @@ final class InsightsViewModel: ObservableObject {
         let total = scores.count
 
         let order: [(key: String, state: EmotionalState)] = [
-            ("STRESS", .stress),
-            ("NEUTRAL", .neutral),
-            ("CALM", .calm),
-            ("MOTIVATED", .motivated)
+            (MoodCategory.stress.rawValue,    .stress),
+            (MoodCategory.neutral.rawValue,   .neutral),
+            (MoodCategory.calm.rawValue,      .calm),
+            (MoodCategory.motivated.rawValue, .motivated)
         ]
 
         var raw: [(emotion: EmotionalState, label: String, pct: Double, count: Int)] = []

@@ -40,8 +40,8 @@ extension AppTheme {
 
         static var accentForeground: Color { .white }
 
-        static func tabActive(_ s: ColorScheme) -> Color {
-            s == .dark ? accent : accent
+        static var accentLight: Color {
+            Color(red: 0.769, green: 0.604, blue: 1.0)
         }
 
         static func textPrimary(_ s: ColorScheme) -> Color {
@@ -221,10 +221,7 @@ extension AppTheme {
         static func micButton(recording: Bool) -> LinearGradient {
             recording
                 ? LinearGradient(
-                    colors: [
-                        Color(red: 0.937, green: 0.267, blue: 0.267),
-                        Color(red: 0.700, green: 0.100, blue: 0.100)
-                    ],
+                    colors: [AppTheme.Colors.destructive, AppTheme.Colors.destructive.opacity(0.75)],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )

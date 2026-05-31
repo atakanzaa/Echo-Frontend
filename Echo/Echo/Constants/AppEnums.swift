@@ -167,3 +167,12 @@ enum MoodCategory: String, Codable {
         self = MoodCategory(rawValue: value.uppercased()) ?? .unknown
     }
 }
+
+enum GoalSuggestionSource: String {
+    case journal = "JOURNAL"
+    case coach = "COACH"
+}
+
+enum SuggestionType {
+    static let completeGoalConfirm = "COMPLETE_GOAL_CONFIRM"
+}

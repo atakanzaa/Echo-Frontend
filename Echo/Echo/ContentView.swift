@@ -5,7 +5,7 @@ struct ContentView: View {
     @State private var isMenuOpen = false
     @StateObject private var userViewModel = ProfileViewModel()
     @StateObject private var tabNavigation = TabNavigationManager()
-    @AppStorage("darkMode") private var darkMode = true
+    @AppStorage(AppConstants.Storage.darkMode) private var darkMode = true
     @EnvironmentObject private var appState: AppState
     @EnvironmentObject private var notificationVM: NotificationViewModel
 

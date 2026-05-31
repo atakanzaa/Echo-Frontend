@@ -168,7 +168,7 @@ struct CoachSessionsListView: View {
             }
             .padding(AppTheme.Spacing.md)
             .background(
-                Color(red: 0.153, green: 0.102, blue: 0.200).opacity(0.6)
+                AppTheme.Colors.accentSoft(.dark).opacity(0.6)
                     .background(.ultraThinMaterial)
             )
             .cornerRadius(AppTheme.Spacing.radiusLg)
