@@ -8,10 +8,12 @@ enum AppConstants {
 
     enum API {
         #if DEBUG
-        // LAN IP of the Mac running the backend — update when switching networks.
-        // Get with: `ipconfig getifaddr en0` on the Mac.
-        static let baseURL = "http://192.168.0.24:8080/api/v1"
-        static let mediaBaseURL = "http://192.168.0.24:8080"
+        // Debug builds talk to the production backend (api.echojournal.net → 91.99.54.30).
+        // To test against a local Mac backend instead, swap these for the LAN IP:
+        //   static let baseURL = "http://<ipconfig getifaddr en0>:8080/api/v1"
+        //   static let mediaBaseURL = "http://<ipconfig getifaddr en0>:8080"
+        static let baseURL = "https://api.echojournal.net/api/v1"
+        static let mediaBaseURL = "https://api.echojournal.net"
         #else
         static let baseURL = "https://api.echojournal.net/api/v1"
         static let mediaBaseURL = "https://api.echojournal.net"

@@ -4,6 +4,7 @@ import UIKit
 struct SettingsView: View {
     @Binding var selectedTab: AppTab
     @EnvironmentObject var locManager: LocalizationManager
+    @EnvironmentObject private var pushManager: PushNotificationManager
     @AppStorage("darkMode") private var darkMode = true
     @AppStorage("privateMode") private var privateMode = false
     @State private var isMenuOpen = false
@@ -77,6 +78,11 @@ struct SettingsView: View {
                                     }
                                 }
                             )
+                        }
+
+                        // Notifications Section
+                        SettingsSectionView(title: locManager.t("settings.notifications")) {
+                            NotificationsToggleRow()
                         }
 
                         SettingsSectionView(title: locManager.t("settings.language")) {
@@ -379,6 +385,61 @@ struct SettingsToggleView: View {
             Toggle("", isOn: $isOn)
                 .labelsHidden()
                 .tint(AppTheme.Colors.accent)
+        }
+    }
+}
+
+struct NotificationsToggleRow: View {
+    @EnvironmentObject private var locManager: LocalizationManager
+    @EnvironmentObject private var pushManager: PushNotificationManager
+    @State private var showSettingsAlert = false
+
+    var body: some View {
+        SettingsRowLayout(
+            icon: "bell.badge.fill",
+            iconColor: AppTheme.Colors.accent,
+            title: locManager.t("settings.push_notifications"),
+            subtitle: locManager.t("settings.push_notifications_sub")
+        ) {
+            Toggle("", isOn: Binding(
+                get: { pushManager.permissionStatus.canDeliver },
+                set: { handleToggle(to: $0) }
+            ))
+            .labelsHidden()
+            .tint(AppTheme.Colors.accent)
+        }
+        .task { await pushManager.refreshPermissionStatus() }
+        .alert(
+            locManager.t("settings.notifications_blocked_title"),
+            isPresented: $showSettingsAlert
+        ) {
+            Button(locManager.t("settings.open_settings")) { openSystemSettings() }
+            Button(locManager.t("common.cancel"), role: .cancel) { }
+        } message: {
+            Text(locManager.t("settings.notifications_blocked_message"))
+        }
+    }
+
+    // notDetermined: ask the OS. denied: only Settings can change it.
+    // authorized + turning off: route to Settings (apps can't revoke permission).
+    private func handleToggle(to newValue: Bool) {
+        switch pushManager.permissionStatus {
+        case .notDetermined:
+            if newValue {
+                Task { await pushManager.requestAuthorizationIfNeeded() }
+            }
+        case .denied:
+            showSettingsAlert = true
+        case .authorized, .provisional, .ephemeral:
+            if !newValue {
+                showSettingsAlert = true
+            }
+        }
+    }
+
+    private func openSystemSettings() {
+        if let url = URL(string: UIApplication.openSettingsURLString) {
+            ExternalNavigator.openURL(url)
         }
     }
 }
