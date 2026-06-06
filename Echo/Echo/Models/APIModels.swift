@@ -50,6 +50,28 @@ struct AdminSummary: Decodable {
     let appVersion:         String?
     let dbReachable:        Bool
     let generatedAt:        String?
+
+    enum CodingKeys: String, CodingKey {
+        case totalUsers
+        case newUsers24h = "newUsers24H"
+        case newUsers7d = "newUsers7D"
+        case activeToday
+        case totalEntries
+        case entries24h
+        case stuckEntries
+        case failedEntries
+        case pushSent24h = "pushSent24H"
+        case pushFailed24h = "pushFailed24H"
+        case pushSkipped24h = "pushSkipped24H"
+        case pushPending
+        case activePushTokens
+        case errors24h
+        case dlqUnresolved
+        case activeSubscriptions
+        case appVersion
+        case dbReachable
+        case generatedAt
+    }
 }
 
 struct AdminError: Decodable, Identifiable {
