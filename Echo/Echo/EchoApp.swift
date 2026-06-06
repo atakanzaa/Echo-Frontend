@@ -26,7 +26,13 @@ struct EchoApp: App {
             ZStack {
                 Group {
                     if appState.isAuthenticated {
-                        ContentView()
+                        // Admins get a dedicated monitoring shell — none of the
+                        // normal user features (journal, coach, AI, community).
+                        if appState.currentUser?.isAdmin == true {
+                            AdminRootView()
+                        } else {
+                            ContentView()
+                        }
                     } else {
                         AuthenticationView()
                     }

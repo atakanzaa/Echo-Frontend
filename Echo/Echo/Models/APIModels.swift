@@ -21,6 +21,51 @@ struct APIUser: Decodable {
     let language:           String?
     let emailVerified:      Bool?
     let passwordLoginEnabled: Bool?
+    let role:               String?
+
+    var isAdmin: Bool {
+        (role ?? "").uppercased() == "ADMIN"
+    }
+}
+
+// MARK: — Admin monitoring
+
+struct AdminSummary: Decodable {
+    let totalUsers:         Int
+    let newUsers24h:        Int
+    let newUsers7d:         Int
+    let activeToday:        Int
+    let totalEntries:       Int
+    let entries24h:         Int
+    let stuckEntries:       Int
+    let failedEntries:      Int
+    let pushSent24h:        Int
+    let pushFailed24h:      Int
+    let pushSkipped24h:     Int
+    let pushPending:        Int
+    let activePushTokens:   Int
+    let errors24h:          Int
+    let dlqUnresolved:      Int
+    let activeSubscriptions: Int
+    let appVersion:         String?
+    let dbReachable:        Bool
+    let generatedAt:        String?
+}
+
+struct AdminError: Decodable, Identifiable {
+    let occurredAt:     String?
+    let httpStatus:     Int?
+    let errorCode:      String?
+    let exceptionClass: String?
+    let shortMessage:   String?
+    let path:           String?
+    let method:         String?
+    let requestId:      String?
+    let userRef:        String?
+    let severity:       String?
+
+    // Stable identity for SwiftUI lists: requestId + timestamp is unique enough.
+    var id: String { (requestId ?? "") + (occurredAt ?? "") }
 }
 
 // MARK: — Journal

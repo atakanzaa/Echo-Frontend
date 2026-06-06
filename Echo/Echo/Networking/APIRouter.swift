@@ -94,6 +94,10 @@ enum APIRouter {
     case dismissGoal(id: String)
     case deleteGoal(id: String)
 
+    // Admin monitoring
+    case adminSummary
+    case adminErrors(page: Int, size: Int)
+
     // Health
     case health
 }
@@ -275,6 +279,12 @@ extension APIRouter {
         case .notCompletedGoal(let id):     return ("/goals/\(id)/not-completed", "PUT", nil, false)
         case .dismissGoal(let id):          return ("/goals/\(id)/dismiss", "PUT", nil, false)
         case .deleteGoal(let id):           return ("/goals/\(id)", "DELETE", nil, false)
+
+        // Admin monitoring
+        case .adminSummary:
+            return ("/admin/monitor/summary", "GET", nil, false)
+        case .adminErrors(let page, let size):
+            return ("/admin/monitor/errors?page=\(max(page, 0))&size=\(max(size, 1))", "GET", nil, false)
 
         // Health
         case .health: return ("/health", "GET", nil, false)
