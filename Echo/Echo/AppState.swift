@@ -24,16 +24,20 @@ final class AppState: ObservableObject {
     }
 
     /// Keychain'deki token'ları backend'e doğrulayıp currentUser'ı restore eder.
-    /// Token geçersizse (süresi dolmuş, backend yeniden başlamış vb.) oturumu kapatır.
+    /// Sadece token gerçekten geçersizse oturumu kapatır; geçici ağ hatalarında oturum korunur.
     func validateSession() async {
         isRestoringSession = true
+        defer { isRestoringSession = false }
         do {
             let user: APIUser = try await APIClient.shared.requestWithAutoRefresh(.me)
             currentUser = user
-        } catch {
+        } catch NetworkError.unauthorized, NetworkError.forbidden {
+            // Token gerçekten geçersiz/iptal — oturumu kapat.
             signOut()
+        } catch {
+            // Geçici hata (offline, timeout, sunucu) — token'lar geçerli, oturumu koru.
+            Log.auth.warning("Session validation deferred due to a transient network error")
         }
-        isRestoringSession = false
     }
 
     func signIn(with authResponse: APIAuthResponse) {

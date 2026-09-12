@@ -116,7 +116,7 @@ struct AuthenticationView: View {
                             Button(action: { showForgotPassword = true }) {
                                 Text(locManager.t("auth.forgot_password"))
                                     .font(AppTheme.Typography.caption)
-                                    .foregroundColor(Color(red: 0.769, green: 0.604, blue: 1.0))
+                                    .foregroundColor(AppTheme.Colors.accentLight)
                             }
                             .frame(maxWidth: .infinity, alignment: .trailing)
                         }
@@ -162,7 +162,7 @@ struct AuthenticationView: View {
                             Text(isSigningUp ? locManager.t("auth.log_in") : locManager.t("auth.sign_up"))
                                 .font(AppTheme.Typography.caption)
                                 .fontWeight(.semibold)
-                                .foregroundColor(Color(red: 0.769, green: 0.604, blue: 1.0))
+                                .foregroundColor(AppTheme.Colors.accentLight)
                         }
                     }
 

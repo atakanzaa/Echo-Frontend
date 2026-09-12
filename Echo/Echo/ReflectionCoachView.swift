@@ -208,7 +208,7 @@ struct AIAvatarView: View {
             Circle()
                 .fill(
                     LinearGradient(
-                        colors: [Color(red: 0.769, green: 0.604, blue: 1.0), AppTheme.Colors.accent],
+                        colors: [AppTheme.Colors.accentLight, AppTheme.Colors.accent],
                         startPoint: .topLeading, endPoint: .bottomTrailing
                     )
                 )
