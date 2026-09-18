@@ -1,12 +1,14 @@
 import SwiftUI
 
 /// Mood ölçeği (implementation.md §3.2): renk **+ şekil**. Renk tek başına anlam taşımaz.
-nonisolated enum EchoMoodLevel: Int, CaseIterable, Sendable, Comparable {
+nonisolated enum EchoMoodLevel: Int, CaseIterable, Sendable, Comparable, Identifiable {
     case heavy = 1
     case low
     case neutral
     case good
     case bright
+
+    var id: Int { rawValue }
 
     static func < (lhs: Self, rhs: Self) -> Bool { lhs.rawValue < rhs.rawValue }
 
@@ -41,16 +43,39 @@ nonisolated enum EchoMoodLevel: Int, CaseIterable, Sendable, Comparable {
         case .bright: AppTheme.color.mood.bright
         }
     }
+}
 
-    /// Renk körlüğü uyumu için her seviyenin ayrı şekli var.
-    var systemImage: String {
-        switch self {
-        case .heavy: "cloud.rain.fill"
-        case .low: "cloud.fill"
-        case .neutral: "circle.fill"
-        case .good: "sun.max.fill"
-        case .bright: "sparkles"
+/// Renk körlüğü uyumu için her seviyenin ayrı şekli vardır (§4.18).
+nonisolated struct EchoMoodShape: Shape {
+    let level: EchoMoodLevel
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        switch level {
+        case .heavy:
+            path.move(to: CGPoint(x: rect.minX, y: rect.minY))
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+            path.addLine(to: CGPoint(x: rect.midX, y: rect.maxY))
+            path.closeSubpath()
+        case .low:
+            path.move(to: CGPoint(x: rect.minX, y: rect.midY))
+            path.addArc(center: CGPoint(x: rect.midX, y: rect.midY), radius: rect.width / 2,
+                        startAngle: .degrees(180), endAngle: .degrees(0), clockwise: true)
+            path.closeSubpath()
+        case .neutral:
+            path.addEllipse(in: rect)
+        case .good:
+            path.move(to: CGPoint(x: rect.minX, y: rect.midY))
+            path.addArc(center: CGPoint(x: rect.midX, y: rect.midY), radius: rect.width / 2,
+                        startAngle: .degrees(180), endAngle: .degrees(0), clockwise: false)
+            path.closeSubpath()
+        case .bright:
+            path.move(to: CGPoint(x: rect.midX, y: rect.minY))
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+            path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
+            path.closeSubpath()
         }
+        return path
     }
 }
 
@@ -58,20 +83,30 @@ nonisolated enum EchoMoodLevel: Int, CaseIterable, Sendable, Comparable {
 struct EchoMoodGlyph: View {
     let level: EchoMoodLevel
     var size: CGFloat = 16
+    var isFilled: Bool = true
 
     var body: some View {
-        Image(systemName: level.systemImage)
-            .font(.system(size: size, weight: .semibold))
-            .foregroundStyle(level.color)
-            .accessibilityHidden(true)
+        Group {
+            if isFilled {
+
+                EchoMoodShape(level: level).fill(level.color)
+            } else {
+                EchoMoodShape(level: level).stroke(level.color, lineWidth: 1.5)
+            }
+        }
+        .frame(width: size, height: size)
+        .accessibilityHidden(true)
     }
 }
 
 #Preview("Mood ölçeği") {
     HStack(spacing: AppTheme.space.sm) {
-        ForEach(EchoMoodLevel.allCases, id: \.rawValue) { level in
+        ForEach(EchoMoodLevel.allCases) { level in
 
-            EchoMoodGlyph(level: level, size: 24)
+            VStack(spacing: AppTheme.space.xxs) {
+                EchoMoodGlyph(level: level, size: 28)
+                EchoMoodGlyph(level: level, size: 28, isFilled: false)
+            }
         }
     }
     .padding()
