@@ -1,6 +1,7 @@
 import SwiftUI
 
 /// Kimlik doğrulama akışı: karşılama → giriş / kayıt / şifre sıfırlama (rules.md §2).
+/// Zemin Echo'nun yankı motifini taşır; hareket Reduce Motion'da durur.
 struct AuthFlowView: View {
     @Environment(AppEnvironment.self) private var environment
     @State private var path = NavigationPath()
@@ -14,46 +15,79 @@ struct AuthFlowView: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            welcome
+            WelcomeView(onSignIn: { path.append(Route.signIn) },
+                        onSignUp: { path.append(Route.signUp) })
                 .navigationDestination(for: Route.self) { route in
 
                     switch route {
-                    case .signIn: SignInView { path.append(Route.forgotPassword) }
-                    case .signUp: SignUpView()
-                    case .forgotPassword: ForgotPasswordView { email in path.append(Route.resetPassword(email: email)) }
-                    case .resetPassword(let email): ResetPasswordView(email: email) { path = NavigationPath() }
+                    case .signIn:
+                        SignInView(onForgotPassword: { path.append(Route.forgotPassword) },
+                                   onSignUp: { path.append(Route.signUp) })
+                    case .signUp:
+                        SignUpView(onSignIn: { path.append(Route.signIn) })
+                    case .forgotPassword:
+                        ForgotPasswordView { email in path.append(Route.resetPassword(email: email)) }
+                    case .resetPassword(let email):
+                        ResetPasswordView(email: email) { path = NavigationPath() }
                     }
                 }
         }
     }
+}
 
-    private var welcome: some View {
-        VStack(spacing: AppTheme.space.lg) {
-            Spacer()
-            EchoRippleView(ringCount: 4, intensity: 0.7)
-                .frame(width: 160, height: 160)
-            VStack(spacing: AppTheme.space.xs) {
-                Text("welcome.title")
-                    .echoTextStyle(.title1)
-                    .foregroundStyle(AppTheme.color.content.primary)
-                Text("welcome.subtitle")
-                    .echoTextStyle(.callout)
-                    .foregroundStyle(AppTheme.color.content.secondary)
-                    .multilineTextAlignment(.center)
+/// Karşılama: tam ekran aurora, nefes alan yankı işareti ve tek birincil eylem.
+struct WelcomeView: View {
+    let onSignIn: () -> Void
+    let onSignUp: () -> Void
+    @Environment(AppEnvironment.self) private var environment
+
+    var body: some View {
+        ZStack {
+            EchoAuroraBackground(style: .immersive)
+            VStack(spacing: 0) {
+                Spacer(minLength: AppTheme.space.xl)
+                EchoBrandMark(size: 220)
+                    .padding(.bottom, AppTheme.space.lg)
+                VStack(spacing: AppTheme.space.xs) {
+                    Text("welcome.title")
+                        .echoTextStyle(.display)
+                        .foregroundStyle(.white)
+                        .multilineTextAlignment(.center)
+                    Text("welcome.subtitle")
+                        .echoTextStyle(.callout)
+                        .foregroundStyle(.white.opacity(0.75))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, AppTheme.space.sm)
+                }
+                Spacer(minLength: AppTheme.space.lg)
+                actions
+                legal
+                    .padding(.top, AppTheme.space.sm)
             }
-            Spacer()
-            VStack(spacing: AppTheme.space.xs) {
-                AppleSignInButton()
-                GoogleSignInButton()
-                EchoButton("welcome.signIn", variant: .tertiary, size: .lg, fullWidth: true) { path.append(Route.signIn) }
-                EchoButton("welcome.createAccount", variant: .ghost, size: .md, fullWidth: true) { path.append(Route.signUp) }
-            }
-            legal
+            .padding(.horizontal, AppTheme.layout.screenHorizontalPadding)
+            .padding(.bottom, AppTheme.space.lg)
         }
-        .padding(.horizontal, AppTheme.layout.screenHorizontalPadding)
-        .padding(.bottom, AppTheme.space.lg)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(AppTheme.color.bg.canvas)
+        .toolbar(.hidden, for: .navigationBar)
+    }
+
+    private var actions: some View {
+        VStack(spacing: AppTheme.space.xs) {
+            AppleSignInButton()
+            GoogleSignInButton(variant: .glass)
+            EchoButton("welcome.signInWithEmail", variant: .glass, size: .lg, fullWidth: true, action: onSignIn)
+            HStack(spacing: AppTheme.space.xxxs) {
+                Text("auth.noAccount")
+                    .echoTextStyle(.subhead)
+                    .foregroundStyle(.white.opacity(0.75))
+                Button(action: onSignUp) {
+                    Text("auth.signUpAction")
+                        .echoTextStyle(.bodyEmphasis)
+                        .foregroundStyle(.white)
+                        .underline()
+                }
+            }
+            .padding(.top, AppTheme.space.xxxs)
+        }
     }
 
     /// Bağlantılar `app/config`'ten gelir; null gelen bağlantı gizlenir.
@@ -61,7 +95,7 @@ struct AuthFlowView: View {
         VStack(spacing: AppTheme.space.xxxs) {
             Text("welcome.legal")
                 .echoTextStyle(.caption)
-                .foregroundStyle(AppTheme.color.content.tertiary)
+                .foregroundStyle(.white.opacity(0.6))
                 .multilineTextAlignment(.center)
             HStack(spacing: AppTheme.space.sm) {
                 if let terms = environment.remoteConfig.config?.termsURL {
@@ -73,7 +107,7 @@ struct AuthFlowView: View {
                     Link(destination: privacy) { Text("welcome.privacy").echoTextStyle(.caption) }
                 }
             }
-            .foregroundStyle(AppTheme.color.content.accent)
+            .foregroundStyle(.white.opacity(0.85))
         }
     }
 }

@@ -7,13 +7,15 @@ nonisolated enum EchoButtonVariant: Sendable {
     case tertiary
     case ghost
     case destructive
+    /// Aurora zemin üzerinde kullanılır; arkasındaki hareketi geçirir.
+    case glass
 
     var background: Color? {
         switch self {
         case .primary: AppTheme.color.accent.primary
         case .secondary: AppTheme.color.bg.accentSoft
         case .tertiary: AppTheme.color.bg.surface
-        case .ghost: nil
+        case .ghost, .glass: nil
         case .destructive: AppTheme.color.feedback.danger
         }
     }
@@ -23,20 +25,25 @@ nonisolated enum EchoButtonVariant: Sendable {
         case .primary: AppTheme.color.accent.primaryPressed
         case .secondary, .tertiary: AppTheme.color.bg.surfaceSunken
         case .ghost: AppTheme.color.bg.accentSoft
+        case .glass: .white.opacity(0.18)
         case .destructive: AppTheme.color.feedback.danger.opacity(0.85)
         }
     }
 
     var foreground: Color {
         switch self {
-        case .primary, .destructive: AppTheme.color.content.onAccent
+        case .primary, .destructive, .glass: AppTheme.color.content.onAccent
         case .secondary, .ghost: AppTheme.color.content.accent
         case .tertiary: AppTheme.color.content.primary
         }
     }
 
     var border: Color? {
-        self == .tertiary ? AppTheme.color.border.default : nil
+        switch self {
+        case .tertiary: AppTheme.color.border.default
+        case .glass: .white.opacity(0.35)
+        default: nil
+        }
     }
 }
 
@@ -169,7 +176,11 @@ private struct EchoButtonStyle: ButtonStyle {
             .padding(.horizontal, size.horizontalPadding)
             .frame(maxWidth: fullWidth ? .infinity : nil, minHeight: size.height)
             .background {
-                if let background = configuration.isPressed ? variant.pressedBackground : variant.background {
+                if variant == .glass {
+
+                    shape.fill(.ultraThinMaterial)
+                        .overlay { shape.fill(configuration.isPressed ? Color.white.opacity(0.18) : .clear) }
+                } else if let background = configuration.isPressed ? variant.pressedBackground : variant.background {
 
                     shape.fill(background)
                 }

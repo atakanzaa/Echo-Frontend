@@ -3,6 +3,7 @@ import SwiftUI
 /// Giriş formu. 401 burada form hatasıdır; oturum yenileme başlatmaz (rules.md §2).
 struct SignInView: View {
     let onForgotPassword: () -> Void
+    let onSignUp: () -> Void
     @Environment(AppEnvironment.self) private var environment
     @State private var email = ""
     @State private var password = ""
@@ -18,6 +19,7 @@ struct SignInView: View {
             EchoButton("welcome.signIn", size: .lg, fullWidth: true, isLoading: isWorking) { submit() }
                 .disabled(email.isEmpty || password.isEmpty)
             EchoButton("auth.forgotPassword", variant: .ghost, size: .sm, action: onForgotPassword)
+            AuthSwitchPrompt(question: "auth.noAccount", action: "auth.signUpAction", onTap: onSignUp)
         }
     }
 
@@ -41,6 +43,7 @@ struct SignInView: View {
 
 /// Kayıt formu. `timezone` cihazdan, `language` uygulama dilinden gönderilir.
 struct SignUpView: View {
+    let onSignIn: () -> Void
     @Environment(AppEnvironment.self) private var environment
     @State private var email = ""
     @State private var password = ""
@@ -57,6 +60,7 @@ struct SignUpView: View {
                           errorText: fieldError("password"), contentType: .newPassword)
             EchoButton("welcome.createAccount", size: .lg, fullWidth: true, isLoading: isWorking) { submit() }
                 .disabled(email.isEmpty || password.isEmpty || displayName.isEmpty)
+            AuthSwitchPrompt(question: "auth.haveAccount", action: "auth.signInAction", onTap: onSignIn)
         }
     }
 
@@ -160,27 +164,63 @@ struct ResetPasswordView: View {
     }
 }
 
-/// Form ekranlarının ortak iskeleti: başlık, sunucu hatası ve alanlar.
+/// Form ekranlarının ortak iskeleti: yumuşak aurora zemin, yankı işareti, cam kart içinde alanlar.
 struct AuthScaffold<Content: View>: View {
     let title: LocalizedStringKey
     let error: AppError?
     @ViewBuilder let content: Content
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: AppTheme.space.sm) {
-                Text(title)
-                    .echoTextStyle(.title2)
-                    .foregroundStyle(AppTheme.color.content.primary)
-                if let error, let message = error.serverMessage ?? error.messageKey.map({ String(localized: String.LocalizationValue($0)) }) {
+        ZStack {
+            EchoAuroraBackground(style: .soft)
+            ScrollView {
+                VStack(spacing: AppTheme.space.md) {
+                    EchoBrandMark(size: 120, tint: AppTheme.color.accent.primary)
+                        .padding(.top, AppTheme.space.xs)
+                    VStack(alignment: .leading, spacing: AppTheme.space.sm) {
+                        Text(title)
+                            .echoTextStyle(.title2)
+                            .foregroundStyle(AppTheme.color.content.primary)
+                        if let error, let message = error.serverMessage ?? error.messageKey.map({ String(localized: String.LocalizationValue($0)) }) {
 
-                    EchoBanner(kind: .danger, title: message)
+                            EchoBanner(kind: .danger, title: message)
+                        }
+                        content
+                    }
+                    .padding(AppTheme.space.md)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background {
+                        RoundedRectangle(cornerRadius: AppTheme.radius.xl, style: .continuous)
+                            .fill(AppTheme.color.bg.surface)
+                            .echoSurface(.level2, in: RoundedRectangle(cornerRadius: AppTheme.radius.xl, style: .continuous))
+                    }
                 }
-                content
+                .padding(.horizontal, AppTheme.layout.screenHorizontalPadding)
+                .padding(.bottom, AppTheme.space.xl)
             }
-            .padding(AppTheme.layout.screenHorizontalPadding)
+            .scrollDismissesKeyboard(.interactively)
         }
-        .background(AppTheme.color.bg.canvas)
-        .scrollDismissesKeyboard(.interactively)
+    }
+}
+
+/// "Hesabın yok mu? Kayıt ol" gibi ekranlar arası geçiş satırı.
+struct AuthSwitchPrompt: View {
+    let question: LocalizedStringKey
+    let action: LocalizedStringKey
+    let onTap: () -> Void
+
+    var body: some View {
+        HStack(spacing: AppTheme.space.xxxs) {
+            Text(question)
+                .echoTextStyle(.subhead)
+                .foregroundStyle(AppTheme.color.content.secondary)
+            Button(action: onTap) {
+                Text(action)
+                    .echoTextStyle(.bodyEmphasis)
+                    .foregroundStyle(AppTheme.color.content.accent)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, AppTheme.space.xxs)
     }
 }

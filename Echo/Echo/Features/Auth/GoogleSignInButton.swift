@@ -4,13 +4,14 @@ import UIKit
 
 /// Google ile giriş (rules.md §2). SDK'dan alınan `id_token` backend'e gönderilir.
 struct GoogleSignInButton: View {
+    var variant: EchoButtonVariant = .tertiary
     @Environment(AppEnvironment.self) private var environment
     @State private var error: AppError?
     @State private var isWorking = false
 
     var body: some View {
         VStack(spacing: AppTheme.space.xxs) {
-            EchoButton("welcome.continueWithGoogle", variant: .tertiary, size: .lg,
+            EchoButton("welcome.continueWithGoogle", variant: variant, size: .lg,
                        leadingIcon: "g.circle", fullWidth: true, isLoading: isWorking) { start() }
             if let error, let message = error.serverMessage {
 

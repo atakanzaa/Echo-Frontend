@@ -120,6 +120,23 @@
         }
       }
     },
+    "auth.haveAccount": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already have an account?"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zaten hesabın var mı?"
+          }
+        }
+      }
+    },
     "auth.newPassword": {
       "extractionState": "manual",
       "localizations": {
@@ -133,6 +150,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Yeni şifre"
+          }
+        }
+      }
+    },
+    "auth.noAccount": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No account yet?"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hesabın yok mu?"
           }
         }
       }
@@ -239,6 +273,23 @@
         }
       }
     },
+    "auth.signInAction": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Giriş yap"
+          }
+        }
+      }
+    },
     "auth.signInTitle": {
       "extractionState": "manual",
       "localizations": {
@@ -252,6 +303,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tekrar hoş geldin"
+          }
+        }
+      }
+    },
+    "auth.signUpAction": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign up"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kayıt ol"
           }
         }
       }
@@ -1274,6 +1342,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Giriş yap"
+          }
+        }
+      }
+    },
+    "welcome.signInWithEmail": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in with email"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E-posta ile giriş yap"
           }
         }
       }
