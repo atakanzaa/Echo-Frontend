@@ -1402,6 +1402,23 @@
         }
       }
     },
+    "common.refresh": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yenile"
+          }
+        }
+      }
+    },
     "common.retry": {
       "extractionState": "manual",
       "localizations": {
@@ -3843,6 +3860,91 @@
         }
       }
     },
+    "mood.level.bright": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bright"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parlak"
+          }
+        }
+      }
+    },
+    "mood.level.good": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Good"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İyi"
+          }
+        }
+      }
+    },
+    "mood.level.heavy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heavy"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ağır"
+          }
+        }
+      }
+    },
+    "mood.level.low": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Low"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Düşük"
+          }
+        }
+      }
+    },
+    "mood.level.neutral": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neutral"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nötr"
+          }
+        }
+      }
+    },
     "mood.title": {
       "extractionState": "stale",
       "localizations": {
@@ -5732,39 +5834,246 @@
         }
       }
     },
-    "today.capsules": {
+    "today.after.mood.body": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Time capsules"
+            "value": "Your feelings, your energy and the topics that stand out."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zaman kapsülleri"
+            "value": "Duyguların, enerjin ve öne çıkan konular."
           }
         }
       }
     },
-    "today.capsulesAction": {
+    "today.after.mood.title": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Leave a note for the future"
+            "value": "Mood and topics"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Geleceğe bir not bırak"
+            "value": "Ruh hâli ve konular"
           }
         }
       }
     },
-    "today.coach": {
+    "today.after.question.body": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The next day this page opens with that question."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ertesi gün bu sayfa o soruyla açılır."
+          }
+        }
+      }
+    },
+    "today.after.question.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A question for you"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sana dönük bir soru"
+          }
+        }
+      }
+    },
+    "today.after.summary.body": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The essence of what you said, in a few sentences."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Söylediklerinin birkaç cümlelik özü."
+          }
+        }
+      }
+    },
+    "today.after.summary.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A short summary"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kısa bir özet"
+          }
+        }
+      }
+    },
+    "today.after.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After your first entry"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İlk kaydından sonra"
+          }
+        }
+      }
+    },
+    "today.bell.a11yUnread %lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications, %lld unread"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bildirimler, %lld okunmamış"
+          }
+        }
+      }
+    },
+    "today.capsule.next": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your next capsule opens on %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sonraki kapsülün %@ tarihinde açılıyor"
+          }
+        }
+      }
+    },
+    "today.capsule.open": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aç"
+          }
+        }
+      }
+    },
+    "today.capsule.openable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld capsules are ready to open"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Açılmayı bekleyen %lld kapsülün var"
+          }
+        }
+      }
+    },
+    "today.coach.last": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last session: %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Son oturum: %@"
+          }
+        }
+      }
+    },
+    "today.coach.meet": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meet your coach"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koçunla tanış"
+          }
+        }
+      }
+    },
+    "today.coach.meetBody": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open up what's on your mind with a coach"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aklındakileri bir koçla konuşarak aç"
+          }
+        }
+      }
+    },
+    "today.coach.title": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -5780,136 +6089,240 @@
         }
       }
     },
-    "today.coachMessage": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Explore what's on your mind with Echo."
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aklındakileri Echo ile birlikte keşfet."
-          }
-        }
-      }
-    },
-    "today.emptyDay": {
+    "today.goals.a11yComplete %@": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nothing recorded yet today. The question above is a good place to start."
+            "value": "Mark as done: %@"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bugün henüz bir şey kaydetmedin. Yukarıdaki soru iyi bir başlangıç."
+            "value": "Tamamlandı olarak işaretle: %@"
           }
         }
       }
     },
-    "today.entries": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Today's entries"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bugünkü kayıtlar"
-          }
-        }
-      }
-    },
-    "today.goals": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your goals"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hedeflerin"
-          }
-        }
-      }
-    },
-    "today.goalsAction": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Take the next small step"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sıradaki küçük adımı at"
-          }
-        }
-      }
-    },
-    "today.greeting": {
-      "comment": "Greeting with the user's display name",
+    "today.goals.a11yDone %@": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hello, %@"
+            "value": "Done: %@"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Merhaba, %@"
+            "value": "Tamamlandı: %@"
           }
         }
       }
     },
-    "today.greetingGeneric": {
-      "extractionState": "stale",
+    "today.goals.completedThisWeek": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hello"
+            "value": "You completed %lld goals this week"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Merhaba"
+            "value": "Bu hafta %lld hedef tamamladın"
           }
         }
       }
     },
-    "today.onThisDay": {
-      "extractionState": "stale",
+    "today.goals.empty": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "On this day"
+            "value": "Set yourself a small goal"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bugün geçmişte"
+            "value": "Kendine küçük bir hedef koy"
+          }
+        }
+      }
+    },
+    "today.goals.section": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Goals"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hedefler"
+          }
+        }
+      }
+    },
+    "today.goals.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your goals for today"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bugün için hedeflerin"
+          }
+        }
+      }
+    },
+    "today.greeting.day": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Good afternoon"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İyi günler"
+          }
+        }
+      }
+    },
+    "today.greeting.evening": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Good evening"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İyi akşamlar"
+          }
+        }
+      }
+    },
+    "today.greeting.morning": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Good morning"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Günaydın"
+          }
+        }
+      }
+    },
+    "today.greeting.welcome": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Welcome"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoş geldin"
+          }
+        }
+      }
+    },
+    "today.knowsYou": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Echo knows you"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Echo seni tanıyor"
+          }
+        }
+      }
+    },
+    "today.memory.yearsAgo": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld years ago today"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld yıl önce bugün"
+          }
+        }
+      }
+    },
+    "today.offline": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You're offline"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çevrimdışısın"
+          }
+        }
+      }
+    },
+    "today.offline.since": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "last updated %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "son güncelleme %@"
           }
         }
       }
@@ -5946,193 +6359,347 @@
         }
       }
     },
-    "today.recent": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Recent entries"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Son kayıtların"
-          }
-        }
-      }
-    },
-    "today.record": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Start recording"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kayda başla"
-          }
-        }
-      }
-    },
-    "today.recordAgain": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Record another thought"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Yeni bir düşünce kaydet"
-          }
-        }
-      }
-    },
-    "today.recordAgainMessage": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your day can hold more than one thought."
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bir güne birden fazla düşünce sığabilir."
-          }
-        }
-      }
-    },
-    "today.recordAgainTitle": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add to today"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bugüne ekle"
-          }
-        }
-      }
-    },
-    "today.recordMessage": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pause for a moment and say what is on your mind."
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bir an dur ve aklından geçenleri anlat."
-          }
-        }
-      }
-    },
-    "today.recordTitle": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "How are you today?"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bugün nasılsın?"
-          }
-        }
-      }
-    },
-    "today.recordedToday": {
+    "today.progress.newUserHint": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "today's entry is in"
+            "value": "Badges open with entries, streaks and goals."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "bugünkü kayıt tamam"
+            "value": "Rozetler kayıt, seri ve hedeflerle açılır."
           }
         }
       }
     },
-    "today.section.goals": {
+    "today.progress.nextBadge": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Goals"
+            "value": "Next badge"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hedefler"
+            "value": "Sıradaki rozet"
           }
         }
       }
     },
-    "today.section.memory": {
+    "today.progress.remaining": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "On this day"
+            "value": "%lld to go"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Geçmişte bugün"
+            "value": "%lld kaldı"
           }
         }
       }
     },
-    "today.section.suggestion": {
+    "today.progress.stats": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "A small suggestion"
+            "value": "Longest streak %lld days · %lld entries in total"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Küçük bir öneri"
+            "value": "En uzun serin %lld gün · toplam %lld kayıt"
           }
         }
       }
     },
-    "today.section.today": {
+    "today.question.a11yHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap to answer by voice"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sesle yanıtlamak için dokun"
+          }
+        }
+      }
+    },
+    "today.question.a11yLabel %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Question of the day: %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Günün sorusu: %@"
+          }
+        }
+      }
+    },
+    "today.question.action": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap to answer by voice"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dokun, sesle yanıtla"
+          }
+        }
+      }
+    },
+    "today.question.fromLast": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A question from your last entry"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Son kaydından bir soru"
+          }
+        }
+      }
+    },
+    "today.question.fromToday": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A question from this morning's entry"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sabahki kaydından bir soru"
+          }
+        }
+      }
+    },
+    "today.question.fromYesterday": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A question from yesterday's entry"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dünkü kaydından bir soru"
+          }
+        }
+      }
+    },
+    "today.question.write": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yaz"
+          }
+        }
+      }
+    },
+    "today.status.count": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld entries today"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bugün %lld kayıt"
+          }
+        }
+      }
+    },
+    "today.status.firstDay": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "your first day on Echo"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Echo’daki ilk günün"
+          }
+        }
+      }
+    },
+    "today.status.none": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nothing recorded today yet"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bugün henüz kaydın yok"
+          }
+        }
+      }
+    },
+    "today.streak.days": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld-day streak"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld günlük seri"
+          }
+        }
+      }
+    },
+    "today.timeline.energy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Energy %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enerji %@"
+          }
+        }
+      }
+    },
+    "today.timeline.failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The analysis could not finish"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Analiz tamamlanamadı"
+          }
+        }
+      }
+    },
+    "today.timeline.failedBody": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your entry is safe. It is retried when you are back online."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaydın güvende. Bağlantı gelince yeniden denenir."
+          }
+        }
+      }
+    },
+    "today.timeline.processing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Echo is listening and analysing"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Echo dinliyor, analiz ediliyor"
+          }
+        }
+      }
+    },
+    "today.timeline.retry": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try now"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şimdi dene"
+          }
+        }
+      }
+    },
+    "today.timeline.title": {
       "extractionState": "manual",
       "localizations": {
         "en": {
@@ -6149,102 +6716,223 @@
         }
       }
     },
-    "today.speakAction": {
+    "today.timeline.toJournal": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tell it with your voice"
+            "value": "Open journal"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sesinle anlat"
+            "value": "Günlüğe git"
           }
         }
       }
     },
-    "today.streakDays": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld day streak"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld günlük seri"
-          }
-        }
-      }
-    },
-    "today.streakLine": {
+    "today.week.a11yEntries": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld days in a row"
+            "value": "%lld entries"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld gündür üst üste"
+            "value": "%lld kayıt"
           }
         }
       }
     },
-    "today.suggestion": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A suggestion for today"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bugün için bir öneri"
-          }
-        }
-      }
-    },
-    "today.writeAction": {
+    "today.week.a11yNoEntry": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "or write"
+            "value": "no entry"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "ya da yaz"
+            "value": "kayıt yok"
           }
         }
       }
     },
-    "today.yearsAgo": {
-      "extractionState": "stale",
+    "today.week.a11yTitle": {
+      "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d years ago"
+            "value": "Mood over the last 7 days"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%d yıl önce"
+            "value": "Son 7 gün ruh hâli"
+          }
+        }
+      }
+    },
+    "today.week.average": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Average"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ortalama"
+          }
+        }
+      }
+    },
+    "today.week.emptyBody": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After every entry Echo marks that day's mood with a shape and a colour."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Her kayıttan sonra Echo o günün ruh hâlini bir şekil ve renkle işaretler."
+          }
+        }
+      }
+    },
+    "today.week.emptyTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your week takes shape here"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Haftan burada şekillenecek"
+          }
+        }
+      }
+    },
+    "today.week.more": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your full weekly report"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Haftalık raporun tamamı"
+          }
+        }
+      }
+    },
+    "today.week.reflection": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Echo's weekly reflection"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Echo’nun haftalık yansıması"
+          }
+        }
+      }
+    },
+    "today.week.today": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bugün"
+          }
+        }
+      }
+    },
+    "today.welcome.body": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speak or write. Echo listens, summarises and leaves you a question."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konuş ya da yaz. Echo dinler, özetler ve sana bir soru bırakır."
+          }
+        }
+      }
+    },
+    "today.welcome.label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To begin"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başlamak için"
+          }
+        }
+      }
+    },
+    "today.welcome.question": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What's on your mind? A few sentences are enough."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aklından ne geçiyor? Birkaç cümle yeter."
           }
         }
       }
