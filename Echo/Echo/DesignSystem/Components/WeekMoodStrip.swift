@@ -235,6 +235,10 @@ struct WeeklyPanel: View {
             header
             WeekMoodStrip(days: days, onTap: onDayTap)
             MoodLegend()
+            Text("today.week.howToRead")
+                .echoTextStyle(.caption)
+                .foregroundStyle(AppTheme.color.content.tertiary)
+                .fixedSize(horizontal: false, vertical: true)
             if !isEmpty, let narrative {
 
                 EchoHairline()

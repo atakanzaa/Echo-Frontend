@@ -32,6 +32,13 @@ final class AppConfigStore {
         isLoading = false
     }
 
+    #if DEBUG
+    /// Yalnız önizleme: sözlük etiketlerini ağsız vermek için.
+    func applyPreview(vocabulary: ServerVocabulary) {
+        self.vocabulary = vocabulary
+    }
+    #endif
+
     /// Sunucunun sürüm kararı; istemci sürüm karşılaştırması yapmaz.
     var requiresUpdate: Bool { config?.release.updateRequired == true }
     var recommendsUpdate: Bool { config?.release.updateRecommended == true }

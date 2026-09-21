@@ -21,4 +21,12 @@ final class NetworkStatus {
     deinit {
         monitor.cancel()
     }
+
+    #if DEBUG
+    /// Yalnız önizleme: çevrimdışı durumunu ağ kesmeden göstermek için.
+    func overrideForPreview(isOnline: Bool) {
+        monitor.pathUpdateHandler = nil
+        self.isOnline = isOnline
+    }
+    #endif
 }
