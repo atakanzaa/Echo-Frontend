@@ -1,4 +1,4 @@
-import AVFoundation
+@preconcurrency import AVFoundation
 import Observation
 
 /// Cihaz içi kayıt. Ses dosyası yalnız kullanıcı gönderene kadar cihazda durur.
@@ -24,9 +24,32 @@ final class AudioRecorderService {
     @ObservationIgnored private var converter: AVAudioConverter?
     @ObservationIgnored private var startedAt: Date?
     @ObservationIgnored private var accumulated: TimeInterval = 0
-    @ObservationIgnored private var timer: Timer?
+    @ObservationIgnored private var tickerTask: Task<Void, Never>?
+    @ObservationIgnored private var interruptionObserver: NSObjectProtocol?
     /// Canlı transkripsiyon aynı ses tamponlarını dinler.
     @ObservationIgnored var onBuffer: (@Sendable (AVAudioPCMBuffer) -> Void)?
+    /// Telefon araması/Siri gibi bir kesinti kaydı duraklattığında ekran durumunu eşler.
+    @ObservationIgnored var onInterruption: (() -> Void)?
+
+    init() {
+        interruptionObserver = NotificationCenter.default.addObserver(
+            forName: AVAudioSession.interruptionNotification,
+            object: AVAudioSession.sharedInstance(),
+            queue: .main
+        ) { [weak self] notification in
+
+            let rawValue = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt
+            Task { @MainActor [weak self] in
+                self?.handleInterruption(rawValue: rawValue)
+            }
+        }
+    }
+
+    deinit {
+        if let interruptionObserver {
+            NotificationCenter.default.removeObserver(interruptionObserver)
+        }
+    }
 
     func start() async throws {
         guard !isRecording else { return }
@@ -73,7 +96,17 @@ final class AudioRecorderService {
         }
 
         engine.prepare()
-        try engine.start()
+        do {
+            try engine.start()
+        } catch {
+            input.removeTap(onBus: 0)
+            self.file = nil
+            self.converter = nil
+            try? FileManager.default.removeItem(at: url)
+            fileURL = nil
+            try? session.setActive(false, options: [.notifyOthersOnDeactivation])
+            throw error
+        }
         accumulated = 0
         startedAt = Date()
         isRecording = true
@@ -87,7 +120,8 @@ final class AudioRecorderService {
         accumulated += Date().timeIntervalSince(startedAt ?? Date())
         startedAt = nil
         isPaused = true
-        timer?.invalidate()
+        tickerTask?.cancel()
+        tickerTask = nil
     }
 
     func resume() throws {
@@ -104,8 +138,8 @@ final class AudioRecorderService {
         guard isRecording else { return fileURL }
         engine.inputNode.removeTap(onBus: 0)
         engine.stop()
-        timer?.invalidate()
-        timer = nil
+        tickerTask?.cancel()
+        tickerTask = nil
         if let startedAt { accumulated += Date().timeIntervalSince(startedAt) }
         duration = accumulated
         startedAt = nil
@@ -126,11 +160,26 @@ final class AudioRecorderService {
         duration = 0
     }
 
+    /// Arka planda gönderilecek ses dosyasını korurken oynayan kayıt oturumunu kapatır.
+    func releaseKeepingFile() {
+        _ = stop()
+    }
+
+    private func handleInterruption(rawValue: UInt?) {
+        guard let rawValue,
+              AVAudioSession.InterruptionType(rawValue: rawValue) == .began,
+              isRecording, !isPaused else { return }
+        pause()
+        onInterruption?()
+    }
+
     private func startTicking() {
-        timer?.invalidate()
-        timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
-            Task { @MainActor in
-                guard let self, let startedAt = self.startedAt else { return }
+        tickerTask?.cancel()
+        tickerTask = Task { [weak self] in
+            while !Task.isCancelled {
+
+                try? await Task.sleep(for: .milliseconds(100))
+                guard let self, let startedAt = self.startedAt else { continue }
                 self.duration = self.accumulated + Date().timeIntervalSince(startedAt)
             }
         }

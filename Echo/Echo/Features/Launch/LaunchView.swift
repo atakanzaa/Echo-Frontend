@@ -6,8 +6,7 @@ struct LaunchView: View {
 
     var body: some View {
         VStack(spacing: AppTheme.space.md) {
-            EchoRippleView(ringCount: 4, intensity: 0.6)
-                .frame(width: 140, height: 140)
+            EchoBrandMark(size: 140, tint: AppTheme.color.accent.primary)
             Text("launch.preparing")
                 .echoTextStyle(.callout)
                 .foregroundStyle(AppTheme.color.content.secondary)

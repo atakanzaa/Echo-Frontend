@@ -27,13 +27,13 @@ struct GoogleSignInButton: View {
         isWorking = true
         error = nil
         GIDSignIn.sharedInstance.signIn(withPresenting: presenter) { result, signInError in
-            guard let idToken = result?.user.idToken?.tokenString else {
-                isWorking = false
-                // İptal sessizdir; diğer hatalar genel mesajla gösterilir.
-                if signInError != nil { error = .unexpectedResponse(status: nil) }
-                return
-            }
-            Task {
+            Task { @MainActor in
+                guard let idToken = result?.user.idToken?.tokenString else {
+                    isWorking = false
+                    // İptal sessizdir; diğer hatalar genel mesajla gösterilir.
+                    if signInError != nil { error = .unexpectedResponse(status: nil) }
+                    return
+                }
                 do {
                     try await environment.session.signInWithGoogle(idToken: idToken,
                                                                    timezone: TimeZone.current.identifier,

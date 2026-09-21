@@ -10,6 +10,7 @@ final class AppEnvironment {
     let stack: EchoAPIStack
     let language: AppLanguageStore
     let theme: ThemeManager
+    let appLock: AppLockManager
 
     let auth: any AuthServicing
     let appConfigService: any AppConfigServicing
@@ -26,19 +27,22 @@ final class AppEnvironment {
     let session: SessionStore
     let remoteConfig: AppConfigStore
     let pendingJournals: PendingJournalStore
+    let submissions: JournalSubmissionStore
 
     init(configuration: AppConfiguration, stack: EchoAPIStack, language: AppLanguageStore) {
         self.configuration = configuration
         self.stack = stack
         self.language = language
         theme = ThemeManager()
+        appLock = AppLockManager()
 
         let auth = LiveAuthService(stack: stack)
         let notifications = LiveNotificationService(stack: stack)
         self.auth = auth
         self.notifications = notifications
         appConfigService = LiveAppConfigService(stack: stack)
-        journal = LiveJournalService(stack: stack)
+        let journal = LiveJournalService(stack: stack)
+        self.journal = journal
         goals = LiveGoalService(stack: stack)
         insights = LiveInsightsService(stack: stack)
         capsules = LiveCapsuleService(stack: stack)
@@ -50,7 +54,9 @@ final class AppEnvironment {
         session = SessionStore(auth: auth, notifications: notifications, tokenStore: stack.tokenStore)
         remoteConfig = AppConfigStore(service: LiveAppConfigService(stack: stack),
                                       appVersion: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String)
-        pendingJournals = PendingJournalStore()
+        let pendingJournals = PendingJournalStore()
+        self.pendingJournals = pendingJournals
+        submissions = JournalSubmissionStore(journal: journal, pending: pendingJournals)
     }
 
     /// Sunucu adresi ve Keychain servisi Info.plist'ten gelir; adres kodda uydurulmaz.

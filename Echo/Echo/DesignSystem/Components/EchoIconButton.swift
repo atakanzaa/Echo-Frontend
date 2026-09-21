@@ -103,7 +103,7 @@ nonisolated struct AnyInsettableShape: InsettableShape {
         EchoIconButton("bell", accessibilityTitle: "Bildirimler") {}
         EchoIconButton("plus", accessibilityTitle: "Ekle", variant: .soft) {}
         EchoIconButton("mic.fill", accessibilityTitle: "Kaydet", variant: .filled) {}
-        EchoIconButton("xmark", accessibilityTitle: "Kapat", variant: .plain, isCircular: false) {}
+        EchoIconButton("xmark", accessibilityTitle: "common.close", variant: .plain, isCircular: false) {}
     }
     .padding()
     .background(AppTheme.color.bg.canvas)

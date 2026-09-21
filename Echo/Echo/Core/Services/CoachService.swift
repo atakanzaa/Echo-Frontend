@@ -7,6 +7,7 @@ nonisolated protocol CoachServicing: Sendable {
     func createSession(journalEntryID: String?, idempotencyKey: String) async throws -> CoachSession
     func messages(sessionID: String, cursor: String?, size: Int) async throws -> ListPage<CoachMessage>
     func sendMessage(sessionID: String, content: String, idempotencyKey: String) async throws -> OperationProgress
+    func operation(id: String) async throws -> OperationProgress
     func endSession(id: String) async throws
     func deleteSession(id: String) async throws
 }
@@ -49,6 +50,13 @@ nonisolated struct LiveCoachService: CoachServicing {
                                                        body: .json(.init(content: content)))
         switch try await stack.client.sendCoachMessage(input) {
         case .accepted(let accepted): return OperationProgress(dto: try accepted.body.json)
+        case let .`default`(status, response): throw AppError.fromDefault(status, try? response.body.applicationProblemJson)
+        }
+    }
+
+    func operation(id: String) async throws -> OperationProgress {
+        switch try await stack.client.getOperation(.init(path: .init(id: id))) {
+        case .ok(let ok): return OperationProgress(dto: try ok.body.json)
         case let .`default`(status, response): throw AppError.fromDefault(status, try? response.body.applicationProblemJson)
         }
     }

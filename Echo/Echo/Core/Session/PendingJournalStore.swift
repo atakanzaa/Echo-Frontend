@@ -9,6 +9,8 @@ nonisolated struct PendingJournal: Codable, Sendable, Equatable, Identifiable {
     }
 
     let id: UUID
+    /// Bekleyen iş farklı bir hesap oturumunda yeniden gönderilemez.
+    let ownerUserID: String?
     let kind: Kind
     let idempotencyKey: String
     let recordedAt: Date

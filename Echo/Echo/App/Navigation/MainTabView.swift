@@ -2,8 +2,10 @@ import SwiftUI
 
 /// Ana kabuk: sekme yığınları, merkez kayıt eylemi ve modal sunumları (implementation.md §5.0).
 struct MainTabView: View {
+    @Environment(AppEnvironment.self) private var environment
     @State private var router = AppRouter()
     @State private var toasts = EchoToastCenter()
+    @State private var sheetAfterRecording: AppSheet?
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -19,18 +21,44 @@ struct MainTabView: View {
         .environment(router)
         .environment(toasts)
         .echoToasts(toasts)
-        .sheet(item: $router.sheet) { sheet in
+        .fullScreenCover(isPresented: recordingPresented, onDismiss: presentDeferredSheet) {
+
+            sheetContent(.recording)
+        }
+        .sheet(item: standardSheet) { sheet in
 
             sheetContent(sheet)
+        }
+        .task {
+            if let userID = environment.session.state.user?.id {
+
+                await environment.submissions.resumePending(for: userID)
+            }
         }
     }
 
     @ViewBuilder private var content: some View {
         switch router.selectedTab {
-        case .today: tabStack(.today) { PlaceholderScreen(title: "tabs.today") }
-        case .journal: tabStack(.journal) { PlaceholderScreen(title: "tabs.journal") }
-        case .community: tabStack(.community) { PlaceholderScreen(title: "tabs.community") }
-        case .profile: tabStack(.profile) { PlaceholderScreen(title: "tabs.profile") }
+        case .today:
+            tabStack(.today) {
+                if let user = environment.session.state.user {
+                    TodayView(user: user, journal: environment.journal, insights: environment.insights,
+                              notifications: environment.notifications, goals: environment.goals)
+                } else {
+                    PlaceholderScreen(title: "tabs.today")
+                }
+            }
+        case .journal:
+            tabStack(.journal) {
+                JournalFeedView(journal: environment.journal,
+                                insights: environment.insights,
+                                timeZone: userTimeZone,
+                                currentStreak: environment.session.state.user?.currentStreak ?? 0)
+            }
+        case .community:
+            tabStack(.community) { CommunityFeedView(community: environment.community) }
+        case .profile:
+            tabStack(.profile) { ProfileView() }
         }
     }
 
@@ -38,23 +66,132 @@ struct MainTabView: View {
         NavigationStack(path: router.path(for: tab)) {
             root()
                 .navigationDestination(for: AppDestination.self) { destination in
-
-                    PlaceholderScreen(title: LocalizedStringKey(String(describing: destination)))
+                    destinationView(destination)
                 }
         }
     }
 
+    @ViewBuilder private func destinationView(_ destination: AppDestination) -> some View {
+        switch destination {
+        case .journalEntry(let id):
+            JournalEntryDetailView(id: id, journal: environment.journal,
+                                   coach: environment.coach, goals: environment.goals,
+                                   timeZone: userTimeZone)
+        case .journalSearch:
+            JournalSearchView(journal: environment.journal)
+        case .insights:
+            InsightsView(service: environment.insights, timeZone: userTimeZone,
+                         currentStreak: environment.session.state.user?.currentStreak ?? 0)
+        case .moodTracker(let periodDays):
+            MoodTrackerView(periodDays: periodDays, service: environment.insights, timeZone: userTimeZone)
+        case .communityPost(let id):
+            CommunityPostDetailView(id: id, community: environment.community)
+        case .achievements:
+            AchievementsView(insights: environment.insights)
+        case .goals:
+            GoalsView(goals: environment.goals)
+        case .createGoal:
+            CreateGoalView(goals: environment.goals)
+        case .capsules:
+            CapsulesView(capsules: environment.capsules)
+        case .createCapsule:
+            CreateCapsuleView(capsules: environment.capsules,
+                              presets: environment.remoteConfig.config?.capsulePresets ?? [])
+        case .capsule(let id):
+            CapsuleDetailView(id: id, capsules: environment.capsules)
+        case .achievementDetail(let badgeKey):
+            AchievementDetailView(key: badgeKey, insights: environment.insights)
+        case .settings:
+            SettingsView()
+        case .notificationSettings:
+            NotificationSettingsView(notifications: environment.notifications)
+        case .blockedAuthors:
+            BlockedAuthorsView(community: environment.community)
+        case .editProfile:
+            EditProfileView()
+        case .privacyConsent:
+            PrivacyConsentView(user: environment.user)
+        case .notifications:
+            NotificationsView(notifications: environment.notifications)
+        case .coachSessions:
+            CoachSessionsView(coach: environment.coach)
+        case .subscription:
+            SubscriptionView(subscription: environment.subscription)
+        }
+    }
+
     @ViewBuilder private func sheetContent(_ sheet: AppSheet) -> some View {
-        NavigationStack {
-            PlaceholderScreen(title: LocalizedStringKey(sheet.id))
+        switch sheet {
+        case .recording:
+            RecordingView(onFinished: { entry in
+
+                router.dismissSheet()
+                router.push(.journalEntry(id: entry.id), on: .today)
+            }, onSwitchToText: {
+                sheetAfterRecording = .composer
+                router.dismissSheet()
+            })
+        case .composer:
+            NavigationStack {
+                ComposerView { entry in
+
+                    router.dismissSheet()
+                    router.push(.journalEntry(id: entry.id), on: .today)
+                }
                 .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button("common.close") { router.dismissSheet() }
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button("common.cancel") { router.dismissSheet() }
                     }
                 }
+            }
+        case .coachChat(let sessionID):
+            NavigationStack {
+                CoachChatView(sessionID: sessionID, coach: environment.coach)
+            }
+            .presentationDetents([.large])
+            .presentationCornerRadius(AppTheme.radius.xl)
+        case .composePost(let prefilledText):
+            NavigationStack {
+                ComposePostView(prefilledText: prefilledText,
+                                community: environment.community,
+                                user: environment.user) { post in
+                    router.dismissSheet()
+                    router.push(.communityPost(id: post.id), on: .community)
+                }
+            }
+            .presentationDetents([.large])
+            .presentationCornerRadius(AppTheme.radius.xl)
+        case .paywall:
+            NavigationStack {
+                PaywallView(subscription: environment.subscription) { router.dismissSheet() }
+            }
+            .presentationDetents([.large])
+            .presentationCornerRadius(AppTheme.radius.xl)
         }
-        .presentationDetents(sheet == .recording ? [.large] : [.medium, .large])
-        .presentationCornerRadius(AppTheme.radius.xl)
+    }
+
+    private var recordingPresented: Binding<Bool> {
+        Binding(
+            get: { router.sheet == .recording },
+            set: { isPresented in
+                if !isPresented, router.sheet == .recording { router.dismissSheet() }
+            })
+    }
+
+    private var standardSheet: Binding<AppSheet?> {
+        Binding(
+            get: { router.sheet == .recording ? nil : router.sheet },
+            set: { router.sheet = $0 })
+    }
+
+    private func presentDeferredSheet() {
+        guard let sheetAfterRecording else { return }
+        self.sheetAfterRecording = nil
+        router.present(sheetAfterRecording)
+    }
+
+    private var userTimeZone: TimeZone {
+        environment.session.state.user?.resolvedTimeZone ?? .current
     }
 }
 

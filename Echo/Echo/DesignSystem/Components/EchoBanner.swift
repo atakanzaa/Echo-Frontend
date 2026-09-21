@@ -66,7 +66,7 @@ struct EchoBanner<Action: View>: View {
             Spacer(minLength: 0)
             if let onDismiss {
 
-                EchoIconButton("xmark", accessibilityTitle: "Kapat", action: onDismiss)
+                EchoIconButton("xmark", accessibilityTitle: "common.close", action: onDismiss)
             }
         }
         .padding(AppTheme.space.xs)

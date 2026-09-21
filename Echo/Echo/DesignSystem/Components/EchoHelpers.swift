@@ -3,10 +3,11 @@ import SwiftUI
 /// 1px ayraç (implementation.md §4.32).
 struct EchoDivider: View {
     var insetLeading: CGFloat = 0
+    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
 
     var body: some View {
         Rectangle()
-            .fill(AppTheme.color.border.subtle)
+            .fill(colorSchemeContrast == .increased ? AppTheme.color.border.strong : AppTheme.color.border.subtle)
             .frame(height: 1)
             .padding(.leading, insetLeading)
             .accessibilityHidden(true)

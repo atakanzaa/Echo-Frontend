@@ -24,6 +24,12 @@ nonisolated struct NotificationItem: Sendable, Equatable, Identifiable {
         createdAt = dto.createdAt
         readAt = dto.readAt
     }
+
+    init(copying item: NotificationItem, isRead: Bool) {
+        id = item.id; type = item.type; title = item.title; body = item.body
+        targetType = item.targetType; targetID = item.targetID; self.isRead = isRead
+        createdAt = item.createdAt; readAt = isRead ? (item.readAt ?? .now) : nil
+    }
 }
 
 /// Bildirim tercihleri; saat değerleri kullanıcının saat dilimindedir.

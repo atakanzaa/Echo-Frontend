@@ -1,0 +1,181 @@
+{
+ "v": 3,
+ "createdOnFiles": {
+  "v": 1,
+  "at": "2026-09-21T07:06:31Z"
+ },
+ "title": "Echo · Bugün",
+ "launch": {
+  "view": "canvas"
+ },
+ "pages": [],
+ "boards": {
+  "Main.dc.html": {
+   "x": 0,
+   "y": 2620,
+   "w": 402,
+   "h": 874,
+   "title": "2 · Sabah · Koyu"
+  },
+  "Durum1-Koyu.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 402,
+   "h": 874,
+   "title": "1 · Yeni kullanıcı · Koyu"
+  },
+  "Durum1-Acik.dc.html": {
+   "x": 482,
+   "y": 0,
+   "w": 402,
+   "h": 874,
+   "title": "1 · Yeni kullanıcı · Açık"
+  },
+  "Durum1-TamSayfa-Koyu.dc.html": {
+   "x": 964,
+   "y": 0,
+   "w": 402,
+   "h": 2260,
+   "title": "1 · Tam sayfa · Koyu"
+  },
+  "Durum2-Acik.dc.html": {
+   "x": 482,
+   "y": 2620,
+   "w": 402,
+   "h": 874,
+   "title": "2 · Sabah · Açık"
+  },
+  "Durum2-XL-Koyu.dc.html": {
+   "x": 964,
+   "y": 2620,
+   "w": 402,
+   "h": 874,
+   "title": "2 · Büyük yazı (xxxL) · Koyu"
+  },
+  "Durum2-XL-Acik.dc.html": {
+   "x": 1446,
+   "y": 2620,
+   "w": 402,
+   "h": 874,
+   "title": "2 · Büyük yazı (xxxL) · Açık"
+  },
+  "Durum3-Koyu.dc.html": {
+   "x": 0,
+   "y": 3854,
+   "w": 402,
+   "h": 874,
+   "title": "3 · Akşam · Koyu"
+  },
+  "Durum3-Acik.dc.html": {
+   "x": 482,
+   "y": 3854,
+   "w": 402,
+   "h": 874,
+   "title": "3 · Akşam · Açık"
+  },
+  "Durum3-TamSayfa-Acik.dc.html": {
+   "x": 964,
+   "y": 3854,
+   "w": 402,
+   "h": 2520,
+   "title": "3 · Tam sayfa · Açık"
+  },
+  "Durum4-Koyu.dc.html": {
+   "x": 0,
+   "y": 6734,
+   "w": 402,
+   "h": 874,
+   "title": "4 · Çevrimdışı · Koyu"
+  },
+  "Durum4-Acik.dc.html": {
+   "x": 482,
+   "y": 6734,
+   "w": 402,
+   "h": 874,
+   "title": "4 · Çevrimdışı · Açık"
+  },
+  "Notlar-Durum2.dc.html": {
+   "x": 0,
+   "y": 7968,
+   "w": 1240,
+   "h": 3000,
+   "title": "Veri notları · Durum 2 tam sayfa"
+  },
+  "Bilesenler-Koyu.dc.html": {
+   "x": 0,
+   "y": 11328,
+   "w": 1440,
+   "h": 3120,
+   "title": "Bileşenler · Koyu"
+  },
+  "Bilesenler-Acik.dc.html": {
+   "x": 1520,
+   "y": 11328,
+   "w": 1440,
+   "h": 3120,
+   "title": "Bileşenler · Açık"
+  }
+ },
+ "order": [
+  "Main.dc.html",
+  "Durum1-Koyu.dc.html",
+  "Durum1-Acik.dc.html",
+  "Durum1-TamSayfa-Koyu.dc.html",
+  "Durum2-Acik.dc.html",
+  "Durum2-XL-Koyu.dc.html",
+  "Durum2-XL-Acik.dc.html",
+  "Durum3-Koyu.dc.html",
+  "Durum3-Acik.dc.html",
+  "Durum3-TamSayfa-Acik.dc.html",
+  "Durum4-Koyu.dc.html",
+  "Durum4-Acik.dc.html",
+  "Notlar-Durum2.dc.html",
+  "Bilesenler-Koyu.dc.html",
+  "Bilesenler-Acik.dc.html"
+ ],
+ "notes": {
+  "r1": {
+   "x": 0,
+   "y": -240,
+   "text": "1 · Yeni kullanıcı — ilk gün",
+   "kind": "title1",
+   "maxW": 1600
+  },
+  "r2": {
+   "x": 0,
+   "y": 2380,
+   "text": "2 · Sabah — bugün henüz kayıt yok",
+   "kind": "title1",
+   "maxW": 1848
+  },
+  "r3": {
+   "x": 0,
+   "y": 3614,
+   "text": "3 · Akşam — 2 kayıt, biri analizde",
+   "kind": "title1",
+   "maxW": 1600
+  },
+  "r4": {
+   "x": 0,
+   "y": 6494,
+   "text": "4 · Çevrimdışı + analiz hatası",
+   "kind": "title1",
+   "maxW": 1600
+  },
+  "r5": {
+   "x": 0,
+   "y": 7728,
+   "text": "Veri notları ve dokunma haritası",
+   "kind": "title1",
+   "maxW": 1600
+  },
+  "r6": {
+   "x": 0,
+   "y": 11088,
+   "text": "Bileşenler",
+   "kind": "title1",
+   "maxW": 2960
+  }
+ },
+ "designSystems": []
+}

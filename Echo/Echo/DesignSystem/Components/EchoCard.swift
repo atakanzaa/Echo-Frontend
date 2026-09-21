@@ -13,6 +13,7 @@ struct EchoCard<Content: View>: View {
     private let style: EchoCardStyle
     private let padding: CGFloat
     private let content: Content
+    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
 
     init(style: EchoCardStyle = .standard, padding: CGFloat? = nil, @ViewBuilder content: () -> Content) {
         self.style = style
@@ -31,7 +32,8 @@ struct EchoCard<Content: View>: View {
                     shape.fill(AppTheme.gradient.auroraPrimary)
                 case .flat:
                     shape.fill(AppTheme.color.bg.surface)
-                        .overlay { shape.strokeBorder(AppTheme.color.border.subtle, lineWidth: 1) }
+                        .overlay { shape.strokeBorder(colorSchemeContrast == .increased
+                            ? AppTheme.color.border.strong : AppTheme.color.border.subtle, lineWidth: 1) }
                 case .standard:
                     Color.clear.echoSurface(.level1, in: shape)
                 case .raised:

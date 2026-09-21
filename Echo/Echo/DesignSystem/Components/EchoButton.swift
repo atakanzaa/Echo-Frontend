@@ -214,9 +214,8 @@ private struct EchoButtonStyle: ButtonStyle {
     .background(AppTheme.color.bg.canvas)
 }
 
-#if DEBUG
 extension EchoButton where Label == EchoButtonLabel {
-    /// Yalnız preview için: katalogda anahtar oluşturmadan metin verir.
+    /// Sunucudan gösterime hazır gelen metinler için yerelleştirme anahtarı oluşturmadan başlık verir.
     init(verbatimTitle: String,
          variant: EchoButtonVariant = .primary,
          size: EchoButtonSize = .md,
@@ -229,4 +228,3 @@ extension EchoButton where Label == EchoButtonLabel {
                   trailingIcon: trailingIcon, fullWidth: fullWidth, isLoading: isLoading, action: action)
     }
 }
-#endif

@@ -5,17 +5,22 @@ import Observation
 nonisolated enum AppDestination: Hashable, Sendable {
     case journalEntry(id: String)
     case journalSearch
-    case calendar
     case insights
+    case moodTracker(periodDays: Int)
     case goals
+    case createGoal
     case achievements
     case achievementDetail(badgeKey: String)
     case capsules
+    case createCapsule
     case capsule(id: String)
     case coachSessions
     case notifications
     case communityPost(id: String)
     case settings
+    case editProfile
+    case privacyConsent
+    case notificationSettings
     case subscription
     case blockedAuthors
 }
