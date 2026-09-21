@@ -11,8 +11,6 @@ struct MainTabView: View {
         ZStack(alignment: .bottom) {
             AppTheme.color.bg.canvas.ignoresSafeArea()
             content
-                // Sekme çubuğu içeriğin üstünde durur; alt boşluk içerik tarafından bırakılır.
-                .safeAreaInset(edge: .bottom) { Color.clear.frame(height: AppTheme.layout.tabBarHeight) }
             EchoTabBar(selection: $router.selectedTab,
                        isRecording: router.sheet?.isRecording == true,
                        onRecordTap: { router.present(.recording()) },
@@ -64,8 +62,9 @@ struct MainTabView: View {
     private func tabStack<Root: View>(_ tab: AppTab, @ViewBuilder root: () -> Root) -> some View {
         NavigationStack(path: router.path(for: tab)) {
             root()
+                .echoTabBarInset()
                 .navigationDestination(for: AppDestination.self) { destination in
-                    destinationView(destination)
+                    destinationView(destination).echoTabBarInset()
                 }
         }
     }

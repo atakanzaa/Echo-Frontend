@@ -27,7 +27,8 @@ struct TodayView: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 0) {
+            // Bölüm sayısı az; tembel yığın yükseklik tahminiyle scroll'u zıplatıyordu.
+            VStack(alignment: .leading, spacing: 0) {
                 if isOffline {
 
                     OfflineStrip(sinceText: model.lastLoadedAt.map { $0.formatted(date: .omitted, time: .shortened) }) {
@@ -105,12 +106,14 @@ struct TodayView: View {
         VStack(alignment: .leading, spacing: AppTheme.space.xxs) {
             EchoSectionTitle(title: String(localized: "today.timeline.title"),
                              actionTitle: "today.timeline.toJournal") { router.selectedTab = .journal }
-            ForEach(Array(model.entries.enumerated()), id: \.element.id) { index, entry in
+            // Gün kronolojik okunur: sabah üstte. Yalnız gösterim sırası; değer üretilmez.
+            let dayEntries = model.entries.sorted { $0.recordedAt < $1.recordedAt }
+            ForEach(Array(dayEntries.enumerated()), id: \.element.id) { index, entry in
 
                 EchoTimelineRow(time: entry.recordedAt,
                                 state: timelineState(entry),
                                 connectsAbove: index > 0,
-                                connectsBelow: index < model.entries.count - 1) {
+                                connectsBelow: index < dayEntries.count - 1) {
                     router.push(.journalEntry(id: entry.id))
                 }
             }

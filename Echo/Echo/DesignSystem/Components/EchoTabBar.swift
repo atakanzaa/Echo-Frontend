@@ -1,5 +1,12 @@
 import SwiftUI
 
+extension View {
+    /// Sekme çubuğunun kapladığı alanı içeriğe bırakır. NavigationStack dışındaki inset içerideki scroll'a ulaşmadığı için yığının içinde uygulanır.
+    func echoTabBarInset() -> some View {
+        safeAreaInset(edge: .bottom, spacing: 0) { Color.clear.frame(height: AppTheme.layout.tabBarHeight) }
+    }
+}
+
 /// 4 sekme + merkezde yükseltilmiş kayıt butonu (implementation.md §4.9).
 struct EchoTabBar: View {
     @Binding var selection: AppTab
