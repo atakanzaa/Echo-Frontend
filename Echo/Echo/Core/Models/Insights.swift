@@ -78,12 +78,14 @@ nonisolated struct PeriodSummary: Sendable, Equatable {
         var id: String { category.wire }
     }
 
+    /// Dönemin her takvim günü için bir nokta; kayıtsız günde skor, etiket ve kategori null.
     nonisolated struct DailyScore: Sendable, Equatable, Identifiable {
         let day: LocalDay?
-        let moodScore: Double
-        let moodLabel: String
-        let moodCategory: EchoMoodCategory
-        var id: String { (day?.isoString ?? "") + moodLabel }
+        let moodScore: Double?
+        let moodLabel: String?
+        let moodCategory: EchoMoodCategory?
+        let entryCount: Int
+        var id: String { day?.isoString ?? "" }
     }
 
     init(dto: Components.Schemas.SummaryResponse) {
@@ -111,7 +113,8 @@ nonisolated struct PeriodSummary: Sendable, Equatable {
         narrativeSummary = dto.narrativeSummary
         dailyMoodScores = dto.dailyMoodScores.map {
             DailyScore(day: LocalDay($0.date), moodScore: $0.moodScore, moodLabel: $0.moodLabel,
-                       moodCategory: EchoMoodCategory(wire: $0.moodCategory.value1?.rawValue ?? $0.moodCategory.value2 ?? ""))
+                       moodCategory: $0.moodCategory.map { EchoMoodCategory(wire: $0.value1?.rawValue ?? $0.value2 ?? "") },
+                       entryCount: Int($0.entryCount))
         }
     }
 }

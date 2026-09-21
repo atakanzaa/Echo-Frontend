@@ -11,7 +11,7 @@ nonisolated enum EchoMockData {
 
             let date = calendar.date(byAdding: .day, value: index - 6, to: today) ?? today
             return EchoMoodPoint(id: "point-\(index)", date: date, score: score,
-                                 caption: score == nil ? nil : "Yürüyüş ve kısa mola")
+                                 caption: score.map { EchoMoodLevel(moodScore: $0).labelText }, entryCount: score == nil ? 0 : 1)
         }
     }()
 

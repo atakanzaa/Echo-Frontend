@@ -5,7 +5,6 @@ import SwiftUI
 private final class MoodTrackerViewModel {
     private(set) var eligibility: InsightEligibility?
     private(set) var summary: PeriodSummary?
-    private(set) var report: AIInsights?
     private(set) var isLoading = false
     private(set) var error: AppError?
     var selectedPeriod: Int
@@ -30,15 +29,12 @@ private final class MoodTrackerViewModel {
             guard loadID == currentLoadID, selectedPeriod == requestedPeriod else { return }
             guard eligibility?.periods.first(where: { $0.days == requestedPeriod })?.isUnlocked == true else {
                 summary = nil
-                report = nil
                 return
             }
             let summary = try await service.summary(periodDays: requestedPeriod, endDay: nil)
-            let report = try? await service.insights(periodDays: requestedPeriod)
             try Task.checkCancellation()
             guard loadID == currentLoadID, selectedPeriod == requestedPeriod else { return }
             self.summary = summary
-            self.report = report
         } catch is CancellationError {
             return
         } catch {
@@ -117,27 +113,26 @@ struct MoodTrackerView: View {
     }
 
     private func dailyList(_ summary: PeriodSummary) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
+        let days = summary.dailyMoodScores.filter { $0.entryCount > 0 }.reversed()
+        return VStack(alignment: .leading, spacing: 0) {
             EchoSectionHeader("mood.daily")
                 .padding(.bottom, AppTheme.space.xs)
             EchoCard(style: .flat, padding: 0) {
                 VStack(spacing: 0) {
-                    ForEach(Array(summary.dailyMoodScores.enumerated()), id: \.element.id) { index, score in
+                    ForEach(Array(days.enumerated()), id: \.element.id) { index, score in
                         HStack(spacing: AppTheme.space.xs) {
-                            EchoMoodGlyph(level: score.moodCategory.displayLevel, size: 18)
+                            EchoMoodGlyph(level: EchoMoodLevel(moodScore: score.moodScore ?? 0.5), size: 18)
                             VStack(alignment: .leading, spacing: AppTheme.space.xxxs) {
                                 Text(score.day.map { JournalPresentation.dayTitle($0, locale: locale, timeZone: timeZone) } ?? "")
                                     .echoTextStyle(.body).foregroundStyle(AppTheme.color.content.primary)
-                                Text(score.moodLabel).echoTextStyle(.footnote).foregroundStyle(AppTheme.color.content.secondary)
+                                Text(score.moodLabel ?? "").echoTextStyle(.footnote).foregroundStyle(AppTheme.color.content.secondary)
                             }
                             Spacer()
-                            if let count = entryCount(for: score.day) {
-                                Text(String(format: String(localized: "mood.entryCount"), count))
-                                    .echoTextStyle(.caption).foregroundStyle(AppTheme.color.content.tertiary)
-                            }
+                            Text(String(format: String(localized: "mood.entryCount"), score.entryCount))
+                                .echoTextStyle(.caption).foregroundStyle(AppTheme.color.content.tertiary)
                         }
                         .padding(AppTheme.space.sm)
-                        if index < summary.dailyMoodScores.count - 1 { EchoDivider(insetLeading: 52) }
+                        if index < days.count - 1 { EchoDivider(insetLeading: 52) }
                     }
                 }
             }
@@ -147,12 +142,8 @@ struct MoodTrackerView: View {
     private func points(_ scores: [PeriodSummary.DailyScore]) -> [EchoMoodPoint] {
         scores.compactMap { score in
             guard let day = score.day, let date = day.startDate(in: timeZone) else { return nil }
-            return EchoMoodPoint(id: day.isoString, date: date, score: score.moodScore, caption: score.moodLabel)
+            return EchoMoodPoint(id: day.isoString, date: date, score: score.moodScore, caption: score.moodLabel,
+                                 entryCount: score.entryCount)
         }
-    }
-
-    private func entryCount(for day: LocalDay?) -> Int? {
-        guard let day else { return nil }
-        return model.report?.weeklyTrend.first { $0.day == day }?.entryCount
     }
 }

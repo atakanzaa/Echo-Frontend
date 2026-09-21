@@ -82,7 +82,7 @@ struct InsightsView: View {
                 EchoEmptyState("insights.insufficient", message: "insights.insufficientMessage", systemImage: "chart.xyaxis.line")
             }
 
-            if !summary.dailyMoodScores.isEmpty {
+            if summary.entryCount > 0 {
                 section("insights.moodMap") {
                     EchoCard(style: .flat) { EchoMoodChart(points: points(summary.dailyMoodScores)) }
                 }
@@ -167,7 +167,8 @@ struct InsightsView: View {
     private func points(_ scores: [PeriodSummary.DailyScore]) -> [EchoMoodPoint] {
         scores.compactMap { score in
             guard let day = score.day, let date = day.startDate(in: timeZone) else { return nil }
-            return EchoMoodPoint(id: day.isoString, date: date, score: score.moodScore, caption: score.moodLabel)
+            return EchoMoodPoint(id: day.isoString, date: date, score: score.moodScore, caption: score.moodLabel,
+                                 entryCount: score.entryCount)
         }
     }
 

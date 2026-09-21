@@ -9,7 +9,10 @@ struct EchoApp: App {
         WindowGroup {
             Group {
                 #if DEBUG
-                if let preview = PreviewLaunch.current {
+                if ProcessInfo.processInfo.arguments.contains("-EchoMoodChartPreview") {
+
+                    MoodChartGallery().preferredColorScheme(.dark)
+                } else if let preview = PreviewLaunch.current {
 
                     PreviewLaunch.view(preview)
                 } else {

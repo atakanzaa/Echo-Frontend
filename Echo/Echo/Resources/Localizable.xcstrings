@@ -2926,6 +2926,23 @@
         }
       }
     },
+    "insights.moodMap.howToRead": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Each dot is a day's average mood; higher is better. Days without a dot have no entries. Tap a day to see it."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Her nokta bir günün ortalama ruh hâli; yukarısı daha iyi. Noktasız günlerde kayıt yok. Görmek için bir güne dokun."
+          }
+        }
+      }
+    },
     "insights.openFullReport": {
       "extractionState": "manual",
       "localizations": {
