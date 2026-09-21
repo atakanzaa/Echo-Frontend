@@ -22,6 +22,7 @@ nonisolated enum AppDestination: Hashable, Sendable {
     case privacyConsent
     case notificationSettings
     case subscription
+    case usage
     case blockedAuthors
 }
 

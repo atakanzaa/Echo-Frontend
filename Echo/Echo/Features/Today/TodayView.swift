@@ -65,7 +65,8 @@ struct TodayView: View {
     private func reload() async {
         async let session: Void = environment.session.refreshUser()
         async let data: Void = model.load()
-        _ = await (session, data)
+        async let usage: Void = environment.usage.refresh()
+        _ = await (session, data, usage)
     }
 
     // MARK: b · Günün girişi
@@ -132,6 +133,9 @@ struct TodayView: View {
         case .failed, .cancelled:
             // Sunucuda başarısız analizi yeniden başlatan uç yok; yeniden deneme yalnız cihazdaki gönderimler içindir.
             return .failed(transcript: entry.transcript, canRetry: false)
+        case .retryScheduled where entry.errorCode == "AI_QUOTA_EXHAUSTED":
+            // Kayıt saklandı; analiz kullanım hakkı yenilenince sunucuda kendiliğinden yapılır.
+            return .waitingForAllowance(transcript: entry.transcript, resumesAt: environment.usage.usage?.resetsAt)
         case .queued, .processing, .retryScheduled, .unknown:
             return .processing(transcript: entry.transcript)
         }

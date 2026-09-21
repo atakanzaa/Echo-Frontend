@@ -105,6 +105,8 @@ struct ProfileView: View {
             settingsGroup(title: "profile.account") {
                 row("profile.subscription", icon: "crown") { router.push(.subscription) }
                 EchoDivider(insetLeading: 60)
+                row("profile.usage", icon: "gauge.with.dots.needle.33percent") { router.push(.usage) }
+                EchoDivider(insetLeading: 60)
                 row("profile.settings", icon: "gearshape") { router.push(.settings) }
             }
         }

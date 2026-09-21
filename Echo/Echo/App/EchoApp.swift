@@ -12,6 +12,9 @@ struct EchoApp: App {
                 if ProcessInfo.processInfo.arguments.contains("-EchoMoodChartPreview") {
 
                     MoodChartGallery().preferredColorScheme(.dark)
+                } else if let usage = PreviewLaunch.argument("-EchoUsagePreview") {
+
+                    UsagePreviewHost(name: usage).preferredColorScheme(.dark).tint(AppTheme.color.accent.primary)
                 } else if let preview = PreviewLaunch.current {
 
                     PreviewLaunch.view(preview)
@@ -57,6 +60,12 @@ enum PreviewLaunch {
     struct Request {
         let state: TodayPreviewState
         let scheme: ColorScheme
+    }
+
+    static func argument(_ flag: String) -> String? {
+        let arguments = ProcessInfo.processInfo.arguments
+        guard let index = arguments.firstIndex(of: flag), index + 1 < arguments.count else { return nil }
+        return arguments[index + 1]
     }
 
     static var current: Request? {

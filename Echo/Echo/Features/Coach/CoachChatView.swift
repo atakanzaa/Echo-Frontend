@@ -2,6 +2,7 @@ import SwiftUI
 
 struct CoachChatView: View {
     @Environment(AppRouter.self) private var router
+    @Environment(AppEnvironment.self) private var environment
     @State private var model: CoachChatViewModel
     @State private var confirmation: Confirmation?
     @State private var sendTask: Task<Void, Never>?
@@ -22,7 +23,8 @@ struct CoachChatView: View {
                     if model.hasMore {
                         EchoButton("coach.loadOlder", variant: .ghost, size: .sm) { Task { await model.loadOlder() } }
                     }
-                    if let error = model.error {
+                    // Hak bitti hatası ayrı şeritte anlatılır; aynı metin iki kez gösterilmez.
+                    if let error = model.error, error.problem?.isAllowanceExhausted != true {
                         EchoBanner(kind: .danger, title: JournalPresentation.errorMessage(error), action: {
                             if model.canRetry {
                                 EchoButton("common.retry", variant: .ghost, size: .sm) {
@@ -63,7 +65,16 @@ struct CoachChatView: View {
                 if thinking { withAnimation(AppTheme.motion.smooth) { proxy.scrollTo("thinking", anchor: .bottom) } }
             }
         }
-        .safeAreaInset(edge: .bottom) { composer }
+        .safeAreaInset(edge: .bottom) {
+            VStack(spacing: AppTheme.space.xxs) {
+                if let usage = environment.usage.usage, usage.state != .ok {
+
+                    UsageNotice(usage: usage, onUpgrade: { router.present(.paywall) })
+                        .padding(.horizontal, AppTheme.layout.screenHorizontalPadding)
+                }
+                composer
+            }
+        }
         .navigationTitle(Text("coach.title"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -79,6 +90,13 @@ struct CoachChatView: View {
             }
         }
         .task { await model.start() }
+        .task { await environment.usage.refresh() }
+        .onChange(of: model.isThinking) { _, thinking in
+            if !thinking { Task { await environment.usage.refresh() } }
+        }
+        .onChange(of: model.error?.problem?.code) { _, _ in
+            if let error = model.error { environment.usage.handle(error) }
+        }
         .onDisappear { sendTask?.cancel() }
         .alert(item: $confirmation) { choice in
             switch choice {
@@ -105,18 +123,21 @@ struct CoachChatView: View {
                 .padding(.vertical, AppTheme.space.xxs)
                 .background(RoundedRectangle(cornerRadius: AppTheme.radius.md, style: .continuous)
                     .fill(AppTheme.color.bg.surfaceSunken))
-                .disabled(model.isSending || model.isThinking)
+                .disabled(model.isSending || model.isThinking || !canUseAI)
                 .submitLabel(.send)
                 .onSubmit { if model.canSend { sendMessage() } }
             EchoIconButton("arrow.up", accessibilityTitle: "coach.send", variant: .filled) {
                 sendMessage()
             }
-            .disabled(!model.canSend)
+            .disabled(!model.canSend || !canUseAI)
         }
         .padding(.horizontal, AppTheme.layout.screenHorizontalPadding)
         .padding(.vertical, AppTheme.space.xxs)
         .background(.ultraThinMaterial)
     }
+
+    /// Sunucunun izin listesi; kullanım bilgisi henüz yoksa gönderim açık kalır ve sunucu kararı verir.
+    private var canUseAI: Bool { environment.usage.usage?.canUseAI ?? true }
 
     private func sendMessage() {
         sendTask?.cancel()

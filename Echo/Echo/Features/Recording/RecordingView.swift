@@ -254,9 +254,15 @@ private struct ReviewSection: View {
     @Bindable var model: RecordingViewModel
     let isLocked: Bool
     let onSubmit: () -> Void
+    @Environment(AppEnvironment.self) private var environment
 
     var body: some View {
         VStack(spacing: AppTheme.space.sm) {
+            // Hak bitmiş olsa da kayıt saklanır; analizin ne zaman yapılacağı gönderimden önce söylenir.
+            if let usage = environment.usage.usage, usage.state == .exhausted {
+
+                UsageNotice(usage: usage, isRecording: true)
+            }
             if let error = model.error,
                let message = error.serverMessage ?? error.messageKey.map({ String(localized: String.LocalizationValue($0)) }) {
 

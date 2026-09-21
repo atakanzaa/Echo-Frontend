@@ -137,6 +137,8 @@ struct EchoTimelineRow: View {
     nonisolated enum State: Equatable {
         case completed(moodLevel: EchoMoodLevel, moodLabel: String, energyLabel: String?, summary: String, topics: [String])
         case processing(transcript: String?)
+        /// Analiz, kullanım hakkı yenilenene kadar bekliyor; `resumesAt` sunucunun yenilenme anıdır.
+        case waitingForAllowance(transcript: String?, resumesAt: Date?)
         case failed(transcript: String?, canRetry: Bool)
     }
 
@@ -209,6 +211,13 @@ struct EchoTimelineRow: View {
                 EchoRippleView(ringCount: 3, intensity: 0.5, speed: 0.55, color: AppTheme.color.accent.primary)
                 Circle().fill(AppTheme.color.accent.primary).frame(width: 10, height: 10)
             }
+        case .waitingForAllowance:
+            ZStack {
+                Circle().fill(AppTheme.color.feedback.warning.opacity(0.16))
+                Image(systemName: "hourglass")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(AppTheme.color.feedback.warning)
+            }
         case .failed:
             ZStack {
                 Circle().fill(AppTheme.color.feedback.danger.opacity(0.16))
@@ -259,6 +268,27 @@ struct EchoTimelineRow: View {
                     EchoSkeleton(width: 48, height: 6, cornerRadius: 3)
                 }
                 .padding(.top, 2)
+            case let .waitingForAllowance(transcript, resumesAt):
+                Text("today.timeline.waiting")
+                    .echoTextStyle(.subhead).fontWeight(.semibold)
+                    .foregroundStyle(AppTheme.color.content.primary)
+                if let transcript, !transcript.isEmpty {
+
+                    Text("“\(transcript)”")
+                        .echoTextStyle(.entryQuote)
+                        .foregroundStyle(AppTheme.color.content.secondary)
+                        .lineLimit(2)
+                }
+                if let resumesAt {
+
+                    UsageCountdown(resetsAt: resumesAt, format: "today.timeline.waitingIn")
+                        .echoTextStyle(.footnote)
+                        .foregroundStyle(AppTheme.color.content.secondary)
+                } else {
+                    Text("today.timeline.waitingBody")
+                        .echoTextStyle(.footnote)
+                        .foregroundStyle(AppTheme.color.content.secondary)
+                }
             case let .failed(transcript, canRetry):
                 Text("today.timeline.failed")
                     .echoTextStyle(.subhead).fontWeight(.semibold)

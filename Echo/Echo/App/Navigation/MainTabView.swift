@@ -6,6 +6,7 @@ struct MainTabView: View {
     @State private var router = AppRouter()
     @State private var toasts = EchoToastCenter()
     @State private var sheetAfterRecording: AppSheet?
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -32,6 +33,10 @@ struct MainTabView: View {
 
                 await environment.submissions.resumePending(for: userID)
             }
+        }
+        .task { await environment.usage.refresh() }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { Task { await environment.usage.refresh() } }
         }
     }
 
@@ -115,6 +120,8 @@ struct MainTabView: View {
             CoachSessionsView(coach: environment.coach)
         case .subscription:
             SubscriptionView(subscription: environment.subscription)
+        case .usage:
+            UsageView()
         }
     }
 

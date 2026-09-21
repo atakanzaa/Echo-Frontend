@@ -12,6 +12,9 @@ nonisolated struct EchoProblem: Error, Sendable, Equatable {
     let requestID: String?
     let reasonCode: String?
     let fieldErrors: [FieldError]
+    /// Yalnız `AI_QUOTA_EXHAUSTED`: hakkın yenileneceği an ve premium teklifinin gösterilip gösterilmeyeceği.
+    let resetsAt: Date?
+    let offerUpgrade: Bool
 
     nonisolated struct FieldError: Sendable, Equatable {
         let field: String
@@ -26,7 +29,11 @@ nonisolated struct EchoProblem: Error, Sendable, Equatable {
         requestID = problem.requestId
         reasonCode = problem.reasonCode
         fieldErrors = problem.fieldErrors.map { FieldError(field: $0.field, code: $0.code) }
+        resetsAt = problem.resetsAt
+        offerUpgrade = problem.offerUpgrade ?? false
     }
+
+    var isAllowanceExhausted: Bool { code == "AI_QUOTA_EXHAUSTED" }
 
     /// Belirli alanın hatası; form ekranları bu kodu kendi metnine değil, sunucu metnine bağlar.
     func fieldError(_ field: String) -> FieldError? {

@@ -4783,6 +4783,23 @@
         }
       }
     },
+    "profile.usage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kullanım hakkı"
+          }
+        }
+      }
+    },
     "record.finish": {
       "extractionState": "manual",
       "localizations": {
@@ -6686,6 +6703,57 @@
         }
       }
     },
+    "today.timeline.waiting": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Analysis waiting"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Analiz sırada"
+          }
+        }
+      }
+    },
+    "today.timeline.waitingBody": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your entry is safe; it will be analysed when your allowance renews."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaydın güvende; kullanım hakkın yenilenince analiz edilecek."
+          }
+        }
+      }
+    },
+    "today.timeline.waitingIn": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Will be analysed when your allowance renews in %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kullanım hakkın %@ sonra yenilenince analiz edilecek"
+          }
+        }
+      }
+    },
     "today.week.a11yEntries": {
       "extractionState": "manual",
       "localizations": {
@@ -6988,6 +7056,227 @@
           "stringUnit": {
             "state": "translated",
             "value": "Güncelleme gerekli"
+          }
+        }
+      }
+    },
+    "usage.alwaysOpen": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Journaling is always open: even when your allowance runs out, entries are saved and analysed once it renews."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Günlük tutmak her zaman açık: hakkın bitse bile kaydın saklanır, analizi hak yenilenince yapılır."
+          }
+        }
+      }
+    },
+    "usage.intro": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Analysis, coach and insights draw on your AI allowance. It renews every day and every month."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Analiz, koç ve içgörüler yapay zeka kullanım hakkından harcar. Hakkın her gün ve her ay yenilenir."
+          }
+        }
+      }
+    },
+    "usage.percentUsed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%ld%% used"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%%%ld kullanıldı"
+          }
+        }
+      }
+    },
+    "usage.plan.free": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You're on the free plan"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ücretsiz plandasın"
+          }
+        }
+      }
+    },
+    "usage.plan.premium": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You're on Premium"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Premium planındasın"
+          }
+        }
+      }
+    },
+    "usage.recordingStillSaved": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your entry is still saved; it will be analysed once your allowance renews."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaydın yine de kaydedilecek; analizi hakkın yenilenince yapılır."
+          }
+        }
+      }
+    },
+    "usage.renewsIn": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renews in %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ sonra yenilenir"
+          }
+        }
+      }
+    },
+    "usage.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kullanım hakkı"
+          }
+        }
+      }
+    },
+    "usage.upgrade": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "See Premium"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Premium'a göz at"
+          }
+        }
+      }
+    },
+    "usage.window.day": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bugün"
+          }
+        }
+      }
+    },
+    "usage.window.month": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This month"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu ay"
+          }
+        }
+      }
+    },
+    "usage.window.other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diğer"
+          }
+        }
+      }
+    },
+    "usage.window.service": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free capacity"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ücretsiz kapasite"
           }
         }
       }

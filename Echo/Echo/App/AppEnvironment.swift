@@ -15,6 +15,7 @@ struct AppServices {
     var community: any CommunityServicing
     var subscription: any SubscriptionServicing
     var user: any UserServicing
+    var usage: any UsageServicing
 
     static func live(_ stack: EchoAPIStack) -> AppServices {
         AppServices(auth: LiveAuthService(stack: stack),
@@ -27,7 +28,8 @@ struct AppServices {
                     coach: LiveCoachService(stack: stack),
                     community: LiveCommunityService(stack: stack),
                     subscription: LiveSubscriptionService(stack: stack),
-                    user: LiveUserService(stack: stack))
+                    user: LiveUserService(stack: stack),
+                    usage: LiveUsageService(stack: stack))
     }
 }
 
@@ -57,6 +59,7 @@ final class AppEnvironment {
     let remoteConfig: AppConfigStore
     let pendingJournals: PendingJournalStore
     let submissions: JournalSubmissionStore
+    let usage: UsageStore
     let network = NetworkStatus()
 
     init(configuration: AppConfiguration, stack: EchoAPIStack, language: AppLanguageStore, services: AppServices? = nil) {
@@ -85,6 +88,7 @@ final class AppEnvironment {
         let pendingJournals = PendingJournalStore()
         self.pendingJournals = pendingJournals
         submissions = JournalSubmissionStore(journal: services.journal, pending: pendingJournals)
+        usage = UsageStore(service: services.usage)
     }
 
     /// Sunucu adresi ve Keychain servisi Info.plist'ten gelir; adres kodda uydurulmaz.
