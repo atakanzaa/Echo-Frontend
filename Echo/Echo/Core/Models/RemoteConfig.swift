@@ -113,10 +113,11 @@ nonisolated struct ServerVocabulary: Sendable, Equatable {
     private let goalStatuses: [String: String]
 
     init(dto: Components.Schemas.VocabularyResponse) {
-        moodCategories = Dictionary(uniqueKeysWithValues: dto.moodCategories.map { ($0.key, $0.label) })
-        energyLevels = Dictionary(uniqueKeysWithValues: dto.energyLevels.map { ($0.key, $0.label) })
-        moodTrends = Dictionary(uniqueKeysWithValues: dto.moodTrends.map { ($0.key, $0.label) })
-        goalStatuses = Dictionary(uniqueKeysWithValues: dto.goalStatuses.map { ($0.key, $0.label) })
+        // Sunucu bir anahtarı iki kez gönderse de açılış çökmez; ilk etiket kullanılır.
+        moodCategories = Dictionary(dto.moodCategories.map { ($0.key, $0.label) }, uniquingKeysWith: { first, _ in first })
+        energyLevels = Dictionary(dto.energyLevels.map { ($0.key, $0.label) }, uniquingKeysWith: { first, _ in first })
+        moodTrends = Dictionary(dto.moodTrends.map { ($0.key, $0.label) }, uniquingKeysWith: { first, _ in first })
+        goalStatuses = Dictionary(dto.goalStatuses.map { ($0.key, $0.label) }, uniquingKeysWith: { first, _ in first })
     }
 
     init() {

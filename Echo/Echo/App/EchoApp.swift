@@ -1,3 +1,4 @@
+import OSLog
 import SwiftUI
 
 @main
@@ -12,6 +13,9 @@ struct EchoApp: App {
                 if ProcessInfo.processInfo.arguments.contains("-EchoMoodChartPreview") {
 
                     MoodChartGallery().preferredColorScheme(.dark)
+                } else if ProcessInfo.processInfo.arguments.contains("-EchoShellPreview") {
+
+                    ShellPreviewHost()
                 } else if let usage = PreviewLaunch.argument("-EchoUsagePreview") {
 
                     UsagePreviewHost(name: usage).preferredColorScheme(.dark).tint(AppTheme.color.accent.primary)
@@ -85,6 +89,60 @@ enum PreviewLaunch {
         .background(AppTheme.color.bg.canvas)
         .preferredColorScheme(request.scheme)
         .tint(AppTheme.color.accent.primary)
+    }
+}
+
+/// Yalnız DEBUG: `-EchoShellPreview` sekmeli ana kabuğu sahte oturumla açar; sekme ve sunum akışları giriş yapmadan denenir.
+/// `-EchoRouteSweep` eklenirse her sekme, her hedef ve her sayfa sırayla açılıp kapatılır; çökme son "start" satırında kalır.
+struct ShellPreviewHost: View {
+    @State private var environment = AppEnvironment.preview(.morning)
+    @State private var router = AppRouter()
+    private let sweeps = ProcessInfo.processInfo.arguments.contains("-EchoRouteSweep")
+    private let log = Logger(subsystem: "Yel.Echo", category: "sweep")
+
+    var body: some View {
+        MainTabView(router: router)
+            .environment(environment)
+            .environment(environment.theme)
+            .preferredColorScheme(.dark)
+            .tint(AppTheme.color.accent.primary)
+            .task { if sweeps { await sweep() } }
+    }
+
+    private func sweep() async {
+        try? await Task.sleep(for: .seconds(2))
+        for tab in AppTab.allCases {
+
+            await step("tab.\(tab.rawValue)") { router.selectedTab = tab }
+        }
+        let destinations: [AppDestination] = [
+            .journalEntry(id: "sweep"), .journalSearch, .insights, .moodTracker(periodDays: 7), .goals, .createGoal,
+            .achievements, .achievementDetail(badgeKey: "first_entry"), .capsules, .createCapsule, .capsule(id: "sweep"),
+            .coachSessions, .notifications, .communityPost(id: "sweep"), .settings, .editProfile, .privacyConsent,
+            .notificationSettings, .subscription, .usage, .blockedAuthors
+        ]
+        for destination in destinations {
+
+            await step("push.\(destination)") {
+                router.popToRoot(.profile)
+                router.push(destination, on: .profile)
+            }
+        }
+        router.popToRoot(.profile)
+        let sheets: [AppSheet] = [.composer, .coachChat(sessionId: nil), .composePost(prefilledText: nil), .paywall, .recording()]
+        for sheet in sheets {
+
+            await step("sheet.\(sheet.id)", seconds: 2) { router.present(sheet) }
+            await step("dismiss.\(sheet.id)") { router.dismissSheet() }
+        }
+        log.notice("SWEEP done")
+    }
+
+    private func step(_ name: String, seconds: Double = 1.2, _ action: () -> Void) async {
+        log.notice("SWEEP start \(name, privacy: .public)")
+        action()
+        try? await Task.sleep(for: .seconds(seconds))
+        log.notice("SWEEP ok \(name, privacy: .public)")
     }
 }
 #endif

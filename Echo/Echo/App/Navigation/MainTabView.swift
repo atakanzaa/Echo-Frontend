@@ -3,10 +3,14 @@ import SwiftUI
 /// Ana kabuk: sekme yığınları, merkez kayıt eylemi ve modal sunumları (implementation.md §5.0).
 struct MainTabView: View {
     @Environment(AppEnvironment.self) private var environment
-    @State private var router = AppRouter()
+    @State private var router: AppRouter
     @State private var toasts = EchoToastCenter()
     @State private var sheetAfterRecording: AppSheet?
     @Environment(\.scenePhase) private var scenePhase
+
+    @MainActor init(router: AppRouter? = nil) {
+        _router = State(initialValue: router ?? AppRouter())
+    }
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -17,8 +21,6 @@ struct MainTabView: View {
                        onRecordTap: { router.present(.recording()) },
                        onReselect: { router.popToRoot($0) })
         }
-        .environment(router)
-        .environment(toasts)
         .echoToasts(toasts)
         .fullScreenCover(isPresented: recordingPresented, onDismiss: presentDeferredSheet) {
 
@@ -38,6 +40,10 @@ struct MainTabView: View {
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { Task { await environment.usage.refresh() } }
         }
+        // En dışta: sayfalar ve tam ekran sunumlar ortamı sunum modifier'ının bulunduğu yerden alır.
+        // Bu iki satır sunumların içinde kalırsa açılan ekran yönlendiriciyi bulamaz ve uygulama çöker.
+        .environment(router)
+        .environment(toasts)
     }
 
     @ViewBuilder private var content: some View {

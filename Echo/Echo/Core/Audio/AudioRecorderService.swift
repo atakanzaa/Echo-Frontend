@@ -65,6 +65,12 @@ final class AudioRecorderService {
 
         let input = engine.inputNode
         let inputFormat = input.outputFormat(forBus: 0)
+        // Görüşme sırasında ya da rota değişirken giriş 0 Hz olabilir; bu biçimle tap takmak uygulamayı çökertir.
+        guard inputFormat.sampleRate > 0, inputFormat.channelCount > 0 else {
+
+            try? session.setActive(false, options: [.notifyOthersOnDeactivation])
+            throw RecorderError.engineUnavailable
+        }
         let url = Self.newFileURL()
         let settings: [String: Any] = [
             AVFormatIDKey: kAudioFormatMPEG4AAC,
@@ -82,6 +88,8 @@ final class AudioRecorderService {
         self.converter = converter
         let onBuffer = self.onBuffer
 
+        // Önceki kayıttan kalmış bir tap varken yenisi takılırsa AVAudioEngine çöker.
+        input.removeTap(onBus: 0)
         input.installTap(onBus: 0, bufferSize: 2_048, format: inputFormat) { [weak self] buffer, _ in
             // Yazma ve transkripsiyon ses iş parçacığında kalır; arayüze yalnız seviye taşınır.
             if let converted = Self.convert(buffer, using: converter, to: processingFormat) {
@@ -179,7 +187,8 @@ final class AudioRecorderService {
             while !Task.isCancelled {
 
                 try? await Task.sleep(for: .milliseconds(100))
-                guard let self, let startedAt = self.startedAt else { continue }
+                guard let self else { return }
+                guard let startedAt = self.startedAt else { continue }
                 self.duration = self.accumulated + Date().timeIntervalSince(startedAt)
             }
         }
