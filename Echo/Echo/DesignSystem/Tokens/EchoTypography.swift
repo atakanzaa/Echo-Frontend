@@ -18,6 +18,10 @@ nonisolated enum EchoTextStyle: CaseIterable, Sendable {
     case caption
     case caption2
     case numeric
+    /// Bölüm başlığı ("Son 7 gün", "Bugün için hedeflerin").
+    case sectionTitle
+    /// Günün sorusu; serif, sayfanın tek büyük metni.
+    case question
 
     var size: CGFloat {
         switch self {
@@ -33,6 +37,8 @@ nonisolated enum EchoTextStyle: CaseIterable, Sendable {
         case .caption: 12
         case .caption2: 11
         case .numeric: 28
+        case .sectionTitle: 21
+        case .question: 32
         }
     }
 
@@ -52,22 +58,24 @@ nonisolated enum EchoTextStyle: CaseIterable, Sendable {
         case .caption: 16
         case .caption2: 13
         case .numeric: 32
+        case .sectionTitle: 26
+        case .question: 38
         }
     }
 
     var weight: Font.Weight {
         switch self {
-        case .display, .title1, .numeric: .bold
+        case .display, .title1, .numeric, .sectionTitle: .bold
         case .title2, .title3, .headline, .bodyEmphasis, .caption2: .semibold
         case .subhead, .caption: .medium
-        case .body, .entry, .entryQuote, .callout, .footnote: .regular
+        case .body, .entry, .entryQuote, .callout, .footnote, .question: .regular
         }
     }
 
     var design: Font.Design {
         switch self {
-        case .display, .title1: .rounded
-        case .entry, .entryQuote: .serif
+        case .display, .title1, .sectionTitle: .rounded
+        case .entry, .entryQuote, .question: .serif
         default: .default
         }
     }
@@ -76,7 +84,8 @@ nonisolated enum EchoTextStyle: CaseIterable, Sendable {
         switch self {
         case .display: -0.4
         case .title1: -0.3
-        case .title2, .numeric: -0.2
+        case .title2, .numeric, .question: -0.2
+        case .sectionTitle: -0.15
         case .title3: -0.1
         case .caption: 0.2
         case .caption2: 0.4
@@ -88,9 +97,9 @@ nonisolated enum EchoTextStyle: CaseIterable, Sendable {
     var relativeTo: Font.TextStyle {
         switch self {
         case .display: .largeTitle
-        case .title1, .numeric: .title
+        case .title1, .numeric, .question: .title
         case .title2: .title2
-        case .title3: .title3
+        case .title3, .sectionTitle: .title3
         case .headline: .headline
         case .body, .bodyEmphasis, .entry, .entryQuote: .body
         case .callout: .callout
@@ -132,6 +141,8 @@ nonisolated struct EchoTypeScale: Sendable {
     let caption = EchoTextStyle.caption
     let caption2 = EchoTextStyle.caption2
     let numeric = EchoTextStyle.numeric
+    let sectionTitle = EchoTextStyle.sectionTitle
+    let question = EchoTextStyle.question
 }
 
 private struct EchoTextStyleModifier: ViewModifier {
