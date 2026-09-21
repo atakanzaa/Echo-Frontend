@@ -319,6 +319,48 @@ nonisolated struct PreviewCoachService: CoachServicing {
     func deleteSession(id: String) async throws {}
 }
 
+/// Farklı en-boy oranlı görsellerle kaydırma denemesi için topluluk akışı.
+nonisolated struct PreviewCommunityService: CommunityServicing {
+    static let posts: [CommunityPost] = (0..<12).map { index in
+
+        let images = ["https://picsum.photos/id/1015/800/1200", "https://picsum.photos/id/1025/1200/800",
+                      "https://picsum.photos/id/1043/900/900"]
+        let image = index % 2 == 0 ? "\"\(images[(index / 2) % 3])\"" : "null"
+        let text = index % 3 == 0 ? "Bugün uzun bir yürüyüş yaptım, kafam ilk kez bu kadar boştu. Akşam da kısa bir günlük tuttum ve günü iyi kapattım."
+            : "Kısa bir not: sabah kahvesi ve sessizlik."
+        return CommunityPost(dto: TodayPreviewFixtures.decode("""
+        {"id":"p\(index)","user_id":"u\(index)","display_name":"Echo üyesi \(index)","content":"\(text)","content_type":"\(index % 2 == 0 ? "image" : "text")",
+         "image_url":\(image),"is_anonymous":\(index % 4 == 1),"likes_count":\(index * 3),"comments_count":\(index),
+         "is_liked_by_me":false,"created_at":"2026-09-2\(index % 9)T10:00:00.000Z","is_mine":false,"can_delete":false,"moderation_status":"visible"}
+        """))
+    }
+
+    func feed(tab: String, cursor: String?, size: Int) async throws -> ListPage<CommunityPost> {
+        try await previewLatency()
+        return ListPage(items: Self.posts, nextCursor: nil, hasMore: false)
+    }
+    func post(id: String) async throws -> CommunityPost { try await previewLatency(); return Self.posts[0] }
+    func createPost(content: String?, emoji: String?, isAnonymous: Bool, badgeKey: String?, idempotencyKey: String) async throws -> CommunityPost { throw previewUnavailable }
+    func createImagePost(imageData: Data, filename: String, content: String?, emoji: String?, isAnonymous: Bool, badgeKey: String?, idempotencyKey: String) async throws -> CommunityPost { throw previewUnavailable }
+    func deletePost(id: String) async throws {}
+    func like(postID: String) async throws -> CommunityPost { throw previewUnavailable }
+    func unlike(postID: String) async throws -> CommunityPost { throw previewUnavailable }
+    func comments(postID: String, cursor: String?, size: Int) async throws -> ListPage<PostComment> { .empty }
+    func replies(postID: String, commentID: String, cursor: String?, size: Int) async throws -> ListPage<PostComment> { .empty }
+    func createComment(postID: String, content: String, parentID: String?, idempotencyKey: String) async throws -> PostComment { throw previewUnavailable }
+    func deleteComment(postID: String, commentID: String) async throws {}
+    func like(commentID: String) async throws -> PostComment { throw previewUnavailable }
+    func unlike(commentID: String) async throws -> PostComment { throw previewUnavailable }
+    func report(postID: String, reason: CommunityReportReason, details: String?) async throws {}
+    func report(commentID: String, reason: CommunityReportReason, details: String?) async throws {}
+    func blockAuthor(postID: String) async throws {}
+    func blockAuthor(commentID: String) async throws {}
+    func blocks(cursor: String?, size: Int) async throws -> ListPage<CommunityBlock> { .empty }
+    func removeBlock(id: String) async throws {}
+    func follow(userID: String) async throws {}
+    func unfollow(userID: String) async throws {}
+}
+
 extension AppEnvironment {
     /// Ağsız önizleme ortamı: sahte servisler, oturum açık kullanıcı ve sunucu sözlüğü.
     static func preview(_ state: TodayPreviewState) -> AppEnvironment {
@@ -332,6 +374,7 @@ extension AppEnvironment {
         services.goals = PreviewGoalService(state: state)
         services.capsules = PreviewCapsuleService(state: state)
         services.coach = PreviewCoachService(state: state)
+        services.community = PreviewCommunityService()
         let environment = AppEnvironment(configuration: AppConfiguration(apiBaseURL: serverURL, subscriptionProductIDs: [],
                                                                          keychainService: "echo.preview"),
                                          stack: stack, language: language, services: services)

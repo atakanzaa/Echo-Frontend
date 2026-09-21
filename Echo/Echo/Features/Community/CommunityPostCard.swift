@@ -81,8 +81,11 @@ struct CommunityPostCard: View {
                 .lineLimit(6)
         }
         if let imageURL = post.imageURL {
-            CachedRemoteImage(url: imageURL)
-            .clipShape(RoundedRectangle(cornerRadius: AppTheme.radius.md, style: .continuous))
+            // Sabit oranlı kutu: görsel yüklenmeden önce ve sonra kartın boyu aynı; kaydırırken liste sıçramaz.
+            Color.clear
+                .aspectRatio(4 / 3, contentMode: .fit)
+                .overlay { CachedRemoteImage(url: imageURL) }
+                .clipShape(RoundedRectangle(cornerRadius: AppTheme.radius.md, style: .continuous))
         }
     }
 
