@@ -28,6 +28,7 @@ final class AppEnvironment {
     let remoteConfig: AppConfigStore
     let pendingJournals: PendingJournalStore
     let submissions: JournalSubmissionStore
+    let network = NetworkStatus()
 
     init(configuration: AppConfiguration, stack: EchoAPIStack, language: AppLanguageStore) {
         self.configuration = configuration

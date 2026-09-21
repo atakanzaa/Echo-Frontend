@@ -77,7 +77,7 @@ struct JournalFeedView: View {
                 }
                 if feedModel.entries.isEmpty, !feedModel.isLoading {
                     EchoEmptyState("journal.empty", message: "journal.emptyMessage", systemImage: "book.closed") {
-                        EchoButton("journal.record", variant: .secondary) { router.present(.recording) }
+                        EchoButton("journal.record", variant: .secondary) { router.present(.recording()) }
                     }
                 } else {
                     ForEach(feedModel.groupedEntries) { group in

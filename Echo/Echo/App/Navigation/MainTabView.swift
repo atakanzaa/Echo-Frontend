@@ -14,8 +14,8 @@ struct MainTabView: View {
                 // Sekme çubuğu içeriğin üstünde durur; alt boşluk içerik tarafından bırakılır.
                 .safeAreaInset(edge: .bottom) { Color.clear.frame(height: AppTheme.layout.tabBarHeight) }
             EchoTabBar(selection: $router.selectedTab,
-                       isRecording: router.sheet == .recording,
-                       onRecordTap: { router.present(.recording) },
+                       isRecording: router.sheet?.isRecording == true,
+                       onRecordTap: { router.present(.recording()) },
                        onReselect: { router.popToRoot($0) })
         }
         .environment(router)
@@ -23,7 +23,7 @@ struct MainTabView: View {
         .echoToasts(toasts)
         .fullScreenCover(isPresented: recordingPresented, onDismiss: presentDeferredSheet) {
 
-            sheetContent(.recording)
+            sheetContent(router.sheet ?? .recording())
         }
         .sheet(item: standardSheet) { sheet in
 
@@ -42,8 +42,7 @@ struct MainTabView: View {
         case .today:
             tabStack(.today) {
                 if let user = environment.session.state.user {
-                    TodayView(user: user, journal: environment.journal, insights: environment.insights,
-                              notifications: environment.notifications, goals: environment.goals)
+                    TodayView(user: user, environment: environment)
                 } else {
                     PlaceholderScreen(title: "tabs.today")
                 }
@@ -122,8 +121,8 @@ struct MainTabView: View {
 
     @ViewBuilder private func sheetContent(_ sheet: AppSheet) -> some View {
         switch sheet {
-        case .recording:
-            RecordingView(onFinished: { entry in
+        case .recording(let prompt, _):
+            RecordingView(prompt: prompt, onFinished: { entry in
 
                 router.dismissSheet()
                 router.push(.journalEntry(id: entry.id), on: .today)
@@ -172,15 +171,15 @@ struct MainTabView: View {
 
     private var recordingPresented: Binding<Bool> {
         Binding(
-            get: { router.sheet == .recording },
+            get: { router.sheet?.isRecording == true },
             set: { isPresented in
-                if !isPresented, router.sheet == .recording { router.dismissSheet() }
+                if !isPresented, router.sheet?.isRecording == true { router.dismissSheet() }
             })
     }
 
     private var standardSheet: Binding<AppSheet?> {
         Binding(
-            get: { router.sheet == .recording ? nil : router.sheet },
+            get: { router.sheet?.isRecording == true ? nil : router.sheet },
             set: { router.sheet = $0 })
     }
 

@@ -27,11 +27,17 @@ nonisolated enum AppDestination: Hashable, Sendable {
 
 /// Modal sunumlar.
 nonisolated enum AppSheet: Identifiable, Hashable, Sendable {
-    case recording
+    /// `prompt` günün sorusundan gelir ve kayıt ekranında gösterilir; sözleşmede sunucuya taşıyan alan yok.
+    case recording(prompt: String? = nil, sourceEntryID: String? = nil)
     case composer
     case coachChat(sessionId: String?)
     case composePost(prefilledText: String?)
     case paywall
+
+    var isRecording: Bool {
+        if case .recording = self { return true }
+        return false
+    }
 
     var id: String {
         switch self {

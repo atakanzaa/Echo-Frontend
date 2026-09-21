@@ -4,6 +4,8 @@ import UIKit
 
 /// Kayıt ekranı (implementation.md §5.4). Tam ekran, tek eylem, ses görünür.
 struct RecordingView: View {
+    /// Günün sorusundan açıldıysa ekranda davet cümlesi yerine o soru gösterilir.
+    var prompt: String?
     let onFinished: (JournalEntry) -> Void
     let onSwitchToText: () -> Void
     @Environment(AppEnvironment.self) private var environment
@@ -121,7 +123,7 @@ struct RecordingView: View {
 
                 EchoBanner(kind: .danger, title: message)
             }
-            Text(model.displayedTranscript.isEmpty ? String(localized: "record.prompt") : model.displayedTranscript)
+            Text(model.displayedTranscript.isEmpty ? (prompt ?? String(localized: "record.prompt")) : model.displayedTranscript)
                 .echoTextStyle(.entry)
                 .foregroundStyle(AppTheme.color.content.onAccent.opacity(0.9))
                 .multilineTextAlignment(.center)

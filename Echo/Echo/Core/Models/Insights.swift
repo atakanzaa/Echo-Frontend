@@ -262,6 +262,8 @@ nonisolated struct Achievements: Sendable, Equatable {
     let level: String
     let levelMessage: String
     let badges: [Badge]
+    /// Sunucunun seçtiği sıradaki rozet; hepsi kazanıldıysa nil. İstemci seçim yapmaz.
+    let nextBadge: Badge?
 
     nonisolated struct Badge: Sendable, Equatable, Identifiable {
         let key: String
@@ -276,6 +278,13 @@ nonisolated struct Achievements: Sendable, Equatable {
         var id: String { key }
     }
 
+    private static func badge(from dto: Components.Schemas.BadgeItem) -> Badge {
+        Badge(key: dto.key.value1?.rawValue ?? dto.key.value2 ?? "",
+              title: dto.title, emoji: dto.emoji, description: dto.description,
+              criteriaDescription: dto.criteriaDescription, isEarned: dto.isEarned,
+              earnedAt: dto.earnedAt, progress: dto.progress, remaining: Int(dto.remaining))
+    }
+
     init(dto: Components.Schemas.AchievementsResponse) {
         currentStreak = Int(dto.currentStreak)
         longestStreak = Int(dto.longestStreak)
@@ -287,12 +296,8 @@ nonisolated struct Achievements: Sendable, Equatable {
         totalCount = Int(dto.totalCount)
         level = dto.level
         levelMessage = dto.levelMessage
-        badges = dto.badges.map {
-            Badge(key: $0.key.value1?.rawValue ?? $0.key.value2 ?? "",
-                  title: $0.title, emoji: $0.emoji, description: $0.description,
-                  criteriaDescription: $0.criteriaDescription, isEarned: $0.isEarned,
-                  earnedAt: $0.earnedAt, progress: $0.progress, remaining: Int($0.remaining))
-        }
+        badges = dto.badges.map(Achievements.badge(from:))
+        nextBadge = dto.nextBadge.map(Achievements.badge(from:))
     }
 }
 

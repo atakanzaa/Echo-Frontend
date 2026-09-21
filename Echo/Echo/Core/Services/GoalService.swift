@@ -6,6 +6,8 @@ nonisolated protocol GoalServicing: Sendable {
     func activeGoals(cursor: String?, size: Int) async throws -> ListPage<Goal>
     func allGoals(cursor: String?, size: Int) async throws -> ListPage<Goal>
     func stats() async throws -> GoalStats
+    /// Açık hedefler ve kullanıcının gününde tamamlananlar; "bugün" sınırını sunucu çizer.
+    func todayGoals() async throws -> [Goal]
     func create(title: String, timeframe: String?, idempotencyKey: String) async throws -> Goal
     func complete(id: String) async throws -> Goal
     func markNotCompleted(id: String) async throws -> Goal
@@ -33,6 +35,13 @@ nonisolated struct LiveGoalService: GoalServicing {
         case .ok(let ok):
             let page = try ok.body.json
             return ListPage(items: page.items.map(Goal.init(dto:)), nextCursor: page.nextCursor, hasMore: page.hasMore)
+        case let .`default`(status, response): throw AppError.fromDefault(status, try? response.body.applicationProblemJson)
+        }
+    }
+
+    func todayGoals() async throws -> [Goal] {
+        switch try await stack.client.listTodayGoals(.init()) {
+        case .ok(let ok): return try ok.body.json.map(Goal.init(dto:))
         case let .`default`(status, response): throw AppError.fromDefault(status, try? response.body.applicationProblemJson)
         }
     }
