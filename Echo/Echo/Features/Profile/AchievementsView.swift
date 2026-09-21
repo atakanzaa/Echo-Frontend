@@ -16,7 +16,7 @@ private final class AchievementsViewModel {
         error = nil
         defer { isLoading = false }
         do { achievements = try await insights.achievements() }
-        catch { self.error = AppError.from(error) }
+        catch { self.error = AppError.displayable(error) }
     }
 }
 
@@ -59,7 +59,7 @@ struct AchievementsView: View {
         .navigationTitle(Text("achievements.title"))
         .navigationBarTitleDisplayMode(.large)
         .task { await model.load() }
-        .refreshable { await model.load() }
+        .echoRefreshable { await model.load() }
     }
 
     private func header(_ achievements: Achievements) -> some View {
@@ -92,7 +92,7 @@ private final class AchievementDetailViewModel {
         isLoading = true; error = nil
         defer { isLoading = false }
         do { detail = try await insights.achievementDetail(badgeKey: key) }
-        catch { self.error = AppError.from(error) }
+        catch { self.error = AppError.displayable(error) }
     }
 }
 

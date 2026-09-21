@@ -1,6 +1,15 @@
 import SwiftUI
 
 /// 1px ayraç (implementation.md §4.32).
+extension View {
+    /// Çek-yenile. SwiftUI, yenileme sürerken ekran veriyle güncellenince `.refreshable` görevini iptal edebiliyor;
+    /// uçuştaki istekler iptal hatasıyla dönüp yanlış "bağlantı yok" gösteriyordu. İş bağımsız bir görevde tamamlanır,
+    /// gösterge de onu bekler.
+    func echoRefreshable(_ action: @escaping @MainActor () async -> Void) -> some View {
+        refreshable { await Task { @MainActor in await action() }.value }
+    }
+}
+
 struct EchoDivider: View {
     var insetLeading: CGFloat = 0
     @Environment(\.colorSchemeContrast) private var colorSchemeContrast

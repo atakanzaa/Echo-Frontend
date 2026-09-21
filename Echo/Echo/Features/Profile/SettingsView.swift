@@ -156,7 +156,7 @@ struct SettingsView: View {
             try await environment.user.requestAccountDeletion(appleAuthorizationCode: nil)
             await environment.session.signOut()
         } catch {
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
         }
         isDeleting = false
     }

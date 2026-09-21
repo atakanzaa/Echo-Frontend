@@ -61,7 +61,7 @@ final class JournalSearchViewModel {
             return
         } catch {
             guard expectedQuery == normalizedQuery else { return }
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
         }
     }
 }

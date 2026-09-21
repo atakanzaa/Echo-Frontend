@@ -30,7 +30,7 @@ struct JournalCalendarView: View {
             .padding(.horizontal, AppTheme.layout.screenHorizontalPadding)
             .padding(.bottom, AppTheme.space.xl)
         }
-        .refreshable { await model.refresh() }
+        .echoRefreshable { await model.refresh() }
         .task { await model.refresh() }
     }
 

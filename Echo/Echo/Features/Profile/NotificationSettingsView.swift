@@ -15,7 +15,7 @@ private final class NotificationSettingsViewModel {
         isLoading = true; error = nil
         defer { isLoading = false }
         do { preferences = try await notifications.preferences() }
-        catch { self.error = AppError.from(error) }
+        catch { self.error = AppError.displayable(error) }
     }
 
     func save() async {
@@ -23,7 +23,7 @@ private final class NotificationSettingsViewModel {
         isLoading = true; error = nil
         defer { isLoading = false }
         do { self.preferences = try await notifications.updatePreferences(preferences) }
-        catch { self.error = AppError.from(error) }
+        catch { self.error = AppError.displayable(error) }
     }
 }
 

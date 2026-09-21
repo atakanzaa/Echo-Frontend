@@ -49,7 +49,7 @@ final class CoachChatViewModel {
             }
             try await loadMessages(reset: true)
         } catch {
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
         }
     }
 
@@ -60,7 +60,7 @@ final class CoachChatViewModel {
         do {
             try await loadMessages(reset: false)
         } catch {
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
         }
     }
 
@@ -110,7 +110,7 @@ final class CoachChatViewModel {
             try await coach.endSession(id: sessionID)
             return true
         } catch {
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
             return false
         }
     }
@@ -121,7 +121,7 @@ final class CoachChatViewModel {
             try await coach.deleteSession(id: sessionID)
             return true
         } catch {
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
             return false
         }
     }
@@ -154,7 +154,7 @@ final class CoachChatViewModel {
                 isThinking = false
                 return
             } catch {
-                self.error = AppError.from(error)
+                self.error = AppError.displayable(error)
                 do { try await Task.sleep(for: .seconds(3)) } catch { return }
             }
         }
@@ -168,7 +168,7 @@ final class CoachChatViewModel {
             do {
                 try await loadMessages(reset: true)
             } catch {
-                self.error = AppError.from(error)
+                self.error = AppError.displayable(error)
             }
         } else {
             error = .unexpectedResponse(status: nil)

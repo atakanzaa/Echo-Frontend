@@ -21,7 +21,7 @@ private final class CapsulesViewModel {
             let (loadedPage, loadedSummary) = try await (page, summary)
             capsules = loadedPage.items
             self.summary = loadedSummary
-        } catch { self.error = AppError.from(error) }
+        } catch { self.error = AppError.displayable(error) }
     }
 }
 
@@ -59,7 +59,7 @@ struct CapsulesView: View {
         .navigationTitle(Text("capsules.title"))
         .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { router.push(.createCapsule) } label: { Image(systemName: "plus") } } }
         .task { await model.load() }
-        .refreshable { await model.load() }
+        .echoRefreshable { await model.load() }
     }
 
     private func summaryView(_ summary: CapsuleSummary) -> some View {
@@ -141,7 +141,7 @@ struct CreateCapsuleView: View {
                                           unlockAt: unlockAt,
                                           idempotencyKey: UUID().uuidString)
             dismiss()
-        } catch { self.error = AppError.from(error) }
+        } catch { self.error = AppError.displayable(error) }
     }
 }
 
@@ -159,11 +159,11 @@ private final class CapsuleDetailViewModel {
         isLoading = true; error = nil
         defer { isLoading = false }
         do { capsule = try await service.capsule(id: id) }
-        catch { self.error = AppError.from(error) }
+        catch { self.error = AppError.displayable(error) }
     }
     func open() async {
         do { capsule = try await service.open(id: id) }
-        catch { self.error = AppError.from(error) }
+        catch { self.error = AppError.displayable(error) }
     }
     func delete() async throws { try await service.delete(id: id) }
 }

@@ -39,7 +39,7 @@ private final class MoodTrackerViewModel {
             return
         } catch {
             guard loadID == currentLoadID else { return }
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
         }
     }
 }

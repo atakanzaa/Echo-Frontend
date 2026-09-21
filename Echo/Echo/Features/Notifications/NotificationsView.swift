@@ -26,7 +26,7 @@ private final class NotificationsViewModel {
             nextCursor = loadedPage.nextCursor
             hasMore = loadedPage.hasMore
             unreadCount = loadedCount
-        } catch { self.error = AppError.from(error) }
+        } catch { self.error = AppError.displayable(error) }
     }
 
     func loadMore(after item: NotificationItem) async {
@@ -37,7 +37,7 @@ private final class NotificationsViewModel {
             let page = try await service.list(cursor: nextCursor, size: 30)
             items.append(contentsOf: page.items.filter { candidate in !items.contains { $0.id == candidate.id } })
             nextCursor = page.nextCursor; hasMore = page.hasMore
-        } catch { self.error = AppError.from(error) }
+        } catch { self.error = AppError.displayable(error) }
     }
 
     func markRead(_ item: NotificationItem) async {
@@ -48,14 +48,14 @@ private final class NotificationsViewModel {
                 let current = items[index]
                 items[index] = NotificationItem(copying: current, isRead: true)
             }
-        } catch { self.error = AppError.from(error) }
+        } catch { self.error = AppError.displayable(error) }
     }
 
     func markAllRead() async {
         do {
             unreadCount = try await service.markAllRead()
             items = items.map { NotificationItem(copying: $0, isRead: true) }
-        } catch { self.error = AppError.from(error) }
+        } catch { self.error = AppError.displayable(error) }
     }
 }
 
@@ -98,7 +98,7 @@ struct NotificationsView: View {
             }
         }
         .task { await model.load() }
-        .refreshable { await model.load() }
+        .echoRefreshable { await model.load() }
     }
 
     private func notificationRow(_ item: NotificationItem) -> some View {

@@ -40,7 +40,7 @@ struct UsageView: View {
         .navigationTitle(Text("usage.title"))
         .navigationBarTitleDisplayMode(.large)
         .task { await environment.usage.refresh() }
-        .refreshable { await environment.usage.refresh() }
+        .echoRefreshable { await environment.usage.refresh() }
     }
 
     private func windowRow(_ window: AIUsage.Window) -> some View {

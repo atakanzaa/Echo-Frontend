@@ -26,7 +26,7 @@ struct ProfileView: View {
                 Button("profile.edit") { router.push(.editProfile) }
             }
         }
-        .refreshable {
+        .echoRefreshable {
             await environment.session.refreshUser()
         }
     }

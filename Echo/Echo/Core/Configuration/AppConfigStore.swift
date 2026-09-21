@@ -27,7 +27,7 @@ final class AppConfigStore {
             self.config = try await config
             self.vocabulary = try await vocabulary
         } catch {
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
         }
         isLoading = false
     }

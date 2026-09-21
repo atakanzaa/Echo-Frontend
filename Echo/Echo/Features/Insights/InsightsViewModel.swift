@@ -42,7 +42,7 @@ final class InsightsViewModel {
             if !didLoadSupportingData { await loadSupportingData() }
         } catch {
             isLoading = false
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
         }
     }
 
@@ -70,7 +70,7 @@ final class InsightsViewModel {
             return
         } catch {
             guard periodLoadID == loadID else { return }
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
         }
     }
 

@@ -41,7 +41,7 @@ struct EditProfileView: View {
                 timezone: timezone, language: nil)
             environment.session.apply(updated)
             dismiss()
-        } catch { self.error = AppError.from(error) }
+        } catch { self.error = AppError.displayable(error) }
     }
 }
 
@@ -58,12 +58,12 @@ private final class PrivacyConsentViewModel {
         isLoading = true; error = nil
         defer { isLoading = false }
         do { status = try await user.consent() }
-        catch { self.error = AppError.from(error) }
+        catch { self.error = AppError.displayable(error) }
     }
 
     func update(aiTraining: Bool? = nil, kvkk: Bool? = nil) async {
         do { status = try await user.updateConsent(aiTraining: aiTraining, kvkk: kvkk, communityTerms: nil) }
-        catch { self.error = AppError.from(error) }
+        catch { self.error = AppError.displayable(error) }
     }
 }
 

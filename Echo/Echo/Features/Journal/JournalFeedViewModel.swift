@@ -17,31 +17,48 @@ final class JournalFeedViewModel {
     @ObservationIgnored private let journal: any JournalServicing
     @ObservationIgnored private let timeZone: TimeZone
     @ObservationIgnored private var cursor: String?
+    /// Yenileme yeni bir nesil başlatır; önceki nesilden geç gelen sayfa listeye eklenmez.
+    @ObservationIgnored private var generation = 0
 
     init(journal: any JournalServicing, timeZone: TimeZone) {
         self.journal = journal
         self.timeZone = timeZone
     }
 
+    /// Liste boşaltılmaz; ilk sayfa gelince yerine konur.
     func refresh() async {
-        cursor = nil
-        hasMore = true
-        entries = []
-        await loadNext()
+        generation += 1
+        let current = generation
+        isLoading = true
+        error = nil
+        defer { if generation == current { isLoading = false } }
+        do {
+            let page = try await journal.recent(cursor: nil, size: 20)
+            guard generation == current else { return }
+            entries = page.items
+            cursor = page.nextCursor
+            hasMore = page.hasMore && page.nextCursor != nil
+        } catch {
+            guard generation == current else { return }
+            self.error = AppError.displayable(error)
+        }
     }
 
     func loadNext() async {
         guard !isLoading, hasMore else { return }
+        let current = generation
         isLoading = true
         error = nil
-        defer { isLoading = false }
+        defer { if generation == current { isLoading = false } }
         do {
             let page = try await journal.recent(cursor: cursor, size: 20)
+            guard generation == current else { return }
             entries.append(contentsOf: page.items)
             cursor = page.nextCursor
             hasMore = page.hasMore && page.nextCursor != nil
         } catch {
-            self.error = AppError.from(error)
+            guard generation == current else { return }
+            self.error = AppError.displayable(error)
         }
     }
 
@@ -53,7 +70,7 @@ final class JournalFeedViewModel {
             entries.removeAll { $0.id == id }
             return true
         } catch {
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
             return false
         }
     }

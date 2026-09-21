@@ -217,6 +217,12 @@ nonisolated enum TodayPreviewFixtures {
 
 private let previewUnavailable = AppError.unexpectedResponse(status: nil)
 
+/// `-EchoPreviewLatency` ile sahte servisler gerçek ağ gibi gecikir; iptal edilen istek CancellationError fırlatır.
+nonisolated private func previewLatency() async throws {
+    guard ProcessInfo.processInfo.arguments.contains("-EchoPreviewLatency") else { return }
+    try await Task.sleep(for: .milliseconds(900))
+}
+
 nonisolated struct PreviewJournalService: JournalServicing {
     let state: TodayPreviewState
     func createFromTranscript(transcript: String, recordedAt: Date, durationSeconds: Int?, idempotencyKey: String) async throws -> JournalEntry { throw previewUnavailable }
@@ -225,13 +231,16 @@ nonisolated struct PreviewJournalService: JournalServicing {
     func status(id: String) async throws -> OperationProgress { throw previewUnavailable }
     func operation(id: String) async throws -> OperationProgress { throw previewUnavailable }
     func recent(cursor: String?, size: Int) async throws -> ListPage<JournalEntry> {
-        ListPage(items: TodayPreviewFixtures.recentEntries(state), nextCursor: nil, hasMore: false)
+        try await previewLatency()
+        return ListPage(items: TodayPreviewFixtures.recentEntries(state), nextCursor: nil, hasMore: false)
     }
     func entries(day: LocalDay, cursor: String?, size: Int) async throws -> ListPage<JournalEntry> {
-        ListPage(items: TodayPreviewFixtures.todayEntries(state), nextCursor: nil, hasMore: false)
+        try await previewLatency()
+        return ListPage(items: TodayPreviewFixtures.todayEntries(state), nextCursor: nil, hasMore: false)
     }
     func search(query: String, cursor: String?, size: Int) async throws -> ListPage<JournalEntry> { .empty }
     func onThisDay() async throws -> [OnThisDayEntry] {
+        try await previewLatency()
         guard state != .newUser else { return [] }
         return [OnThisDayEntry(id: "m1", day: LocalDay("2025-09-21"), summary: "Sahilde uzun bir yürüyüş, kafam ilk kez bu kadar boştu.",
                                moodLabel: "Sakin", moodScore: 0.72, yearsAgo: 1)]
@@ -241,20 +250,20 @@ nonisolated struct PreviewJournalService: JournalServicing {
 
 nonisolated struct PreviewInsightsService: InsightsServicing {
     let state: TodayPreviewState
-    func calendar(year: Int, month: Int) async throws -> CalendarMonth { TodayPreviewFixtures.calendar(state) }
-    func summary(periodDays: Int, endDay: LocalDay?) async throws -> PeriodSummary { TodayPreviewFixtures.summary() }
-    func insights(periodDays: Int) async throws -> AIInsights { TodayPreviewFixtures.weekly(state) }
+    func calendar(year: Int, month: Int) async throws -> CalendarMonth { try await previewLatency(); return TodayPreviewFixtures.calendar(state) }
+    func summary(periodDays: Int, endDay: LocalDay?) async throws -> PeriodSummary { try await previewLatency(); return TodayPreviewFixtures.summary() }
+    func insights(periodDays: Int) async throws -> AIInsights { try await previewLatency(); return TodayPreviewFixtures.weekly(state) }
     func eligibility() async throws -> InsightEligibility { throw previewUnavailable }
     func detailedStats() async throws -> DetailedStats { throw previewUnavailable }
-    func profileSummary() async throws -> ProfileSummary? { TodayPreviewFixtures.profile(state) }
-    func achievements() async throws -> Achievements { TodayPreviewFixtures.achievements(state) }
+    func profileSummary() async throws -> ProfileSummary? { try await previewLatency(); return TodayPreviewFixtures.profile(state) }
+    func achievements() async throws -> Achievements { try await previewLatency(); return TodayPreviewFixtures.achievements(state) }
     func achievementDetail(badgeKey: String) async throws -> AchievementDetail { throw previewUnavailable }
 }
 
 nonisolated struct PreviewNotificationService: NotificationServicing {
     let state: TodayPreviewState
-    func list(cursor: String?, size: Int) async throws -> ListPage<NotificationItem> { .empty }
-    func unreadCount() async throws -> Int { state == .newUser ? 0 : 3 }
+    func list(cursor: String?, size: Int) async throws -> ListPage<NotificationItem> { try await previewLatency(); return .empty }
+    func unreadCount() async throws -> Int { try await previewLatency(); return state == .newUser ? 0 : 3 }
     func markRead(id: String) async throws -> Int { 0 }
     func markAllRead() async throws -> Int { 0 }
     func preferences() async throws -> NotificationPreferences { throw previewUnavailable }
@@ -265,17 +274,18 @@ nonisolated struct PreviewNotificationService: NotificationServicing {
 
 nonisolated struct PreviewGoalService: GoalServicing {
     let state: TodayPreviewState
-    func activeGoals(cursor: String?, size: Int) async throws -> ListPage<Goal> { .empty }
-    func allGoals(cursor: String?, size: Int) async throws -> ListPage<Goal> { .empty }
-    func stats() async throws -> GoalStats { TodayPreviewFixtures.goalStats(state) }
-    func todayGoals() async throws -> [Goal] { TodayPreviewFixtures.goals(state) }
+    func activeGoals(cursor: String?, size: Int) async throws -> ListPage<Goal> { try await previewLatency(); return .empty }
+    func allGoals(cursor: String?, size: Int) async throws -> ListPage<Goal> { try await previewLatency(); return .empty }
+    func stats() async throws -> GoalStats { try await previewLatency(); return TodayPreviewFixtures.goalStats(state) }
+    func todayGoals() async throws -> [Goal] { try await previewLatency(); return TodayPreviewFixtures.goals(state) }
     func create(title: String, timeframe: String?, idempotencyKey: String) async throws -> Goal { throw previewUnavailable }
     func complete(id: String) async throws -> Goal { throw previewUnavailable }
     func markNotCompleted(id: String) async throws -> Goal { throw previewUnavailable }
     func dismiss(id: String) async throws -> Goal { throw previewUnavailable }
     func delete(id: String) async throws {}
     func suggestions(sourceType: String?, suggestionType: String?, journalEntryID: String?, coachSessionID: String?) async throws -> [GoalSuggestion] {
-        TodayPreviewFixtures.suggestions(state)
+        try await previewLatency()
+        return TodayPreviewFixtures.suggestions(state)
     }
     func acceptSuggestion(id: String) async throws -> Goal { throw previewUnavailable }
     func rejectSuggestion(id: String) async throws {}
@@ -285,6 +295,7 @@ nonisolated struct PreviewCapsuleService: CapsuleServicing {
     let state: TodayPreviewState
     func list(cursor: String?, size: Int) async throws -> ListPage<TimeCapsule> { .empty }
     func summary() async throws -> CapsuleSummary {
+        try await previewLatency()
         guard let summary = TodayPreviewFixtures.capsules(state) else { throw previewUnavailable }
         return summary
     }
@@ -297,7 +308,8 @@ nonisolated struct PreviewCapsuleService: CapsuleServicing {
 nonisolated struct PreviewCoachService: CoachServicing {
     let state: TodayPreviewState
     func sessions(cursor: String?, size: Int) async throws -> ListPage<CoachSession> {
-        ListPage(items: TodayPreviewFixtures.coachSession(state).map { [$0] } ?? [], nextCursor: nil, hasMore: false)
+        try await previewLatency()
+        return ListPage(items: TodayPreviewFixtures.coachSession(state).map { [$0] } ?? [], nextCursor: nil, hasMore: false)
     }
     func createSession(journalEntryID: String?, idempotencyKey: String) async throws -> CoachSession { throw previewUnavailable }
     func messages(sessionID: String, cursor: String?, size: Int) async throws -> ListPage<CoachMessage> { .empty }

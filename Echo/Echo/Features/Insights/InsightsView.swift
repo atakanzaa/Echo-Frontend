@@ -39,7 +39,7 @@ struct InsightsView: View {
             await model.loadSelectedPeriod()
         }
         .task(id: model.summary?.narrativeSummary) { renderSnapshot() }
-        .refreshable { await model.load() }
+        .echoRefreshable { await model.load() }
     }
 
     @ViewBuilder private var periodPicker: some View {

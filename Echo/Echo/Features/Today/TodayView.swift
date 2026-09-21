@@ -57,7 +57,7 @@ struct TodayView: View {
         .background(AppTheme.color.bg.canvas)
         .toolbar(.hidden, for: .navigationBar)
         .environment(\.timeZone, timeZone)
-        .refreshable { await reload() }
+        .echoRefreshable { await reload() }
         .task { await reload() }
         .onDisappear { model.stop() }
     }

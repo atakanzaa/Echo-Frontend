@@ -47,7 +47,7 @@ struct CommunityFeedView: View {
                 .padding(.horizontal, AppTheme.layout.screenHorizontalPadding)
                 .padding(.bottom, AppTheme.space.xl)
             }
-            .refreshable { await model.refresh() }
+            .echoRefreshable { await model.refresh() }
         }
         .background(AppTheme.color.bg.canvas)
         .navigationTitle(Text("community.title"))

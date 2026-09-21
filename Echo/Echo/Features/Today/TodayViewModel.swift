@@ -72,7 +72,7 @@ final class TodayViewModel {
             }
             lastLoadedAt = Date()
         } catch {
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
         }
 
         async let loadedRecent = journal.recent(cursor: nil, size: 5)
@@ -112,7 +112,7 @@ final class TodayViewModel {
             if let index = goals.firstIndex(where: { $0.id == goal.id }) { goals[index] = updated }
             goalStats = try? await goalService.stats()
         } catch {
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
         }
     }
 
@@ -123,7 +123,7 @@ final class TodayViewModel {
             if goal.status.isOpen { goals.insert(goal, at: 0) }
             goalStats = try? await goalService.stats()
         } catch {
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
         }
     }
 
@@ -132,7 +132,7 @@ final class TodayViewModel {
             try await goalService.rejectSuggestion(id: suggestion.id)
             goalSuggestions.removeAll { $0.id == suggestion.id }
         } catch {
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
         }
     }
 

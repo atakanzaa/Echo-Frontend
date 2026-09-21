@@ -33,13 +33,19 @@ final class JournalCalendarViewModel {
         await loadMonth(alignToToday: !alignedToBackendToday)
     }
 
+    /// Seçili günün kayıtları boşaltılmaz; ilk sayfa gelince yerine konur.
     func refresh() async {
         await loadMonth()
-        guard selectedDay != nil else { return }
-        dayEntries = []
-        dayCursor = nil
-        hasMoreDayEntries = true
-        await loadNextDayPage()
+        guard let day = selectedDay else { return }
+        do {
+            let page = try await journal.entries(day: day, cursor: nil, size: 20)
+            guard selectedDay == day else { return }
+            dayEntries = page.items
+            dayCursor = page.nextCursor
+            hasMoreDayEntries = page.hasMore && page.nextCursor != nil
+        } catch {
+            self.error = AppError.displayable(error)
+        }
     }
 
     func moveMonth(by offset: Int) async {
@@ -77,7 +83,7 @@ final class JournalCalendarViewModel {
             dayCursor = page.nextCursor
             hasMoreDayEntries = page.hasMore && page.nextCursor != nil
         } catch {
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
         }
     }
 
@@ -104,7 +110,7 @@ final class JournalCalendarViewModel {
             }
         } catch {
             isLoadingMonth = false
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
         }
     }
 }

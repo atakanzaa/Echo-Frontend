@@ -54,7 +54,7 @@ final class PaginatedList<Element: Sendable & Identifiable> {
             cursor = page.nextCursor
             hasMore = page.hasMore && page.nextCursor != nil
         } catch {
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
         }
         isLoading = false
     }

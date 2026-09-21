@@ -19,7 +19,7 @@ private final class CoachSessionsViewModel {
         do {
             let page = try await service.sessions(cursor: nil, size: 30)
             sessions = page.items; nextCursor = page.nextCursor; hasMore = page.hasMore
-        } catch { self.error = AppError.from(error) }
+        } catch { self.error = AppError.displayable(error) }
     }
     func loadMore(after session: CoachSession) async {
         guard session.id == sessions.last?.id, hasMore, !isLoadingMore else { return }
@@ -29,11 +29,11 @@ private final class CoachSessionsViewModel {
             let page = try await service.sessions(cursor: nextCursor, size: 30)
             sessions.append(contentsOf: page.items.filter { candidate in !sessions.contains { $0.id == candidate.id } })
             nextCursor = page.nextCursor; hasMore = page.hasMore
-        } catch { self.error = AppError.from(error) }
+        } catch { self.error = AppError.displayable(error) }
     }
     func delete(_ session: CoachSession) async {
         do { try await service.deleteSession(id: session.id); sessions.removeAll { $0.id == session.id } }
-        catch { self.error = AppError.from(error) }
+        catch { self.error = AppError.displayable(error) }
     }
 }
 
@@ -83,7 +83,7 @@ struct CoachSessionsView: View {
         .navigationTitle(Text("coach.sessionsTitle"))
         .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { router.present(.coachChat(sessionId: nil)) } label: { Image(systemName: "plus") } } }
         .task { await model.load() }
-        .refreshable { await model.load() }
+        .echoRefreshable { await model.load() }
         .alert("coach.deleteTitle", isPresented: Binding(get: { pendingDeletion != nil }, set: { if !$0 { pendingDeletion = nil } })) {
             Button("common.cancel", role: .cancel) { pendingDeletion = nil }
             Button("common.delete", role: .destructive) {

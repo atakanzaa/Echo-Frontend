@@ -48,7 +48,7 @@ final class JournalEntryDetailViewModel {
             try await journal.delete(id: entryID)
             return true
         } catch {
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
             return false
         }
     }
@@ -87,7 +87,7 @@ final class JournalEntryDetailViewModel {
             _ = try await goals.acceptSuggestion(id: id)
             goalSuggestions.removeAll { $0.id == id }
         } catch {
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
         }
     }
 
@@ -100,7 +100,7 @@ final class JournalEntryDetailViewModel {
             try await goals.rejectSuggestion(id: id)
             goalSuggestions.removeAll { $0.id == id }
         } catch {
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
         }
     }
 
@@ -113,7 +113,7 @@ final class JournalEntryDetailViewModel {
         } catch is CancellationError {
             return
         } catch {
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
         }
     }
 
@@ -149,7 +149,7 @@ final class JournalEntryDetailViewModel {
             } catch is CancellationError {
                 return
             } catch {
-                self.error = AppError.from(error)
+                self.error = AppError.displayable(error)
                 do {
                     try await Task.sleep(for: .seconds(3))
                 } catch {

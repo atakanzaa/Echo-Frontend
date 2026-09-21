@@ -47,7 +47,7 @@ final class CommunityPostDetailViewModel {
             comments = []
             await loadMoreComments()
         } catch {
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
         }
     }
 
@@ -59,7 +59,7 @@ final class CommunityPostDetailViewModel {
             commentsCursor = page.nextCursor
             commentsHasMore = page.hasMore && page.nextCursor != nil
         } catch {
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
         }
     }
 
@@ -69,7 +69,7 @@ final class CommunityPostDetailViewModel {
             let page = try await community.replies(postID: postID, commentID: comment.id, cursor: nil, size: 50)
             replies[comment.id] = page.items
         } catch {
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
         }
     }
 
@@ -116,7 +116,7 @@ final class CommunityPostDetailViewModel {
         do {
             self.post = try await (post.isLikedByMe ? community.unlike(postID: post.id) : community.like(postID: post.id))
         } catch {
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
         }
     }
 
@@ -125,7 +125,7 @@ final class CommunityPostDetailViewModel {
             let updated = try await (comment.isLikedByMe ? community.unlike(commentID: comment.id) : community.like(commentID: comment.id))
             replaceComment(updated)
         } catch {
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
         }
     }
 
@@ -140,7 +140,7 @@ final class CommunityPostDetailViewModel {
             replies = [:]
             await loadMoreComments()
         } catch {
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
         }
     }
 
@@ -150,7 +150,7 @@ final class CommunityPostDetailViewModel {
             try await community.deletePost(id: postID)
             return true
         } catch {
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
             return false
         }
     }
@@ -168,7 +168,7 @@ final class CommunityPostDetailViewModel {
             try await community.blockAuthor(postID: postID)
             return true
         } catch {
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
             return false
         }
     }
@@ -182,7 +182,7 @@ final class CommunityPostDetailViewModel {
             }
             return true
         } catch {
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
             return false
         }
     }
@@ -192,7 +192,7 @@ final class CommunityPostDetailViewModel {
             try await action()
             return true
         } catch {
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
             return false
         }
     }

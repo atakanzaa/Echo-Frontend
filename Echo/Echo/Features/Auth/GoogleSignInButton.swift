@@ -39,7 +39,7 @@ struct GoogleSignInButton: View {
                                                                    timezone: TimeZone.current.identifier,
                                                                    language: environment.language.language)
                 } catch {
-                    self.error = AppError.from(error)
+                    self.error = AppError.displayable(error)
                 }
                 isWorking = false
             }

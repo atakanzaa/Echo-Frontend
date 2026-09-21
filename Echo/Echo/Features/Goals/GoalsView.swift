@@ -33,7 +33,7 @@ private final class GoalsViewModel {
             nextCursor = loadedPage.nextCursor
             hasMore = loadedPage.hasMore
             self.stats = loadedStats
-        } catch { self.error = AppError.from(error) }
+        } catch { self.error = AppError.displayable(error) }
     }
 
     func loadMoreIfNeeded(after goal: Goal) async {
@@ -47,7 +47,7 @@ private final class GoalsViewModel {
             goals.append(contentsOf: page.items.filter { item in !goals.contains(where: { $0.id == item.id }) })
             nextCursor = page.nextCursor
             hasMore = page.hasMore
-        } catch { self.error = AppError.from(error) }
+        } catch { self.error = AppError.displayable(error) }
     }
 
     func toggle(_ goal: Goal) async {
@@ -58,7 +58,7 @@ private final class GoalsViewModel {
             replace(updated)
             stats = try? await service.stats()
             if filter == .active, !updated.status.isOpen { goals.removeAll { $0.id == updated.id } }
-        } catch { self.error = AppError.from(error) }
+        } catch { self.error = AppError.displayable(error) }
     }
 
     func dismiss(_ goal: Goal) async {
@@ -67,7 +67,7 @@ private final class GoalsViewModel {
             replace(updated)
             stats = try? await service.stats()
             if filter == .active { goals.removeAll { $0.id == goal.id } }
-        } catch { self.error = AppError.from(error) }
+        } catch { self.error = AppError.displayable(error) }
     }
 
     func delete(_ goal: Goal) async {
@@ -75,7 +75,7 @@ private final class GoalsViewModel {
             try await service.delete(id: goal.id)
             goals.removeAll { $0.id == goal.id }
             stats = try? await service.stats()
-        } catch { self.error = AppError.from(error) }
+        } catch { self.error = AppError.displayable(error) }
     }
 
     private func replace(_ goal: Goal) {
@@ -126,7 +126,7 @@ struct GoalsView: View {
         .navigationTitle(Text("goals.title"))
         .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { router.push(.createGoal) } label: { Image(systemName: "plus") } } }
         .onAppear { Task { await model.load() } }
-        .refreshable { await model.load() }
+        .echoRefreshable { await model.load() }
         .alert("goals.deleteTitle", isPresented: Binding(
             get: { pendingDeletion != nil },
             set: { if !$0 { pendingDeletion = nil } }
@@ -214,7 +214,7 @@ struct CreateGoalView: View {
                                        timeframe: timeframe.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty,
                                        idempotencyKey: UUID().uuidString)
             dismiss()
-        } catch { self.error = AppError.from(error) }
+        } catch { self.error = AppError.displayable(error) }
     }
 }
 

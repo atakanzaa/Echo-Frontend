@@ -34,7 +34,7 @@ struct SignInView: View {
             do {
                 try await environment.session.signIn(email: email, password: password)
             } catch {
-                self.error = AppError.from(error)
+                self.error = AppError.displayable(error)
             }
             isWorking = false
         }
@@ -77,7 +77,7 @@ struct SignUpView: View {
                                                        timezone: TimeZone.current.identifier,
                                                        language: environment.language.language)
             } catch {
-                self.error = AppError.from(error)
+                self.error = AppError.displayable(error)
             }
             isWorking = false
         }
@@ -112,7 +112,7 @@ struct ForgotPasswordView: View {
                 try await environment.auth.requestPasswordReset(email: email)
                 onCodeSent(email)
             } catch {
-                self.error = AppError.from(error)
+                self.error = AppError.displayable(error)
             }
             isWorking = false
         }
@@ -157,7 +157,7 @@ struct ResetPasswordView: View {
                 isDone = true
                 onFinished()
             } catch {
-                self.error = AppError.from(error)
+                self.error = AppError.displayable(error)
             }
             isWorking = false
         }

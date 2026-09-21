@@ -20,7 +20,7 @@ private final class SubscriptionViewModel {
             async let catalog = service.products()
             self.status = try await status
             self.catalog = try await catalog
-        } catch { self.error = AppError.from(error) }
+        } catch { self.error = AppError.displayable(error) }
     }
 }
 
@@ -62,7 +62,7 @@ struct SubscriptionView: View {
         .background(AppTheme.color.bg.canvas)
         .navigationTitle(Text("subscription.title"))
         .task { await model.load() }
-        .refreshable { await model.load() }
+        .echoRefreshable { await model.load() }
     }
 
     private func quotaRow(_ quota: SubscriptionStatus.Quota) -> some View {

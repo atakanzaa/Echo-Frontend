@@ -12,7 +12,15 @@ private final class BlockedAuthorsViewModel {
 
     init(community: any CommunityServicing) { self.community = community }
 
-    func refresh() async { cursor = nil; hasMore = true; blocks = []; await loadNext() }
+    /// Liste boşaltılmaz; ilk sayfa gelince yerine konur.
+    func refresh() async {
+        do {
+            let page = try await community.blocks(cursor: nil, size: 30)
+            blocks = page.items
+            cursor = page.nextCursor
+            hasMore = page.hasMore && page.nextCursor != nil
+        } catch { self.error = AppError.displayable(error) }
+    }
 
     func loadNext() async {
         guard !isLoading, hasMore else { return }
@@ -23,14 +31,14 @@ private final class BlockedAuthorsViewModel {
             blocks.append(contentsOf: page.items)
             cursor = page.nextCursor
             hasMore = page.hasMore && page.nextCursor != nil
-        } catch { self.error = AppError.from(error) }
+        } catch { self.error = AppError.displayable(error) }
     }
 
     func unblock(_ block: CommunityBlock) async {
         do {
             try await community.removeBlock(id: block.id)
             blocks.removeAll { $0.id == block.id }
-        } catch { self.error = AppError.from(error) }
+        } catch { self.error = AppError.displayable(error) }
     }
 }
 
@@ -68,6 +76,6 @@ struct BlockedAuthorsView: View {
         .navigationTitle(Text("blocked.title"))
         .navigationBarTitleDisplayMode(.inline)
         .task { await model.refresh() }
-        .refreshable { await model.refresh() }
+        .echoRefreshable { await model.refresh() }
     }
 }

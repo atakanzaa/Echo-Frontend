@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 import EchoAPI
 import OpenAPIRuntime
 
@@ -84,8 +85,23 @@ nonisolated enum AppError: Error, Sendable {
         return .problem(EchoProblem(status: status, problem: problem))
     }
 
+    /// Ekranda gösterilecek hata; iptal edilen iş (ekrandan çıkma, yenilemenin yerini alan yeni istek) hata değildir.
+    static func displayable(_ error: any Error) -> AppError? {
+        isCancellation(error) ? nil : from(error)
+    }
+
+    static func isCancellation(_ error: any Error) -> Bool {
+        if error is CancellationError { return true }
+        if let urlError = error as? URLError, urlError.code == .cancelled { return true }
+        if let clientError = error as? ClientError { return isCancellation(clientError.underlyingError) }
+        return false
+    }
+
     /// Ağ katmanından gelen hatayı tek tipe indirger.
     static func from(_ error: any Error) -> AppError {
+        #if DEBUG
+        Logger(subsystem: "Yel.Echo", category: "errors").notice("AppError.from \(String(reflecting: error), privacy: .public)")
+        #endif
         if let appError = error as? AppError { return appError }
         if let sessionError = error as? SessionError {
 

@@ -94,7 +94,7 @@ final class ComposePostViewModel {
             return await submit(sensitiveContentConfirmed: true)
         } catch {
             isWorking = false
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
             return nil
         }
     }

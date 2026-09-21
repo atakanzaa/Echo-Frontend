@@ -109,7 +109,7 @@ struct JournalFeedView: View {
             .padding(.horizontal, AppTheme.layout.screenHorizontalPadding)
             .padding(.bottom, AppTheme.space.xl)
         }
-        .refreshable { await feedModel.refresh() }
+        .echoRefreshable { await feedModel.refresh() }
         // Detaydan geri dönüldüğünde sayaç ve liste sunucudan yeniden okunur.
         .task { await feedModel.refresh() }
     }

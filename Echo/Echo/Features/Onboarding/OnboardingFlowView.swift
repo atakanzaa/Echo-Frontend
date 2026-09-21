@@ -182,7 +182,7 @@ struct OnboardingFlowView: View {
                     step += 1
                 }
             } catch {
-                self.error = AppError.from(error)
+                self.error = AppError.displayable(error)
             }
             isWorking = false
         }

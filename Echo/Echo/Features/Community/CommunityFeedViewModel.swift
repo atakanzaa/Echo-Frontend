@@ -41,7 +41,7 @@ final class CommunityFeedViewModel {
             if loadID == requestID { isLoading = false }
         } catch {
             guard loadID == requestID else { return }
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
             isLoading = false
         }
     }
@@ -59,7 +59,7 @@ final class CommunityFeedViewModel {
             cursor = page.nextCursor
             hasMore = page.hasMore && page.nextCursor != nil
         } catch {
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
         }
     }
 
@@ -71,7 +71,7 @@ final class CommunityFeedViewModel {
             let updated = try await (post.isLikedByMe ? community.unlike(postID: post.id) : community.like(postID: post.id))
             replace(updated)
         } catch {
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
         }
     }
 
@@ -83,7 +83,7 @@ final class CommunityFeedViewModel {
             try await community.deletePost(id: post.id)
             posts.removeAll { $0.id == post.id }
         } catch {
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
         }
     }
 
@@ -92,7 +92,7 @@ final class CommunityFeedViewModel {
             try await community.report(postID: post.id, reason: reason, details: details)
             return true
         } catch {
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
             return false
         }
     }
@@ -103,7 +103,7 @@ final class CommunityFeedViewModel {
             posts.removeAll { $0.userID == post.userID }
             return true
         } catch {
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
             return false
         }
     }
@@ -118,7 +118,7 @@ final class CommunityFeedViewModel {
                 try await community.follow(userID: userID)
             }
         } catch {
-            self.error = AppError.from(error)
+            self.error = AppError.displayable(error)
         }
     }
 
