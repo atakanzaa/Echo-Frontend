@@ -101,6 +101,16 @@ final class AppEnvironment {
         return AppEnvironment(configuration: configuration, stack: stack, language: language)
     }
 
+    /// Çıkış ve hesap silme: sunucu oturumu kapanır; bu kullanıcının cihazdaki gönderilmemiş kayıtları, ses dosyaları
+    /// ve kullanım bilgisi silinir. Oturumun kendiliğinden düşmesi (süresi dolan token) bunları silmez; kullanıcı geri
+    /// girince bekleyen kayıtlar gönderilir.
+    func signOut() async {
+        let userID = session.state.user?.id
+        await session.signOut()
+        pendingJournals.removeAll(ownedBy: userID)
+        usage.clear()
+    }
+
     /// Uygulama dili değiştiğinde sunucu metinleri ve kullanıcı tercihi birlikte güncellenir.
     func changeLanguage(to newLanguage: AppLanguage) async {
         language.language = newLanguage

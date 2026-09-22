@@ -7,7 +7,8 @@ struct AuthFlowView: View {
     @State private var path = NavigationPath()
 
     private nonisolated enum Route: Hashable {
-        case signIn
+        /// `email` kayıttan "bu e-posta kayıtlı" ile gelindiğinde girişi doldurur.
+        case signIn(email: String?)
         case signUp
         case forgotPassword
         case resetPassword(email: String)
@@ -15,16 +16,17 @@ struct AuthFlowView: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            WelcomeView(onSignIn: { path.append(Route.signIn) },
+            WelcomeView(onSignIn: { path.append(Route.signIn(email: nil)) },
                         onSignUp: { path.append(Route.signUp) })
                 .navigationDestination(for: Route.self) { route in
 
                     switch route {
-                    case .signIn:
-                        SignInView(onForgotPassword: { path.append(Route.forgotPassword) },
+                    case .signIn(let email):
+                        SignInView(initialEmail: email ?? "",
+                                   onForgotPassword: { path.append(Route.forgotPassword) },
                                    onSignUp: { path.append(Route.signUp) })
                     case .signUp:
-                        SignUpView(onSignIn: { path.append(Route.signIn) })
+                        SignUpView(onSignIn: { email in path.append(Route.signIn(email: email)) })
                     case .forgotPassword:
                         ForgotPasswordView { email in path.append(Route.resetPassword(email: email)) }
                     case .resetPassword(let email):

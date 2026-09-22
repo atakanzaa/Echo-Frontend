@@ -54,6 +54,21 @@ final class PendingJournalStore {
         persist()
     }
 
+    func count(ownedBy userID: String?) -> Int {
+        items.filter { $0.ownerUserID == nil || $0.ownerUserID == userID }.count
+    }
+
+    /// Çıkışta ve hesap silmede: bu kullanıcının (ve sahibi bilinmeyen eski) bekleyen kayıtları ve ses dosyaları silinir.
+    func removeAll(ownedBy userID: String?) {
+        let removed = items.filter { $0.ownerUserID == nil || $0.ownerUserID == userID }
+        for item in removed {
+
+            if let url = audioURL(for: item) { try? FileManager.default.removeItem(at: url) }
+        }
+        items.removeAll { item in removed.contains { $0.id == item.id } }
+        persist()
+    }
+
     func audioURL(for item: PendingJournal) -> URL? {
         guard let name = item.audioFileName else { return nil }
         return FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]

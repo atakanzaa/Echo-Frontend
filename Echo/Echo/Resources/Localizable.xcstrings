@@ -353,6 +353,23 @@
         }
       }
     },
+    "auth.signInWithThisEmail": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in with this email"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu e-postayla giriş yap"
+          }
+        }
+      }
+    },
     "auth.signUpAction": {
       "extractionState": "manual",
       "localizations": {
@@ -5392,6 +5409,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Echo'dan çıkış yapılsın mı?"
+          }
+        }
+      }
+    },
+    "settings.signOutUnsent": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld entries haven't been sent yet. Signing out deletes them from this device."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Henüz gönderilmemiş %lld kaydın var. Çıkış yaparsan bu cihazdan silinir."
           }
         }
       }

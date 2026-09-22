@@ -29,7 +29,12 @@ struct SettingsView: View {
         .navigationBarTitleDisplayMode(.inline)
         .alert("settings.signOutTitle", isPresented: $showsSignOut) {
             Button("common.cancel", role: .cancel) {}
-            Button("settings.signOut", role: .destructive) { Task { await environment.session.signOut() } }
+            Button("settings.signOut", role: .destructive) { Task { await environment.signOut() } }
+        } message: {
+            if unsentCount > 0 {
+
+                Text(String(format: String(localized: "settings.signOutUnsent"), unsentCount))
+            }
         }
         .alert("settings.deleteFirstTitle", isPresented: $showsDeleteFirst) {
             Button("common.cancel", role: .cancel) {}
@@ -44,6 +49,11 @@ struct SettingsView: View {
             Button("common.cancel", role: .cancel) {}
             Button("settings.deleteAccount", role: .destructive) { Task { await deleteAccount() } }
         } message: { Text("settings.deleteFinalMessage") }
+    }
+
+    /// Bu kullanıcının cihazda bekleyen, henüz sunucuya ulaşmamış kayıtları; çıkışta silinecekleri için önceden söylenir.
+    private var unsentCount: Int {
+        environment.pendingJournals.count(ownedBy: environment.session.state.user?.id)
     }
 
     private var appearanceSection: some View {
@@ -154,7 +164,7 @@ struct SettingsView: View {
         error = nil
         do {
             try await environment.user.requestAccountDeletion(appleAuthorizationCode: nil)
-            await environment.session.signOut()
+            await environment.signOut()
         } catch {
             self.error = AppError.displayable(error)
         }

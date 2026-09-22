@@ -5,10 +5,16 @@ struct SignInView: View {
     let onForgotPassword: () -> Void
     let onSignUp: () -> Void
     @Environment(AppEnvironment.self) private var environment
-    @State private var email = ""
+    @State private var email: String
     @State private var password = ""
     @State private var error: AppError?
     @State private var isWorking = false
+
+    init(initialEmail: String = "", onForgotPassword: @escaping () -> Void, onSignUp: @escaping () -> Void) {
+        self.onForgotPassword = onForgotPassword
+        self.onSignUp = onSignUp
+        _email = State(initialValue: initialEmail)
+    }
 
     var body: some View {
         AuthScaffold(title: "auth.signInTitle", error: error) {
@@ -43,7 +49,8 @@ struct SignInView: View {
 
 /// Kayıt formu. `timezone` cihazdan, `language` uygulama dilinden gönderilir.
 struct SignUpView: View {
-    let onSignIn: () -> Void
+    /// Kayıtlı bir e-postayla gelindiyse girişe o e-postayla geçilir.
+    let onSignIn: (String?) -> Void
     @Environment(AppEnvironment.self) private var environment
     @State private var email = ""
     @State private var password = ""
@@ -60,7 +67,11 @@ struct SignUpView: View {
                           errorText: fieldError("password"), contentType: .newPassword)
             EchoButton("welcome.createAccount", size: .lg, fullWidth: true, isLoading: isWorking) { submit() }
                 .disabled(email.isEmpty || password.isEmpty || displayName.isEmpty)
-            AuthSwitchPrompt(question: "auth.haveAccount", action: "auth.signInAction", onTap: onSignIn)
+            if error?.problem?.code == "EMAIL_ALREADY_REGISTERED" {
+
+                EchoButton("auth.signInWithThisEmail", variant: .secondary, size: .lg, fullWidth: true) { onSignIn(email) }
+            }
+            AuthSwitchPrompt(question: "auth.haveAccount", action: "auth.signInAction", onTap: { onSignIn(nil) })
         }
     }
 
