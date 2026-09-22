@@ -8,12 +8,16 @@ nonisolated struct EchoAPIStack: Sendable {
     let session: SessionCoordinator
     let tokenStore: KeychainTokenStore
     let serverURL: URL
+    /// Yönetim paneli istemcisi aynı oturum ve transport'la kurulur.
+    let connection: EchoConnection
 
     static func make(serverURL: URL,
                      keychainService: String,
                      language: @escaping @Sendable () -> String?) throws -> EchoAPIStack {
         let tokenStore = KeychainTokenStore(service: keychainService)
-        let made = try EchoClient.make(serverURL: serverURL, tokenStore: tokenStore, language: language)
-        return EchoAPIStack(client: made.client, session: made.session, tokenStore: tokenStore, serverURL: serverURL)
+        let connection = try EchoClient.connect(serverURL: serverURL, tokenStore: tokenStore, language: language)
+        let client = Client(serverURL: serverURL, configuration: EchoClient.defaultConfiguration, transport: connection.transport)
+        return EchoAPIStack(client: client, session: connection.session, tokenStore: tokenStore, serverURL: serverURL,
+                            connection: connection)
     }
 }

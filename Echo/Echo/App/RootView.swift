@@ -42,6 +42,9 @@ struct RootView: View {
                 LaunchView()
             case .signedOut:
                 AuthFlowView()
+            case .signedIn(let user) where user.isAdmin:
+                // Yönetici hesabı yalnız paneli açar; günlük tutmaz, onboarding görmez.
+                AdminRootView(service: environment.admin)
             case .signedIn(let user):
                 if onboardingCompleted || OnboardingState.isCompleted(userID: user.id) {
 

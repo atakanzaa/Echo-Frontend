@@ -44,7 +44,20 @@ final class AppLockManager {
         return success
     }
 
-    private func authenticate() async -> Bool {
+    /// Yönetim işlemleri: uygulama kilidi kapalı olsa da her seferinde cihaz sahibinin onayı istenir.
+    func confirmOwner(reason: String) async -> Bool {
+        #if DEBUG
+        if bypassesOwnerCheck { return true }
+        #endif
+        return await authenticate(reason: reason)
+    }
+
+    #if DEBUG
+    /// Yalnız önizleme: simülatörde Face ID olmadan panel akışlarını denemek için.
+    @ObservationIgnored var bypassesOwnerCheck = false
+    #endif
+
+    private func authenticate(reason: String = String(localized: "lock.reason")) async -> Bool {
         let context = LAContext()
         var policyError: NSError?
         guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &policyError) else {
@@ -54,7 +67,7 @@ final class AppLockManager {
         do {
             let success = try await context.evaluatePolicy(
                 .deviceOwnerAuthentication,
-                localizedReason: String(localized: "lock.reason"))
+                localizedReason: reason)
             errorMessage = nil
             return success
         } catch {

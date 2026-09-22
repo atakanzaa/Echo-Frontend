@@ -16,6 +16,7 @@ struct AppServices {
     var subscription: any SubscriptionServicing
     var user: any UserServicing
     var usage: any UsageServicing
+    var admin: any AdminServicing
 
     static func live(_ stack: EchoAPIStack) -> AppServices {
         AppServices(auth: LiveAuthService(stack: stack),
@@ -29,7 +30,8 @@ struct AppServices {
                     community: LiveCommunityService(stack: stack),
                     subscription: LiveSubscriptionService(stack: stack),
                     user: LiveUserService(stack: stack),
-                    usage: LiveUsageService(stack: stack))
+                    usage: LiveUsageService(stack: stack),
+                    admin: LiveAdminService(stack: stack))
     }
 }
 
@@ -54,6 +56,7 @@ final class AppEnvironment {
     let community: any CommunityServicing
     let subscription: any SubscriptionServicing
     let user: any UserServicing
+    let admin: any AdminServicing
 
     let session: SessionStore
     let remoteConfig: AppConfigStore
@@ -83,6 +86,7 @@ final class AppEnvironment {
         community = services.community
         subscription = services.subscription
         user = services.user
+        admin = services.admin
 
         session = SessionStore(auth: services.auth, notifications: services.notifications, tokenStore: stack.tokenStore)
         remoteConfig = AppConfigStore(service: services.appConfig,

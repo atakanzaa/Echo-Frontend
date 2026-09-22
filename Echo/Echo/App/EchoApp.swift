@@ -17,6 +17,9 @@ struct EchoApp: App {
                 } else if ProcessInfo.processInfo.arguments.contains("-EchoShellPreview") {
 
                     ShellPreviewHost()
+                } else if ProcessInfo.processInfo.arguments.contains("-EchoAdminPreview") {
+
+                    AdminPreviewHost()
                 } else if let notice = PreviewLaunch.argument("-EchoNoticePreview") {
 
                     NoticePreviewHost(name: notice)

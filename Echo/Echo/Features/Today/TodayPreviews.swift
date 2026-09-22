@@ -363,7 +363,7 @@ nonisolated struct PreviewCommunityService: CommunityServicing {
 
 extension AppEnvironment {
     /// Ağsız önizleme ortamı: sahte servisler, oturum açık kullanıcı ve sunucu sözlüğü.
-    static func preview(_ state: TodayPreviewState) -> AppEnvironment {
+    static func preview(_ state: TodayPreviewState, admin: (any AdminServicing)? = nil) -> AppEnvironment {
         let language = AppLanguageStore()
         let serverURL = URL(string: "https://preview.echo.invalid")!
         let stack = try! EchoAPIStack.make(serverURL: serverURL, keychainService: "echo.preview", language: language.headerProvider)
@@ -375,6 +375,7 @@ extension AppEnvironment {
         services.capsules = PreviewCapsuleService(state: state)
         services.coach = PreviewCoachService(state: state)
         services.community = PreviewCommunityService()
+        if let admin { services.admin = admin }
         let environment = AppEnvironment(configuration: AppConfiguration(apiBaseURL: serverURL, subscriptionProductIDs: [],
                                                                          keychainService: "echo.preview"),
                                          stack: stack, language: language, services: services)
