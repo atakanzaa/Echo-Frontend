@@ -82,7 +82,9 @@ nonisolated enum AppError: Error, Sendable {
     /// 401 burada oturum kaybı sayılmaz: giriş formundaki 401 form hatasıdır (rules.md §2).
     static func fromDefault(_ status: Int, _ problem: Components.Schemas.Problem?) -> AppError {
         guard let problem else { return .unexpectedResponse(status: status) }
-        return .problem(EchoProblem(status: status, problem: problem))
+        let echoProblem = EchoProblem(status: status, problem: problem)
+        ServiceSignal.post(echoProblem)
+        return .problem(echoProblem)
     }
 
     /// Ekranda gösterilecek hata; iptal edilen iş (ekrandan çıkma, yenilemenin yerini alan yeni istek) hata değildir.
@@ -122,5 +124,21 @@ nonisolated enum AppError: Error, Sendable {
         }
         if error is CancellationError { return .network }
         return .unexpectedResponse(status: nil)
+    }
+}
+
+/// Bakım ve erişim engeli her ekrandan gelebilir; uygulama kökü bunları tek yerde karşılar.
+nonisolated enum ServiceSignal {
+    static let maintenance = Notification.Name("EchoServiceMaintenance")
+    static let accessBlocked = Notification.Name("EchoServiceAccessBlocked")
+
+    static func post(_ problem: EchoProblem) {
+        let name: Notification.Name
+        switch problem.code {
+        case "MAINTENANCE_MODE": name = maintenance
+        case "ACCESS_BLOCKED": name = accessBlocked
+        default: return
+        }
+        NotificationCenter.default.post(name: name, object: nil, userInfo: ["detail": problem.detail])
     }
 }

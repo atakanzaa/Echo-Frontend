@@ -84,4 +84,22 @@ final class AppRouter {
     func dismissSheet() {
         sheet = nil
     }
+
+    /// Bildirim hedefini ilgili ekrana çevirir; uygulama içi liste ve push aynı yolu kullanır.
+    func open(_ target: EchoNotificationTarget, id: String?) {
+        switch target {
+        case .journalEntry:
+            if let id { push(.journalEntry(id: id)) }
+        case .journal: selectedTab = .journal
+        case .achievement:
+            if let id { push(.achievementDetail(badgeKey: id)) } else { push(.achievements) }
+        case .post:
+            if let id { push(.communityPost(id: id), on: .community) }
+        case .coach: present(.coachChat(sessionId: id))
+        case .insights: push(.insights)
+        case .capsule:
+            if let id { push(.capsule(id: id)) } else { push(.capsules) }
+        case .adminAlert, .unknown: break
+        }
+    }
 }

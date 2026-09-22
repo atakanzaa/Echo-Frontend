@@ -3764,6 +3764,57 @@
         }
       }
     },
+    "maintenance.retry": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try again"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tekrar dene"
+          }
+        }
+      }
+    },
+    "maintenance.signIn": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Giriş yap"
+          }
+        }
+      }
+    },
+    "maintenance.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We're doing some quick maintenance"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kısa bir bakım yapıyoruz"
+          }
+        }
+      }
+    },
     "mood.bestDay": {
       "localizations": {
         "en": {
@@ -6665,6 +6716,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kaydın güvende. Bağlantı gelince yeniden denenir."
+          }
+        }
+      }
+    },
+    "today.timeline.paused": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Analysis paused"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Analiz duraklatıldı"
+          }
+        }
+      }
+    },
+    "today.timeline.pausedBody": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your entry is safe; it will be analysed automatically soon."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaydın güvende; kısa süre içinde kendiliğinden analiz edilecek."
           }
         }
       }

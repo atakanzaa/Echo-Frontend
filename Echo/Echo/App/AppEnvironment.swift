@@ -61,6 +61,8 @@ final class AppEnvironment {
     let submissions: JournalSubmissionStore
     let usage: UsageStore
     let network = NetworkStatus()
+    let push = PushRegistrar.shared
+    @ObservationIgnored private var signalTasks: [Task<Void, Never>] = []
 
     init(configuration: AppConfiguration, stack: EchoAPIStack, language: AppLanguageStore, services: AppServices? = nil) {
         self.configuration = configuration
@@ -98,7 +100,30 @@ final class AppEnvironment {
         let stack = try EchoAPIStack.make(serverURL: configuration.apiBaseURL,
                                           keychainService: configuration.keychainService,
                                           language: language.headerProvider)
-        return AppEnvironment(configuration: configuration, stack: stack, language: language)
+        let environment = AppEnvironment(configuration: configuration, stack: stack, language: language)
+        environment.push.attach(environment.notifications)
+        environment.observeServiceSignals()
+        return environment
+    }
+
+    /// Bakım ve erişim engeli hangi ekrandan gelirse gelsin kökte karşılanır.
+    private func observeServiceSignals() {
+        guard signalTasks.isEmpty else { return }
+        signalTasks.append(Task { [weak self] in
+            for await note in NotificationCenter.default.notifications(named: ServiceSignal.maintenance) {
+                let detail = note.userInfo?["detail"] as? String ?? ""
+                self?.remoteConfig.reportMaintenance(detail)
+            }
+        })
+        signalTasks.append(Task { [weak self] in
+            for await note in NotificationCenter.default.notifications(named: ServiceSignal.accessBlocked) {
+                let detail = note.userInfo?["detail"] as? String ?? ""
+                guard let self, self.session.state.user != nil else { continue }
+                await self.session.end(message: detail)
+                self.push.signedOut()
+                self.usage.clear()
+            }
+        })
     }
 
     /// Çıkış ve hesap silme: sunucu oturumu kapanır; bu kullanıcının cihazdaki gönderilmemiş kayıtları, ses dosyaları
@@ -106,7 +131,8 @@ final class AppEnvironment {
     /// girince bekleyen kayıtlar gönderilir.
     func signOut() async {
         let userID = session.state.user?.id
-        await session.signOut()
+        await session.signOut(pushToken: push.token)
+        push.signedOut()
         pendingJournals.removeAll(ownedBy: userID)
         usage.clear()
     }

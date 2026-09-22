@@ -139,6 +139,8 @@ struct EchoTimelineRow: View {
         case processing(transcript: String?)
         /// Analiz, kullanım hakkı yenilenene kadar bekliyor; `resumesAt` sunucunun yenilenme anıdır.
         case waitingForAllowance(transcript: String?, resumesAt: Date?)
+        /// Analiz sunucuda geçici olarak durduruldu; kayıt saklandı.
+        case paused(transcript: String?)
         case failed(transcript: String?, canRetry: Bool)
     }
 
@@ -211,7 +213,7 @@ struct EchoTimelineRow: View {
                 EchoRippleView(ringCount: 3, intensity: 0.5, speed: 0.55, color: AppTheme.color.accent.primary)
                 Circle().fill(AppTheme.color.accent.primary).frame(width: 10, height: 10)
             }
-        case .waitingForAllowance:
+        case .waitingForAllowance, .paused:
             ZStack {
                 Circle().fill(AppTheme.color.feedback.warning.opacity(0.16))
                 Image(systemName: "hourglass")
@@ -289,6 +291,20 @@ struct EchoTimelineRow: View {
                         .echoTextStyle(.footnote)
                         .foregroundStyle(AppTheme.color.content.secondary)
                 }
+            case let .paused(transcript):
+                Text("today.timeline.paused")
+                    .echoTextStyle(.subhead).fontWeight(.semibold)
+                    .foregroundStyle(AppTheme.color.content.primary)
+                if let transcript, !transcript.isEmpty {
+
+                    Text("“\(transcript)”")
+                        .echoTextStyle(.entryQuote)
+                        .foregroundStyle(AppTheme.color.content.secondary)
+                        .lineLimit(2)
+                }
+                Text("today.timeline.pausedBody")
+                    .echoTextStyle(.footnote)
+                    .foregroundStyle(AppTheme.color.content.secondary)
             case let .failed(transcript, canRetry):
                 Text("today.timeline.failed")
                     .echoTextStyle(.subhead).fontWeight(.semibold)

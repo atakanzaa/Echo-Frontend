@@ -3,6 +3,7 @@ import SwiftUI
 
 @main
 struct EchoApp: App {
+    @UIApplicationDelegateAdaptor(EchoAppDelegate.self) private var appDelegate
     @State private var environment: AppEnvironment?
     @State private var startupError: String?
 
@@ -16,6 +17,9 @@ struct EchoApp: App {
                 } else if ProcessInfo.processInfo.arguments.contains("-EchoShellPreview") {
 
                     ShellPreviewHost()
+                } else if let notice = PreviewLaunch.argument("-EchoNoticePreview") {
+
+                    NoticePreviewHost(name: notice)
                 } else if let usage = PreviewLaunch.argument("-EchoUsagePreview") {
 
                     UsagePreviewHost(name: usage).preferredColorScheme(.dark).tint(AppTheme.color.accent.primary)
@@ -94,6 +98,52 @@ enum PreviewLaunch {
 
 /// Yalnız DEBUG: `-EchoShellPreview` sekmeli ana kabuğu sahte oturumla açar; sekme ve sunum akışları giriş yapmadan denenir.
 /// `-EchoRouteSweep` eklenirse her sekme, her hedef ve her sayfa sırayla açılıp kapatılır; çökme son "start" satırında kalır.
+/// Yalnız DEBUG: `-EchoNoticePreview <maintenance|ai_paused|community_frozen|registrations_closed|blocked>`
+/// sunucu duyurularının ve engellenen oturumun ekranlarını sahte veriyle açar.
+struct NoticePreviewHost: View {
+    let name: String
+    @State private var environment = AppEnvironment.preview(.morning)
+    @State private var router = AppRouter()
+
+    var body: some View {
+        content
+            .environment(environment)
+            .environment(environment.theme)
+            .preferredColorScheme(.dark)
+            .tint(AppTheme.color.accent.primary)
+            .task { apply() }
+    }
+
+    @ViewBuilder private var content: some View {
+        switch name {
+        case "maintenance":
+            MaintenanceView(message: "Bakım 15:00'e kadar sürecek. Kayıtların güvende.", allowsSignIn: true) {}
+        case "blocked", "registrations_closed":
+            AuthFlowView()
+        default:
+            MainTabView(router: router)
+        }
+    }
+
+    private func apply() {
+        let messages = [
+            "maintenance": "Bakım 15:00'e kadar sürecek. Kayıtların güvende.",
+            "ai_paused": "Yapay zekâ analizi kısa süreliğine duraklatıldı. Kayıtların güvende; analiz sonra yapılacak.",
+            "community_frozen": "Topluluk şu an salt okunur. Paylaşım ve yorum kısa süre sonra açılacak.",
+            "registrations_closed": "Yeni hesap açılışı geçici olarak kapalı."
+        ]
+        if let message = messages[name] {
+
+            environment.remoteConfig.applyPreview(notices: [.init(key: name, message: message)])
+        }
+        if name == "community_frozen" { router.selectedTab = .community }
+        if name == "blocked" {
+
+            environment.session.applyPreview(endedMessage: "Hesabın kullanım koşullarına aykırı etkinlik nedeniyle engellendi.")
+        }
+    }
+}
+
 struct ShellPreviewHost: View {
     @State private var environment = AppEnvironment.preview(.morning)
     @State private var router = AppRouter()

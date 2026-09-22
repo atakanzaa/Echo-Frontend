@@ -60,6 +60,10 @@ struct SignUpView: View {
 
     var body: some View {
         AuthScaffold(title: "auth.signUpTitle", error: error) {
+            if error == nil, let closed = environment.remoteConfig.notice("registrations_closed") {
+
+                EchoBanner(kind: .warning, title: closed.message)
+            }
             EchoTextField("auth.displayName", text: $displayName, errorText: fieldError("display_name"), contentType: .name)
             EchoTextField("auth.email", placeholder: "auth.emailPlaceholder", text: $email,
                           errorText: fieldError("email"), contentType: .emailAddress, keyboardType: .emailAddress)

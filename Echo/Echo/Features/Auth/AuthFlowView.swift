@@ -62,6 +62,11 @@ struct WelcomeView: View {
                         .padding(.horizontal, AppTheme.space.sm)
                 }
                 Spacer(minLength: AppTheme.space.lg)
+                if let message = environment.session.endedMessage {
+
+                    EchoBanner(kind: .danger, title: message)
+                        .padding(.bottom, AppTheme.space.sm)
+                }
                 actions
                 legal
                     .padding(.top, AppTheme.space.sm)

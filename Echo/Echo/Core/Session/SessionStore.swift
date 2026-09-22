@@ -21,6 +21,8 @@ final class SessionStore {
     /// Açılışta oturum geri yüklenemediyse (ağ/sunucu) gösterilir; oturum silinmez.
     private(set) var restoreError: AppError?
     private(set) var isWorking = false
+    /// Oturum sunucu kararıyla bittiyse (hesap ya da adres engeli) karşılama ekranında gösterilen sunucu metni.
+    private(set) var endedMessage: String?
 
     @ObservationIgnored private let auth: any AuthServicing
     @ObservationIgnored private let notifications: any NotificationServicing
@@ -91,12 +93,29 @@ final class SessionStore {
         state = .signedIn(user)
     }
 
+    #if DEBUG
+    /// Yalnız önizleme: sunucunun bitirdiği oturumu ağsız göstermek için.
+    func applyPreview(endedMessage: String) {
+        self.endedMessage = endedMessage
+        state = .signedOut
+    }
+    #endif
+
     /// Çıkışta önce cihazın push token sahipliği bırakılır, sonra sunucu oturumu kapatılır.
     func signOut(pushToken: String? = nil) async {
+        endedMessage = nil
         isWorking = true
         if let pushToken { try? await notifications.unregisterPushToken(pushToken) }
         try? await auth.signOut()
         isWorking = false
+        state = .signedOut
+    }
+
+    /// Sunucu hesabı ya da adresi engellediğinde: yerel oturum kapanır, cihazdaki gönderilmemiş kayıtlar korunur.
+    func end(message: String) async {
+        guard state.user != nil else { return }
+        try? await auth.signOut()
+        endedMessage = message
         state = .signedOut
     }
 
@@ -105,6 +124,7 @@ final class SessionStore {
         defer { isWorking = false }
         do {
             state = .signedIn(try await work())
+            endedMessage = nil
         } catch {
             throw AppError.from(error)
         }

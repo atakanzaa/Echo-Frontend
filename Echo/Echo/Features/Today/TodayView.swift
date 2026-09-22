@@ -136,6 +136,9 @@ struct TodayView: View {
         case .retryScheduled where entry.errorCode == "AI_QUOTA_EXHAUSTED":
             // Kayıt saklandı; analiz kullanım hakkı yenilenince sunucuda kendiliğinden yapılır.
             return .waitingForAllowance(transcript: entry.transcript, resumesAt: environment.usage.usage?.resetsAt)
+        case .retryScheduled where entry.errorCode == "AI_PAUSED":
+            // Analiz yönetici kararıyla duraklatıldı; kayıt saklandı, açılınca kendiliğinden yapılır.
+            return .paused(transcript: entry.transcript)
         case .queued, .processing, .retryScheduled, .unknown:
             return .processing(transcript: entry.transcript)
         }

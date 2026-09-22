@@ -19,6 +19,8 @@ nonisolated struct RemoteAppConfig: Sendable, Equatable {
     let recording: RecordingLimits
     let capsulePresets: [CapsulePreset]
     let adPlacements: [AdPlacement]
+    /// Açık kapatma anahtarları: `maintenance`, `ai_paused`, `registrations_closed`, `community_frozen`.
+    let serviceNotices: [ServiceNotice]
 
     nonisolated struct CrisisResource: Sendable, Equatable {
         let phoneNumber: String
@@ -52,6 +54,14 @@ nonisolated struct RemoteAppConfig: Sendable, Equatable {
         let days: Int
         /// İstek dilinde gösterime hazır etiket.
         let label: String
+
+        var id: String { key }
+    }
+
+    nonisolated struct ServiceNotice: Sendable, Equatable, Identifiable {
+        let key: String
+        /// İstek dilinde gösterime hazır metin.
+        let message: String
 
         var id: String { key }
     }
@@ -100,6 +110,9 @@ nonisolated struct RemoteAppConfig: Sendable, Equatable {
             AdPlacement(placement: $0.placement.value1?.rawValue ?? $0.placement.value2 ?? "",
                         isEnabled: $0.enabled,
                         frequency: $0.frequency.map(Int.init))
+        }
+        serviceNotices = dto.serviceNotices.map {
+            ServiceNotice(key: $0.key.value1?.rawValue ?? $0.key.value2 ?? "", message: $0.message)
         }
     }
 }

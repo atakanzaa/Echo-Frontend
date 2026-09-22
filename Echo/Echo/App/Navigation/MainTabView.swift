@@ -15,7 +15,11 @@ struct MainTabView: View {
     var body: some View {
         ZStack(alignment: .bottom) {
             AppTheme.color.bg.canvas.ignoresSafeArea()
-            content
+            // Duyuru gezinme çubuğunun üstünde ayrı satırdır; üst üste binmesin diye içerik aşağı iner.
+            VStack(spacing: 0) {
+                serviceNotice
+                content
+            }
             EchoTabBar(selection: $router.selectedTab,
                        isRecording: router.sheet?.isRecording == true,
                        onRecordTap: { router.present(.recording()) },
@@ -37,6 +41,12 @@ struct MainTabView: View {
             }
         }
         .task { await environment.usage.refresh() }
+        .task(id: environment.push.pendingTarget) {
+            // Dokunulan bildirim: hedef ekran açılır, istek bir kez tüketilir.
+            guard let target = environment.push.pendingTarget else { return }
+            environment.push.pendingTarget = nil
+            router.open(target.type, id: target.id)
+        }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { Task { await environment.usage.refresh() } }
         }
@@ -44,6 +54,21 @@ struct MainTabView: View {
         // Bu iki satır sunumların içinde kalırsa açılan ekran yönlendiriciyi bulamaz ve uygulama çöker.
         .environment(router)
         .environment(toasts)
+    }
+
+    /// Sunucunun açık duyurusu yalnız etkilediği sekmede gösterilir; metin sunucudan gelir.
+    @ViewBuilder private var serviceNotice: some View {
+        let key = switch router.selectedTab {
+        case .today, .journal: "ai_paused"
+        case .community: "community_frozen"
+        case .profile: ""
+        }
+        if let notice = environment.remoteConfig.notice(key) {
+
+            EchoBanner(kind: .warning, title: notice.message)
+                .padding(.horizontal, AppTheme.layout.screenHorizontalPadding)
+                .padding(.vertical, AppTheme.space.xxs)
+        }
     }
 
     @ViewBuilder private var content: some View {

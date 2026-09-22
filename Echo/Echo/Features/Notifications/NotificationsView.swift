@@ -123,20 +123,7 @@ struct NotificationsView: View {
     private func open(_ item: NotificationItem) async {
         await model.markRead(item)
         guard let target = item.targetType else { return }
-        switch target {
-        case .journalEntry:
-            if let id = item.targetID { router.push(.journalEntry(id: id)) }
-        case .journal: router.selectedTab = .journal
-        case .achievement:
-            if let key = item.targetID { router.push(.achievementDetail(badgeKey: key)) } else { router.push(.achievements) }
-        case .post:
-            if let id = item.targetID { router.push(.communityPost(id: id), on: .community) }
-        case .coach: router.present(.coachChat(sessionId: item.targetID))
-        case .insights: router.push(.insights)
-        case .capsule:
-            if let id = item.targetID { router.push(.capsule(id: id)) } else { router.push(.capsules) }
-        case .unknown: break
-        }
+        router.open(target, id: item.targetID)
     }
 
     private func icon(for target: EchoNotificationTarget?) -> String {

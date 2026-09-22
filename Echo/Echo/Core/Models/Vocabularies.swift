@@ -221,10 +221,13 @@ nonisolated enum EchoNotificationTarget: Sendable, Hashable {
     case coach
     case insights
     case capsule
+    /// Yalnız yönetici hesabına gelir; `target_id` uyarının kimliğidir.
+    case adminAlert
     case unknown(String)
 
     init(wire: String) {
         switch wire {
+        case "admin_alert": self = .adminAlert
         case "journal_entry": self = .journalEntry
         case "journal": self = .journal
         case "achievement": self = .achievement
